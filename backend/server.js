@@ -38,6 +38,203 @@ transporter.verify((error, success) => {
 let users = [];
 let orders = [];
 
+// Thêm vào server.js sau dòng let orders = [];
+
+// Danh sách mã giảm giá
+const discountCodes = [
+  { code: "TQ10-CHILL", value: 10000, isActive: true },
+  { code: "TQ20-VUIVE", value: 20000, isActive: true },
+  { code: "TQ30-XINCHAO", value: 30000, isActive: true },
+  { code: "TQ40-TUANQ", value: 40000, isActive: true },
+  { code: "TQ50-LIXI", value: 50000, isActive: true },
+  { code: "TQ60-MEMEME", value: 60000, isActive: true },
+  { code: "TQ70-MUAHE", value: 70000, isActive: true },
+  { code: "TQ80-ZUIZUI", value: 80000, isActive: true },
+  { code: "TQ90-DANGCAP", value: 90000, isActive: true },
+  { code: "TQ100-QUADINH", value: 100000, isActive: true },
+];
+
+// Lưu trữ lịch sử sử dụng mã (userId + code)
+let usedDiscountCodes = [];
+
+// ===================== DISCOUNT CODE ROUTES =====================
+
+// Kiểm tra mã giảm giá
+app.post("/api/discount/validate", (req, res) => {
+  try {
+    const { code, userId, orderTotal } = req.body;
+
+    if (!code || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin mã giảm giá hoặc người dùng!",
+      });
+    }
+
+    // Kiểm tra mã có tồn tại không
+    const discount = discountCodes.find(
+      (d) => d.code.toUpperCase() === code.toUpperCase() && d.isActive
+    );
+
+    if (!discount) {
+      return res.json({
+        success: false,
+        message: "Mã giảm giá không hợp lệ hoặc đã hết hạn!",
+      });
+    }
+
+    // Kiểm tra user đã dùng mã này chưa
+    const hasUsed = usedDiscountCodes.some(
+      (u) => u.userId === userId && u.code.toUpperCase() === code.toUpperCase()
+    );
+
+    if (hasUsed) {
+      return res.json({
+        success: false,
+        message: "Bạn đã sử dụng mã giảm giá này rồi!",
+      });
+    }
+
+    // Kiểm tra đơn hàng có đủ giá trị không
+    if (orderTotal < discount.value) {
+      return res.json({
+        success: false,
+        message: `Đơn hàng phải từ ${discount.value.toLocaleString()}đ trở lên để sử dụng mã này!`,
+      });
+    }
+
+    // Mã hợp lệ
+    res.json({
+      success: true,
+      message: `Áp dụng thành công! Giảm ${discount.value.toLocaleString()}đ`,
+      discount: {
+        code: discount.code,
+        value: discount.value,
+      },
+    });
+  } catch (error) {
+    console.error("Validate discount error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi kiểm tra mã giảm giá!",
+    });
+  }
+});
+
+// Cập nhật route tạo đơn hàng để hỗ trợ mã giảm giá
+app.post("/api/orders", async (req, res) => {
+  try {
+    const { userId, items, customerInfo, total, discountCode } = req.body;
+
+    let finalTotal = total;
+    let appliedDiscount = null;
+
+    // Xử lý mã giảm giá nếu có
+    if (discountCode) {
+      const discount = discountCodes.find(
+        (d) => d.code.toUpperCase() === discountCode.toUpperCase() && d.isActive
+      );
+
+      if (discount) {
+        const hasUsed = usedDiscountCodes.some(
+          (u) =>
+            u.userId === userId &&
+            u.code.toUpperCase() === discountCode.toUpperCase()
+        );
+
+        if (!hasUsed && total >= discount.value) {
+          finalTotal = total - discount.value;
+          appliedDiscount = discount;
+
+          // Lưu lịch sử sử dụng mã
+          usedDiscountCodes.push({
+            userId,
+            code: discount.code,
+            usedAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
+    const newOrder = {
+      id: Date.now(),
+      userId,
+      items,
+      customerInfo,
+      originalTotal: total,
+      discount: appliedDiscount,
+      total: finalTotal,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    };
+
+    orders.push(newOrder);
+
+    res.status(201).json({
+      success: true,
+      message: "Đơn hàng đã được tạo thành công!",
+      order: newOrder,
+    });
+  } catch (error) {
+    console.error("Order creation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tạo đơn hàng!",
+    });
+  }
+});
+
+// Lấy danh sách mã giảm giá (admin only)
+app.get("/api/admin/discounts", checkAdminAuth, (req, res) => {
+  try {
+    res.json({
+      success: true,
+      discounts: discountCodes.map((d) => ({
+        ...d,
+        usedCount: usedDiscountCodes.filter((u) => u.code === d.code).length,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách mã giảm giá!",
+    });
+  }
+});
+
+// Bật/tắt mã giảm giá (admin only)
+app.patch("/api/admin/discounts/:code", checkAdminAuth, (req, res) => {
+  try {
+    const { code } = req.params;
+    const { isActive } = req.body;
+
+    const discountIndex = discountCodes.findIndex(
+      (d) => d.code.toUpperCase() === code.toUpperCase()
+    );
+
+    if (discountIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy mã giảm giá!",
+      });
+    }
+
+    discountCodes[discountIndex].isActive = isActive;
+
+    res.json({
+      success: true,
+      message: `Đã ${isActive ? "bật" : "tắt"} mã giảm giá!`,
+      discount: discountCodes[discountIndex],
+    });
+  } catch (error) {
+    console.error("Update discount error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật mã giảm giá!",
+    });
+  }
+});
+
 // ⚠️ QUAN TRỌNG: Đọc admin credentials từ .env
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "tuan0112";

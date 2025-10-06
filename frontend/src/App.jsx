@@ -10,7 +10,7 @@ import wed201 from "./wed201.png";
 import QR from "./QR.png";
 import avt from "./avt.png";
 import avt2 from "./avt2.png";
-import avt1 from "./avt1.png";
+import avt1 from "./avt1.png"; 
 import {
   ShoppingCart,
   LogOut,
@@ -716,6 +716,227 @@ const getStatusBadge = (status) => {
     </div>
   );
 };
+// PHẦN 1: Thêm state cho discount code (thêm vào sau các state khác)
+const [discountCode, setDiscountCode] = useState("");
+const [appliedDiscount, setAppliedDiscount] = useState(null);
+const [discountError, setDiscountError] = useState("");
+const [checkingDiscount, setCheckingDiscount] = useState(false);
+
+// PHẦN 2: Hàm kiểm tra mã giảm giá
+const handleApplyDiscount = async () => {
+  if (!discountCode.trim()) {
+    setDiscountError("Vui lòng nhập mã giảm giá!");
+    return;
+  }
+
+  if (!currentUser) {
+    setDiscountError("Vui lòng đăng nhập để sử dụng mã giảm giá!");
+    return;
+  }
+
+  setCheckingDiscount(true);
+  setDiscountError("");
+
+  try {
+    const response = await fetch(`${API_URL}/discount/validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code: discountCode.trim(),
+        userId: currentUser.id,
+        orderTotal: totalPrice,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      setAppliedDiscount(data.discount);
+      setDiscountError("");
+      alert(`✅ ${data.message}`);
+    } else {
+      setDiscountError(data.message);
+      setAppliedDiscount(null);
+    }
+  } catch (error) {
+    console.error("Discount validation error:", error);
+    setDiscountError("Lỗi khi kiểm tra mã giảm giá!");
+  } finally {
+    setCheckingDiscount(false);
+  }
+};
+
+// PHẦN 3: Hàm xóa mã giảm giá
+const handleRemoveDiscount = () => {
+  setAppliedDiscount(null);
+  setDiscountCode("");
+  setDiscountError("");
+};
+
+// PHẦN 4: Tính tổng tiền sau giảm giá
+const finalTotal = appliedDiscount 
+  ? Math.max(0, totalPrice - appliedDiscount.value)
+  : totalPrice;
+
+// PHẦN 5: Cập nhật hàm handleCheckout để gửi mã giảm giá
+const handleCheckout = async (e) => {
+  e.preventDefault();
+
+  if (!currentUser) {
+    alert("Vui lòng đăng nhập để thanh toán!");
+    setShowCart(false);
+    setShowLogin(true);
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  const orderData = {
+    userId: currentUser.id,
+    items: [...cart],
+    customerInfo: {
+      name: e.target.customerName.value,
+      phone: e.target.phone.value,
+      email: e.target.customerEmail.value,
+      note: e.target.note.value,
+    },
+    total: totalPrice,
+    discountCode: appliedDiscount?.code || null,
+  };
+
+  try {
+    const response = await fetch(`${API_URL}/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      setCart([]);
+      setAppliedDiscount(null);
+      setDiscountCode("");
+      setShowCart(false);
+      alert("Đơn hàng đã được tạo thành công! Vui lòng kiểm tra email.");
+    } else {
+      alert(data.message || "Tạo đơn hàng thất bại!");
+    }
+  } catch (error) {
+    console.error("Checkout error:", error);
+    alert("Lỗi kết nối server!");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+// PHẦN 6: UI cho mã giảm giá (thêm vào Shopping Cart Modal, sau phần hiển thị giỏ hàng)
+// Đặt ở TRƯỚC phần "Tổng cộng" và form thông tin khách hàng
+
+{/* Mã giảm giá */}
+<div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+  <h4 className="font-bold text-lg text-gray-800 mb-4 flex items-center">
+    🎁 Mã giảm giá
+  </h4>
+  
+  {appliedDiscount ? (
+    <div className="bg-white rounded-lg p-4 border-2 border-green-500">
+      <div className="flex justify-between items-center mb-2">
+        <div>
+          <p className="font-bold text-green-600 text-lg">{appliedDiscount.code}</p>
+          <p className="text-sm text-gray-600">
+            Giảm {appliedDiscount.value.toLocaleString()}đ
+          </p>
+        </div>
+        <button
+          onClick={handleRemoveDiscount}
+          className="text-red-500 hover:text-red-700 font-medium"
+        >
+          ✕ Xóa
+        </button>
+      </div>
+    </div>
+  ) : (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={discountCode}
+          onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+          placeholder="Nhập mã giảm giá (VD: TQ10-CHILL)"
+          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent uppercase"
+        />
+        <button
+          onClick={handleApplyDiscount}
+          disabled={checkingDiscount || !discountCode.trim()}
+          className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-lg hover:shadow-lg transition transform hover:scale-105 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {checkingDiscount ? "..." : "Áp dụng"}
+        </button>
+      </div>
+      
+      {discountError && (
+        <p className="text-red-500 text-sm">{discountError}</p>
+      )}
+      
+      <details className="text-sm">
+        <summary className="cursor-pointer text-purple-600 hover:text-purple-700 font-medium">
+          📋 Danh sách mã giảm giá
+        </summary>
+        <div className="mt-3 space-y-2 bg-white p-4 rounded-lg">
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {[
+              { code: "TQ10-CHILL", value: "10K" },
+              { code: "TQ20-VUIVE", value: "20K" },
+              { code: "TQ30-XINCHAO", value: "30K" },
+              { code: "TQ40-TUANQ", value: "40K" },
+              { code: "TQ50-LIXI", value: "50K" },
+              { code: "TQ60-MEMEME", value: "60K" },
+              { code: "TQ70-MUAHE", value: "70K" },
+              { code: "TQ80-ZUIZUI", value: "80K" },
+              { code: "TQ90-DANGCAP", value: "90K" },
+              { code: "TQ100-QUADINH", value: "100K" },
+            ].map((discount) => (
+              <div
+                key={discount.code}
+                onClick={() => setDiscountCode(discount.code)}
+                className="bg-purple-50 p-2 rounded cursor-pointer hover:bg-purple-100 transition"
+              >
+                <p className="font-bold text-purple-600">{discount.code}</p>
+                <p className="text-gray-600">Giảm {discount.value}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-gray-500 italic mt-3">
+            * Mỗi mã chỉ sử dụng được 1 lần/người
+          </p>
+        </div>
+      </details>
+    </div>
+  )}
+</div>
+
+{/* Cập nhật phần hiển thị tổng tiền */}
+<div className="border-t pt-4 mb-6">
+  {appliedDiscount && (
+    <div className="flex justify-between text-gray-600 mb-2">
+      <span>Tạm tính:</span>
+      <span>{totalPrice.toLocaleString()}đ</span>
+    </div>
+  )}
+  {appliedDiscount && (
+    <div className="flex justify-between text-green-600 mb-2 font-semibold">
+      <span>Giảm giá:</span>
+      <span>-{appliedDiscount.value.toLocaleString()}đ</span>
+    </div>
+  )}
+  <div className="flex justify-between items-center text-xl font-bold">
+    <span>Tổng cộng:</span>
+    <span className="text-blue-600">
+      {finalTotal.toLocaleString()}đ
+    </span>
+  </div>
+</div>
 // ============ ORDER HISTORY COMPONENT ============
 const OrderHistory = ({ userId, onClose }) => {
   const [orders, setOrders] = useState([]);
@@ -1116,18 +1337,70 @@ const [showOrderHistory, setShowOrderHistory] = useState(false);
   // Dữ liệu dịch vụ tiếng Anh
   const englishServices = [
     {
-      id: "luk",
-      name: "Hỗ trợ project LUK",
-      services: ["Edit Video", "Làm Kịch Bản", "Làm Slide", "Hỗ Trợ Debate"],
+      id: "luk-video",
+      name: "Edit Video LUK",
+      code: "LUK-VIDEO",
+      services: ["Chỉnh sửa video chuyên nghiệp", "Thêm phụ đề, hiệu ứng", "Xuất file chất lượng cao"],
       price: 70000,
       icon: "🎬",
       img: avt2,
       bgImg: avt2,
     },
     {
+      id: "luk-script",
+      name: "Làm Kịch Bản LUK",
+      code: "LUK-SCRIPT",
+      services: ["Viết kịch bản theo yêu cầu", "Nội dung logic, mạch lạc", "Phù hợp với thời lượng"],
+      price: 40000,
+      icon: "📝",
+      img: avt2,
+      bgImg: avt2,
+    },
+    {
+      id: "luk-transcript",
+      name: "Làm Transcript LUK",
+      code: "LUK-TRANSCRIPT",
+      services: ["Chuyển audio thành text", "Định dạng chuẩn", "Nhanh chóng, chính xác"],
+      price: 10000,
+      icon: "📄",
+      img: avt2,
+      bgImg: avt2,
+    },
+    {
+      id: "luk-slide",
+      name: "Làm Slide LUK",
+      code: "LUK-SLIDE",
+      services: ["Thiết kế slide đẹp mắt", "Nội dung đầy đủ", "Hỗ trợ trình bày"],
+      price: 70000,
+      icon: "📊",
+      img: avt2,
+      bgImg: avt2,
+    },
+    {
+      id: "luk-debate",
+      name: "Hỗ Trợ Debate LUK",
+      code: "LUK-DEBATE",
+      services: ["Chuẩn bị luận điểm", "Luyện tập tranh luận", "Tư vấn chiến thuật"],
+      price: 150000,
+      icon: "🗣️",
+      img: avt2,
+      bgImg: avt2,
+    },
+    {
+      id: "luk-full-check2",
+      name: "Hỗ Trợ Full Check 2",
+      code: "LUK-FULL",
+      services: ["Kiểm tra toàn bộ project", "Đảm bảo đạt điểm cao", "Hỗ trợ tổng thể"],
+      price: 90000,
+      icon: "✅",
+      img: avt2,
+      bgImg: avt2,
+    },
+    {
       id: "trans",
       name: "Học TRANS",
-      services: ["Hỗ Trợ Tài Liệu Ôn Thi"],
+      code: "TRANS",
+      services: ["Hỗ Trợ Tài Liệu Ôn Thi", "Đề cương chi tiết", "Bài tập có lời giải"],
       price: 70000,
       icon: "📖",
       img: avt1,
