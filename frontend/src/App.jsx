@@ -1144,15 +1144,73 @@ const handleLogin = async (e) => {
                   <a
                     key={idx}
                     href={`#${item.toLowerCase().replace(" ", "")}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(item.toLowerCase().replace(" ", ""))?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                      setMobileMenuOpen(false);
+                    }}
                     className="block text-gray-700 hover:text-blue-600 py-2 font-medium"
                   >
                     {item}
                   </a>
                 )
               )}
-              {!currentUser && (
+              
+              {/* Admin button for mobile */}
+              <button
+                onClick={() => {
+                  setShowAdminDashboard(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left text-gray-700 hover:text-blue-600 py-2 font-medium"
+              >
+                Admin
+              </button>
+
+              {/* Cart button for mobile */}
+              <button
+                onClick={() => {
+                  setShowCart(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg hover:bg-gray-200 transition"
+              >
+                <span className="font-medium text-gray-700">Giỏ hàng</span>
+                <div className="flex items-center space-x-2">
+                  {cart.length > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      {cart.length}
+                    </span>
+                  )}
+                  <ShoppingCart className="w-5 h-5 text-gray-700" />
+                </div>
+              </button>
+
+              {/* User section for mobile */}
+              {currentUser ? (
+                <div className="flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg">
+                  <span className="text-sm text-gray-700">
+                    Xin chào, {currentUser.name}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setCurrentUser(null);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition"
+                  >
+                    <LogOut className="w-5 h-5 text-gray-700" />
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={() => setShowLogin(true)}
+                  onClick={() => {
+                    setShowLogin(true);
+                    setMobileMenuOpen(false);
+                  }}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-md transition transform hover:-translate-y-0.5"
                 >
                   Đăng nhập
