@@ -251,7 +251,10 @@ const deleteUser = async (userId) => {
     console.error('❌ Delete error:', error);
     alert('Lỗi khi xóa người dùng: ' + error.message);
   }
+  
 };
+
+
 const getStatusBadge = (status) => {
     const statusConfig = {
       pending: {
@@ -713,27 +716,7 @@ const getStatusBadge = (status) => {
     </div>
   );
 };
-// ============ MAIN APP COMPONENT ============
-const App = () => {
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [cart, setCart] = useState([]);
-  const [showCart, setShowCart] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-const [showOrderHistory, setShowOrderHistory] = useState(false);
-
-  // Component nhỏ: Form Coursera
-  const CourseraForm = ({ addToCart }) => {
-    const PRICE_PER_MOOC = 30000;
-    const [courseName, setCourseName] = useState("");
-    const [moocCount, setMoocCount] = useState(1);
-    const [error, setError] = useState("");
-
-    // Component hiển thị lịch sử đơn hàng
+// ============ ORDER HISTORY COMPONENT ============
 const OrderHistory = ({ userId, onClose }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -803,7 +786,6 @@ const OrderHistory = ({ userId, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 flex justify-between items-center">
           <div className="flex items-center space-x-3">
             <ShoppingBag className="w-8 h-8" />
@@ -822,7 +804,6 @@ const OrderHistory = ({ userId, onClose }) => {
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12">
@@ -847,7 +828,6 @@ const OrderHistory = ({ userId, onClose }) => {
                   key={order.id}
                   className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
                 >
-                  {/* Order Header */}
                   <div className="flex justify-between items-start mb-4 pb-4 border-b">
                     <div>
                       <h4 className="text-lg font-bold text-gray-800 mb-1">
@@ -861,7 +841,6 @@ const OrderHistory = ({ userId, onClose }) => {
                     {getStatusBadge(order.status)}
                   </div>
 
-                  {/* Order Items */}
                   <div className="space-y-2 mb-4">
                     <h5 className="font-semibold text-gray-700 text-sm">
                       Sản phẩm:
@@ -886,7 +865,6 @@ const OrderHistory = ({ userId, onClose }) => {
                     ))}
                   </div>
 
-                  {/* Order Total */}
                   <div className="flex justify-between items-center pt-4 border-t">
                     <span className="text-gray-700 font-semibold">
                       Tổng cộng:
@@ -896,7 +874,6 @@ const OrderHistory = ({ userId, onClose }) => {
                     </span>
                   </div>
 
-                  {/* Customer Info (collapsed by default) */}
                   <details className="mt-4">
                     <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-700 font-medium">
                       Xem thông tin giao hàng
@@ -928,7 +905,6 @@ const OrderHistory = ({ userId, onClose }) => {
           )}
         </div>
 
-        {/* Footer */}
         <div className="bg-gray-50 p-4 flex justify-end border-t">
           <button
             onClick={onClose}
@@ -941,6 +917,27 @@ const OrderHistory = ({ userId, onClose }) => {
     </div>
   );
 };
+// ============ MAIN APP COMPONENT ============
+const App = () => {
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [showCart, setShowCart] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+const [showOrderHistory, setShowOrderHistory] = useState(false);
+
+  // Component nhỏ: Form Coursera
+  const CourseraForm = ({ addToCart }) => {
+    const PRICE_PER_MOOC = 30000;
+    const [courseName, setCourseName] = useState("");
+    const [moocCount, setMoocCount] = useState(1);
+    const [error, setError] = useState("");
+
+  
     const handleAdd = () => {
       if (!courseName.trim()) {
         setError("⚠️ Vui lòng nhập tên khóa học!");
@@ -2059,13 +2056,7 @@ const handleLogin = async (e) => {
         </div>
         
       )}
-      {/* Order History Modal */}
-{showOrderHistory && currentUser && (
-  <OrderHistory
-    userId={currentUser.id}
-    onClose={() => setShowOrderHistory(false)}
-  />
-)}
+     
     </div>
   );
 };

@@ -90,6 +90,56 @@ app.post("/api/admin/login", (req, res) => {
   }
 });
 
+// Middleware kiểm tra admin token - IMPROVED VERSION
+const checkAdminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  console.log("🔐 Auth check:");
+  console.log("   Header:", authHeader ? "Present" : "Missing");
+
+  if (!authHeader) {
+    console.log("❌ No authorization header");
+    return res.status(401).json({
+      success: false,
+      message: "Không có quyền truy cập! (Missing token)",
+    });
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+
+  if (!token) {
+    console.log("❌ No token after Bearer");
+    return res.status(401).json({
+      success: false,
+      message: "Không có quyền truy cập! (Invalid format)",
+    });
+  }
+
+  try {
+    const decoded = Buffer.from(token, "base64").toString("utf-8");
+    console.log(
+      "   Decoded token starts with:",
+      decoded.substring(0, 20) + "..."
+    );
+
+    if (decoded.startsWith(ADMIN_EMAIL + ":")) {
+      console.log("✅ Admin authenticated");
+      next();
+    } else {
+      console.log("❌ Token does not match admin email");
+      res.status(401).json({
+        success: false,
+        message: "Token không hợp lệ!",
+      });
+    }
+  } catch (error) {
+    console.log("❌ Token decode error:", error.message);
+    res.status(401).json({
+      success: false,
+      message: "Token không hợp lệ!",
+    });
+  }
+};
 // Xóa người dùng (admin only)
 app.delete("/api/admin/users/:id", checkAdminAuth, (req, res) => {
   try {
@@ -156,57 +206,6 @@ app.delete("/api/admin/users/:id", checkAdminAuth, (req, res) => {
     });
   }
 });
-// Middleware kiểm tra admin token - IMPROVED VERSION
-const checkAdminAuth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  console.log("🔐 Auth check:");
-  console.log("   Header:", authHeader ? "Present" : "Missing");
-
-  if (!authHeader) {
-    console.log("❌ No authorization header");
-    return res.status(401).json({
-      success: false,
-      message: "Không có quyền truy cập! (Missing token)",
-    });
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-
-  if (!token) {
-    console.log("❌ No token after Bearer");
-    return res.status(401).json({
-      success: false,
-      message: "Không có quyền truy cập! (Invalid format)",
-    });
-  }
-
-  try {
-    const decoded = Buffer.from(token, "base64").toString("utf-8");
-    console.log(
-      "   Decoded token starts with:",
-      decoded.substring(0, 20) + "..."
-    );
-
-    if (decoded.startsWith(ADMIN_EMAIL + ":")) {
-      console.log("✅ Admin authenticated");
-      next();
-    } else {
-      console.log("❌ Token does not match admin email");
-      res.status(401).json({
-        success: false,
-        message: "Token không hợp lệ!",
-      });
-    }
-  } catch (error) {
-    console.log("❌ Token decode error:", error.message);
-    res.status(401).json({
-      success: false,
-      message: "Token không hợp lệ!",
-    });
-  }
-};
-
 // Lấy dashboard stats
 app.get("/api/admin/stats", checkAdminAuth, (req, res) => {
   try {
