@@ -381,6 +381,7 @@ app.post("/api/register", async (req, res) => {
       user: { id: newUser.id, name: newUser.name, email: newUser.email },
     });
   } catch (error) {
+    console.error(" Register error:", req.body);
     console.error("Register error:", error);
     res.status(500).json({
       success: false,
@@ -607,7 +608,7 @@ app.get("/api/debug/orders", (req, res) => {
     })),
   });
 });
-app.listen(PORT, () => {
+app.listen(process.env.PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📧 Email: ${process.env.EMAIL_USER}`);
   console.log(`🔐 Admin Email: ${ADMIN_EMAIL}`);
