@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 
 const API_URL = "https://webtuanvaquanfpt.onrender.com/api";
-                
+
 // ============ ADMIN DASHBOARD COMPONENT ============
 const AdminDashboard = ({ onBackToMain }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -42,7 +42,9 @@ const AdminDashboard = ({ onBackToMain }) => {
   const [loading, setLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+
   const [stats, setStats] = useState({
+    
     totalOrders: 0,
     totalRevenue: 0,
     totalUsers: 0,
@@ -50,7 +52,6 @@ const AdminDashboard = ({ onBackToMain }) => {
   });
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
-  
   const [activeTab, setActiveTab] = useState("dashboard");
 
   useEffect(() => {
@@ -166,116 +167,89 @@ const AdminDashboard = ({ onBackToMain }) => {
       alert("Lỗi kết nối server!");
     }
   };
-  
-  // Đặt ngay sau hàm updateOrderStatus (khoảng dòng 170)
 
-const deleteOrder = async (orderId) => {
-  // Confirm trước khi xóa
-  if (!window.confirm(`⚠️ Bạn có chắc muốn xóa đơn hàng #${orderId}?\nHành động này không thể hoàn tác!`)) {
-    return;
-  }
-
-  try {
-    console.log('🗑️ Attempting to delete order:', orderId);
-    console.log('🔑 Using token:', adminToken?.substring(0, 20) + '...');
-
-    const response = await fetch(`${API_URL}/admin/orders/${orderId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${adminToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    console.log('📡 Response status:', response.status);
-    const data = await response.json();
-    console.log('📦 Response data:', data);
-
-    if (response.ok && data.success) {
-      // Xóa đơn khỏi state
-      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
-      
-      // Refresh dashboard data
-      fetchDashboardData(adminToken);
-      
-      alert('✅ ' + (data.message || 'Xóa đơn hàng thành công!'));
-      console.log('✅ Order deleted successfully');
-    } else {
-      alert('❌ ' + (data.message || 'Không thể xóa đơn hàng!'));
-      console.error('❌ Delete failed:', data);
+  const deleteOrder = async (orderId) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa đơn hàng #${orderId}?\nHành động này không thể hoàn tác!`)) {
+      return;
     }
-  } catch (error) {
-    console.error('❌ Delete error:', error);
-    alert('Lỗi khi xóa đơn hàng: ' + error.message);
-  }
-};
-const deleteUser = async (userId) => {
-  // Confirm trước khi xóa
-  if (!window.confirm(`⚠️ Bạn có chắc muốn xóa người dùng #${userId}?\n\nHành động này sẽ:\n- Xóa vĩnh viễn người dùng\n- Xóa TẤT CẢ đơn hàng của người dùng này\n\nKhông thể hoàn tác!`)) {
-    return;
-  }
 
-  try {
-    console.log('🗑️ Attempting to delete user:', userId);
+    try {
+      const response = await fetch(`${API_URL}/admin/orders/${orderId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-    const response = await fetch(`${API_URL}/admin/users/${userId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${adminToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
+      const data = await response.json();
 
-    console.log('📡 Response status:', response.status);
-    const data = await response.json();
-    console.log('📦 Response data:', data);
-
-    if (response.ok && data.success) {
-      // Xóa user khỏi state
-      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-      
-      // Refresh dashboard data
-      fetchDashboardData(adminToken);
-      
-      const message = data.deletedOrdersCount > 0 
-        ? `✅ Đã xóa người dùng và ${data.deletedOrdersCount} đơn hàng liên quan!`
-        : `✅ Đã xóa người dùng thành công!`;
-      
-      alert(message);
-      console.log('✅ User deleted successfully');
-    } else {
-      alert('❌ ' + (data.message || 'Không thể xóa người dùng!'));
-      console.error('❌ Delete failed:', data);
+      if (response.ok && data.success) {
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+        fetchDashboardData(adminToken);
+        alert(data.message || 'Xóa đơn hàng thành công!');
+      } else {
+        alert(data.message || 'Không thể xóa đơn hàng!');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Lỗi khi xóa đơn hàng: ' + error.message);
     }
-  } catch (error) {
-    console.error('❌ Delete error:', error);
-    alert('Lỗi khi xóa người dùng: ' + error.message);
-  }
-  
-};
+  };
 
+  const deleteUser = async (userId) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa người dùng #${userId}?\n\nHành động này sẽ:\n- Xóa vĩnh viễn người dùng\n- Xóa TẤT CẢ đơn hàng của người dùng này\n\nKhông thể hoàn tác!`)) {
+      return;
+    }
 
-const getStatusBadge = (status) => {
+    try {
+      const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+        fetchDashboardData(adminToken);
+        const message = data.deletedOrdersCount > 0 
+          ? `Đã xóa người dùng và ${data.deletedOrdersCount} đơn hàng liên quan!`
+          : `Đã xóa người dùng thành công!`;
+        alert(message);
+      } else {
+        alert(data.message || 'Không thể xóa người dùng!');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Lỗi khi xóa người dùng: ' + error.message);
+    }
+  };
+
+  const getStatusBadge = (status) => {
     const statusConfig = {
       pending: {
         bg: "bg-yellow-100",
         text: "text-yellow-800",
-        label: "⏳ Chờ xử lý",
+        label: "Chờ xử lý",
       },
       processing: {
         bg: "bg-blue-100",
         text: "text-blue-800",
-        label: "📦 Đang xử lý",
+        label: "Đang xử lý",
       },
       completed: {
         bg: "bg-green-100",
         text: "text-green-800",
-        label: "✅ Hoàn thành",
+        label: "Hoàn thành",
       },
       cancelled: {
         bg: "bg-red-100",
         text: "text-red-800",
-        label: "❌ Đã hủy",
+        label: "Đã hủy",
       },
     };
 
@@ -351,8 +325,6 @@ const getStatusBadge = (status) => {
       </div>
     );
   }
-
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -618,7 +590,7 @@ const getStatusBadge = (status) => {
                       onClick={() => deleteOrder(order.id)}
                       className="flex-1 min-w-[150px] bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition font-semibold"
                     >
-                      🗑️ Xóa đơn
+                      Xóa đơn
                     </button>
                   </div>
                 </div>
@@ -633,310 +605,89 @@ const getStatusBadge = (status) => {
           </div>
         )}
 
-       {activeTab === "users" && (
-  <div>
-    <h2 className="text-2xl font-bold text-gray-800 mb-6">
-      Quản lý người dùng
-    </h2>
+        {activeTab === "users" && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              Quản lý người dùng
+            </h2>
 
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Tên
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Số đơn hàng
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Tổng chi tiêu
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Ngày đăng ký
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Thao tác
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {user.id}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {user.name}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {user.email}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {user.orderCount || 0} đơn
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm font-semibold text-green-600">
-                  {(user.totalSpent || 0).toLocaleString()}đ
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(user.createdAt).toLocaleDateString("vi-VN")}
-                </td>
-                <td className="px-6 py-4 text-sm">
-                  <button
-                    onClick={() => deleteUser(user.id)}
-                    className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-semibold text-sm"
-                  >
-                    🗑️ Xóa
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {users.length === 0 && (
-        <div className="p-12 text-center">
-          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Chưa có người dùng nào</p>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Tên
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Số đơn hàng
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Tổng chi tiêu
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Ngày đăng ký
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {users.map((user) => (
+                      <tr key={user.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {user.id}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                          {user.name}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {user.email}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {user.orderCount || 0} đơn
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-semibold text-green-600">
+                          {(user.totalSpent || 0).toLocaleString()}đ
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <button
+                            onClick={() => deleteUser(user.id)}
+                            className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-semibold text-sm"
+                          >
+                            Xóa
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {users.length === 0 && (
+                <div className="p-12 text-center">
+                  <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">Chưa có người dùng nào</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 };
-// PHẦN 1: Thêm state cho discount code (thêm vào sau các state khác)
-const [discountCode, setDiscountCode] = useState("");
-const [appliedDiscount, setAppliedDiscount] = useState(null);
-const [discountError, setDiscountError] = useState("");
-const [checkingDiscount, setCheckingDiscount] = useState(false);
-
-// PHẦN 2: Hàm kiểm tra mã giảm giá
-const handleApplyDiscount = async () => {
-  if (!discountCode.trim()) {
-    setDiscountError("Vui lòng nhập mã giảm giá!");
-    return;
-  }
-
-  if (!currentUser) {
-    setDiscountError("Vui lòng đăng nhập để sử dụng mã giảm giá!");
-    return;
-  }
-
-  setCheckingDiscount(true);
-  setDiscountError("");
-
-  try {
-    const response = await fetch(`${API_URL}/discount/validate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        code: discountCode.trim(),
-        userId: currentUser.id,
-        orderTotal: totalPrice,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      setAppliedDiscount(data.discount);
-      setDiscountError("");
-      alert(`✅ ${data.message}`);
-    } else {
-      setDiscountError(data.message);
-      setAppliedDiscount(null);
-    }
-  } catch (error) {
-    console.error("Discount validation error:", error);
-    setDiscountError("Lỗi khi kiểm tra mã giảm giá!");
-  } finally {
-    setCheckingDiscount(false);
-  }
-};
-
-// PHẦN 3: Hàm xóa mã giảm giá
-const handleRemoveDiscount = () => {
-  setAppliedDiscount(null);
-  setDiscountCode("");
-  setDiscountError("");
-};
-
-// PHẦN 4: Tính tổng tiền sau giảm giá
-const finalTotal = appliedDiscount 
-  ? Math.max(0, totalPrice - appliedDiscount.value)
-  : totalPrice;
-
-// PHẦN 5: Cập nhật hàm handleCheckout để gửi mã giảm giá
-const handleCheckout = async (e) => {
-  e.preventDefault();
-
-  if (!currentUser) {
-    alert("Vui lòng đăng nhập để thanh toán!");
-    setShowCart(false);
-    setShowLogin(true);
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  const orderData = {
-    userId: currentUser.id,
-    items: [...cart],
-    customerInfo: {
-      name: e.target.customerName.value,
-      phone: e.target.phone.value,
-      email: e.target.customerEmail.value,
-      note: e.target.note.value,
-    },
-    total: totalPrice,
-    discountCode: appliedDiscount?.code || null,
-  };
-
-  try {
-    const response = await fetch(`${API_URL}/orders`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderData),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      setCart([]);
-      setAppliedDiscount(null);
-      setDiscountCode("");
-      setShowCart(false);
-      alert("Đơn hàng đã được tạo thành công! Vui lòng kiểm tra email.");
-    } else {
-      alert(data.message || "Tạo đơn hàng thất bại!");
-    }
-  } catch (error) {
-    console.error("Checkout error:", error);
-    alert("Lỗi kết nối server!");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-// PHẦN 6: UI cho mã giảm giá (thêm vào Shopping Cart Modal, sau phần hiển thị giỏ hàng)
-// Đặt ở TRƯỚC phần "Tổng cộng" và form thông tin khách hàng
-
-{/* Mã giảm giá */}
-<div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
-  <h4 className="font-bold text-lg text-gray-800 mb-4 flex items-center">
-    🎁 Mã giảm giá
-  </h4>
-  
-  {appliedDiscount ? (
-    <div className="bg-white rounded-lg p-4 border-2 border-green-500">
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <p className="font-bold text-green-600 text-lg">{appliedDiscount.code}</p>
-          <p className="text-sm text-gray-600">
-            Giảm {appliedDiscount.value.toLocaleString()}đ
-          </p>
-        </div>
-        <button
-          onClick={handleRemoveDiscount}
-          className="text-red-500 hover:text-red-700 font-medium"
-        >
-          ✕ Xóa
-        </button>
-      </div>
-    </div>
-  ) : (
-    <div className="space-y-3">
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={discountCode}
-          onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-          placeholder="Nhập mã giảm giá (VD: TQ10-CHILL)"
-          className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent uppercase"
-        />
-        <button
-          onClick={handleApplyDiscount}
-          disabled={checkingDiscount || !discountCode.trim()}
-          className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-lg hover:shadow-lg transition transform hover:scale-105 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {checkingDiscount ? "..." : "Áp dụng"}
-        </button>
-      </div>
-      
-      {discountError && (
-        <p className="text-red-500 text-sm">{discountError}</p>
-      )}
-      
-      <details className="text-sm">
-        <summary className="cursor-pointer text-purple-600 hover:text-purple-700 font-medium">
-          📋 Danh sách mã giảm giá
-        </summary>
-        <div className="mt-3 space-y-2 bg-white p-4 rounded-lg">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {[
-              { code: "TQ10-CHILL", value: "10K" },
-              { code: "TQ20-VUIVE", value: "20K" },
-              { code: "TQ30-XINCHAO", value: "30K" },
-              { code: "TQ40-TUANQ", value: "40K" },
-              { code: "TQ50-LIXI", value: "50K" },
-              { code: "TQ60-MEMEME", value: "60K" },
-              { code: "TQ70-MUAHE", value: "70K" },
-              { code: "TQ80-ZUIZUI", value: "80K" },
-              { code: "TQ90-DANGCAP", value: "90K" },
-              { code: "TQ100-QUADINH", value: "100K" },
-            ].map((discount) => (
-              <div
-                key={discount.code}
-                onClick={() => setDiscountCode(discount.code)}
-                className="bg-purple-50 p-2 rounded cursor-pointer hover:bg-purple-100 transition"
-              >
-                <p className="font-bold text-purple-600">{discount.code}</p>
-                <p className="text-gray-600">Giảm {discount.value}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-gray-500 italic mt-3">
-            * Mỗi mã chỉ sử dụng được 1 lần/người
-          </p>
-        </div>
-      </details>
-    </div>
-  )}
-</div>
-
-{/* Cập nhật phần hiển thị tổng tiền */}
-<div className="border-t pt-4 mb-6">
-  {appliedDiscount && (
-    <div className="flex justify-between text-gray-600 mb-2">
-      <span>Tạm tính:</span>
-      <span>{totalPrice.toLocaleString()}đ</span>
-    </div>
-  )}
-  {appliedDiscount && (
-    <div className="flex justify-between text-green-600 mb-2 font-semibold">
-      <span>Giảm giá:</span>
-      <span>-{appliedDiscount.value.toLocaleString()}đ</span>
-    </div>
-  )}
-  <div className="flex justify-between items-center text-xl font-bold">
-    <span>Tổng cộng:</span>
-    <span className="text-blue-600">
-      {finalTotal.toLocaleString()}đ
-    </span>
-  </div>
-</div>
 // ============ ORDER HISTORY COMPONENT ============
 const OrderHistory = ({ userId, onClose }) => {
   const [orders, setOrders] = useState([]);
@@ -2341,5 +2092,6 @@ const handleLogin = async (e) => {
     </div>
   );
 };
+
 
 export default App;
