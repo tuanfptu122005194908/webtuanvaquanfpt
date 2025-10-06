@@ -90,6 +90,72 @@ app.post("/api/admin/login", (req, res) => {
   }
 });
 
+// Xóa người dùng (admin only)
+app.delete("/api/admin/users/:id", checkAdminAuth, (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+
+    console.log("🔍 Delete user request received:");
+    console.log("   User ID from params:", req.params.id);
+    console.log("   Converted to number:", userId);
+    console.log("   Total users in DB:", users.length);
+
+    if (isNaN(userId)) {
+      console.log("❌ Invalid user ID");
+      return res.status(400).json({
+        success: false,
+        message: "ID người dùng không hợp lệ!",
+      });
+    }
+
+    const userIndex = users.findIndex((u) => u.id === userId);
+
+    console.log("   User index found:", userIndex);
+
+    if (userIndex === -1) {
+      console.log("❌ User not found");
+      console.log(
+        "   Available user IDs:",
+        users.map((u) => u.id)
+      );
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng!",
+      });
+    }
+
+    const deletedUser = users[userIndex];
+
+    // Xóa tất cả đơn hàng của user này
+    const userOrders = orders.filter((o) => o.userId === userId);
+    orders = orders.filter((o) => o.userId !== userId);
+
+    // Xóa user
+    users.splice(userIndex, 1);
+
+    console.log(`✅ Người dùng #${userId} đã bị xóa bởi admin`);
+    console.log(`   Đã xóa ${userOrders.length} đơn hàng liên quan`);
+    console.log(`   Remaining users: ${users.length}`);
+
+    res.json({
+      success: true,
+      message: "Xóa người dùng thành công!",
+      deletedUser: {
+        id: deletedUser.id,
+        name: deletedUser.name,
+        email: deletedUser.email,
+      },
+      deletedOrdersCount: userOrders.length,
+    });
+  } catch (error) {
+    console.error("❌ Delete user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xóa người dùng!",
+      error: error.message,
+    });
+  }
+});
 // Middleware kiểm tra admin token - IMPROVED VERSION
 const checkAdminAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -353,6 +419,36 @@ app.patch("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
 });
 
 // ===================== USER ROUTES =====================
+// Lấy đơn hàng của user hiện tại
+app.get("/api/users/:userId/orders", (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID người dùng không hợp lệ!",
+      });
+    }
+
+    // Lọc đơn hàng của user
+    const userOrders = orders
+      .filter((o) => o.userId === userId)
+      .sort((a, b) => b.id - a.id); // Sắp xếp mới nhất trước
+
+    res.json({
+      success: true,
+      orders: userOrders,
+      total: userOrders.length,
+    });
+  } catch (error) {
+    console.error("Get user orders error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách đơn hàng!",
+    });
+  }
+});
 
 app.post("/api/register", async (req, res) => {
   try {

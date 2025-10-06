@@ -209,6 +209,49 @@ const deleteOrder = async (orderId) => {
     alert('Lỗi khi xóa đơn hàng: ' + error.message);
   }
 };
+const deleteUser = async (userId) => {
+  // Confirm trước khi xóa
+  if (!window.confirm(`⚠️ Bạn có chắc muốn xóa người dùng #${userId}?\n\nHành động này sẽ:\n- Xóa vĩnh viễn người dùng\n- Xóa TẤT CẢ đơn hàng của người dùng này\n\nKhông thể hoàn tác!`)) {
+    return;
+  }
+
+  try {
+    console.log('🗑️ Attempting to delete user:', userId);
+
+    const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('📡 Response status:', response.status);
+    const data = await response.json();
+    console.log('📦 Response data:', data);
+
+    if (response.ok && data.success) {
+      // Xóa user khỏi state
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+      
+      // Refresh dashboard data
+      fetchDashboardData(adminToken);
+      
+      const message = data.deletedOrdersCount > 0 
+        ? `✅ Đã xóa người dùng và ${data.deletedOrdersCount} đơn hàng liên quan!`
+        : `✅ Đã xóa người dùng thành công!`;
+      
+      alert(message);
+      console.log('✅ User deleted successfully');
+    } else {
+      alert('❌ ' + (data.message || 'Không thể xóa người dùng!'));
+      console.error('❌ Delete failed:', data);
+    }
+  } catch (error) {
+    console.error('❌ Delete error:', error);
+    alert('Lỗi khi xóa người dùng: ' + error.message);
+  }
+};
 const getStatusBadge = (status) => {
     const statusConfig = {
       pending: {
@@ -587,74 +630,85 @@ const getStatusBadge = (status) => {
           </div>
         )}
 
-        {activeTab === "users" && (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              Quản lý người dùng
-            </h2>
+       {activeTab === "users" && (
+  <div>
+    <h2 className="text-2xl font-bold text-gray-800 mb-6">
+      Quản lý người dùng
+    </h2>
 
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Tên
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Số đơn hàng
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Tổng chi tiêu
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Ngày đăng ký
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {user.id}
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                          {user.name}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {user.email}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {user.orderCount || 0} đơn
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-semibold text-green-600">
-                          {(user.totalSpent || 0).toLocaleString()}đ
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {new Date(user.createdAt).toLocaleDateString("vi-VN")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {users.length === 0 && (
-                <div className="p-12 text-center">
-                  <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Chưa có người dùng nào</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Tên
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Số đơn hàng
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Tổng chi tiêu
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Ngày đăng ký
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Thao tác
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {users.map((user) => (
+              <tr key={user.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 text-sm text-gray-900">
+                  {user.id}
+                </td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                  {user.name}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  {user.email}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {user.orderCount || 0} đơn
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm font-semibold text-green-600">
+                  {(user.totalSpent || 0).toLocaleString()}đ
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                </td>
+                <td className="px-6 py-4 text-sm">
+                  <button
+                    onClick={() => deleteUser(user.id)}
+                    className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-semibold text-sm"
+                  >
+                    🗑️ Xóa
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {users.length === 0 && (
+        <div className="p-12 text-center">
+          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Chưa có người dùng nào</p>
+        </div>
+      )}
+    </div>
+  </div>
+)}
       </main>
     </div>
   );
@@ -670,6 +724,7 @@ const App = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+const [showOrderHistory, setShowOrderHistory] = useState(false);
 
   // Component nhỏ: Form Coursera
   const CourseraForm = ({ addToCart }) => {
@@ -678,6 +733,214 @@ const App = () => {
     const [moocCount, setMoocCount] = useState(1);
     const [error, setError] = useState("");
 
+    // Component hiển thị lịch sử đơn hàng
+const OrderHistory = ({ userId, onClose }) => {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserOrders();
+  }, [userId]);
+
+  const fetchUserOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/users/${userId}/orders`);
+      const data = await response.json();
+
+      if (data.success) {
+        setOrders(data.orders);
+      }
+    } catch (error) {
+      console.error("Fetch orders error:", error);
+      alert("Không thể tải lịch sử đơn hàng!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: {
+        bg: "bg-yellow-100",
+        text: "text-yellow-800",
+        label: "⏳ Chờ xử lý",
+        icon: Clock,
+      },
+      processing: {
+        bg: "bg-blue-100",
+        text: "text-blue-800",
+        label: "📦 Đang xử lý",
+        icon: Package,
+      },
+      completed: {
+        bg: "bg-green-100",
+        text: "text-green-800",
+        label: "✅ Hoàn thành",
+        icon: CheckCircle,
+      },
+      cancelled: {
+        bg: "bg-red-100",
+        text: "text-red-800",
+        label: "❌ Đã hủy",
+        icon: XCircle,
+      },
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+    const Icon = config.icon;
+
+    return (
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}
+      >
+        <Icon className="w-4 h-4 mr-1" />
+        {config.label}
+      </span>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <ShoppingBag className="w-8 h-8" />
+            <div>
+              <h3 className="text-2xl font-bold">Lịch sử đơn hàng</h3>
+              <p className="text-blue-100 text-sm">
+                Tổng cộng: {orders.length} đơn hàng
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="hover:bg-white/20 p-2 rounded-lg transition"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+              <p className="text-gray-600">Đang tải dữ liệu...</p>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="text-center py-12">
+              <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">Bạn chưa có đơn hàng nào</p>
+              <button
+                onClick={onClose}
+                className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                Đi mua sắm
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                >
+                  {/* Order Header */}
+                  <div className="flex justify-between items-start mb-4 pb-4 border-b">
+                    <div>
+                      <h4 className="text-lg font-bold text-gray-800 mb-1">
+                        Đơn hàng #{order.id}
+                      </h4>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        {new Date(order.createdAt).toLocaleString("vi-VN")}
+                      </div>
+                    </div>
+                    {getStatusBadge(order.status)}
+                  </div>
+
+                  {/* Order Items */}
+                  <div className="space-y-2 mb-4">
+                    <h5 className="font-semibold text-gray-700 text-sm">
+                      Sản phẩm:
+                    </h5>
+                    {order.items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center bg-gray-50 p-3 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-800">
+                            {item.name}
+                          </p>
+                          {item.code && (
+                            <p className="text-xs text-gray-500">{item.code}</p>
+                          )}
+                        </div>
+                        <span className="font-semibold text-blue-600">
+                          {item.price.toLocaleString()}đ
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Order Total */}
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <span className="text-gray-700 font-semibold">
+                      Tổng cộng:
+                    </span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      {order.total.toLocaleString()}đ
+                    </span>
+                  </div>
+
+                  {/* Customer Info (collapsed by default) */}
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      Xem thông tin giao hàng
+                    </summary>
+                    <div className="mt-3 bg-gray-50 p-4 rounded-lg space-y-1 text-sm">
+                      <p className="text-gray-700">
+                        <span className="font-medium">Người nhận:</span>{" "}
+                        {order.customerInfo.name}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Điện thoại:</span>{" "}
+                        {order.customerInfo.phone}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Email:</span>{" "}
+                        {order.customerInfo.email}
+                      </p>
+                      {order.customerInfo.note && (
+                        <p className="text-gray-700">
+                          <span className="font-medium">Ghi chú:</span>{" "}
+                          {order.customerInfo.note}
+                        </p>
+                      )}
+                    </div>
+                  </details>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="bg-gray-50 p-4 flex justify-end border-t">
+          <button
+            onClick={onClose}
+            className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
     const handleAdd = () => {
       if (!courseName.trim()) {
         setError("⚠️ Vui lòng nhập tên khóa học!");
@@ -1100,27 +1363,34 @@ const handleLogin = async (e) => {
                 )}
               </button>
 
-              {/* User */}
-              {currentUser ? (
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-700">
-                    Xin chào, {currentUser.name}
-                  </span>
-                  <button
-                    onClick={() => setCurrentUser(null)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition"
-                  >
-                    <LogOut className="w-5 h-5 text-gray-700" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowLogin(true)}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition transform hover:-translate-y-0.5"
-                >
-                  Đăng nhập
-                </button>
-              )}
+             {/* User */}
+{currentUser ? (
+  <div className="flex items-center space-x-3">
+    <button
+      onClick={() => setShowOrderHistory(true)}
+      className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition px-3 py-2 rounded-lg hover:bg-gray-100"
+    >
+      <ShoppingBag className="w-5 h-5" />
+      <span className="text-sm font-medium">Đơn hàng</span>
+    </button>
+    <span className="text-sm text-gray-700">
+      Xin chào, {currentUser.name}
+    </span>
+    <button
+      onClick={handleLogout}
+      className="p-2 hover:bg-gray-100 rounded-lg transition"
+    >
+      <LogOut className="w-5 h-5 text-gray-700" />
+    </button>
+  </div>
+) : (
+  <button
+    onClick={() => setShowLogin(true)}
+    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition transform hover:-translate-y-0.5"
+  >
+    Đăng nhập
+  </button>
+)}
             </div>
 
             {/* Mobile Menu Button */}
@@ -1189,33 +1459,45 @@ const handleLogin = async (e) => {
                 </div>
               </button>
 
-              {/* User section for mobile */}
-              {currentUser ? (
-                <div className="flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg">
-                  <span className="text-sm text-gray-700">
-                    Xin chào, {currentUser.name}
-                  </span>
-                  <button
-                    onClick={() => {
-                      setCurrentUser(null);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="p-2 hover:bg-gray-200 rounded-lg transition"
-                  >
-                    <LogOut className="w-5 h-5 text-gray-700" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setShowLogin(true);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-md transition transform hover:-translate-y-0.5"
-                >
-                  Đăng nhập
-                </button>
-              )}
+             {/* User section for mobile */}
+{currentUser ? (
+  <div className="space-y-2">
+    <button
+      onClick={() => {
+        setShowOrderHistory(true);
+        setMobileMenuOpen(false);
+      }}
+      className="w-full flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-3 rounded-lg hover:bg-blue-100 transition"
+    >
+      <ShoppingBag className="w-5 h-5" />
+      <span className="font-medium">Lịch sử đơn hàng</span>
+    </button>
+    <div className="flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg">
+      <span className="text-sm text-gray-700">
+        Xin chào, {currentUser.name}
+      </span>
+      <button
+        onClick={() => {
+          handleLogout();
+          setMobileMenuOpen(false);
+        }}
+        className="p-2 hover:bg-gray-200 rounded-lg transition"
+      >
+        <LogOut className="w-5 h-5 text-gray-700" />
+      </button>
+    </div>
+  </div>
+) : (
+  <button
+    onClick={() => {
+      setShowLogin(true);
+      setMobileMenuOpen(false);
+    }}
+    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-md transition transform hover:-translate-y-0.5"
+  >
+    Đăng nhập
+  </button>
+)}
             </div>
           )}
         </nav>
@@ -1775,7 +2057,15 @@ const handleLogin = async (e) => {
             </div>
           </div>
         </div>
+        
       )}
+      {/* Order History Modal */}
+{showOrderHistory && currentUser && (
+  <OrderHistory
+    userId={currentUser.id}
+    onClose={() => setShowOrderHistory(false)}
+  />
+)}
     </div>
   );
 };
