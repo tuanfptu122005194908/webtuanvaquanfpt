@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from "react";
+import mas291 from "./mas291.png";
+import csd201 from "./csd201.png";
+import mae101 from "./mae101.png";
+import mad101 from "./mad101.png";
+import dbi202 from "./dbi202.png";
+import lab211 from "./lab211.png";
+import pro192 from "./pro192.png";
+import wed201 from "./wed201.png";
+import QR from "./QR.png";
+import avt from "./avt.png";
+import avt2 from "./avt2.png";
+import avt1 from "./avt1.png";
 import {
   ShoppingCart,
   LogOut,
@@ -729,8 +741,8 @@ const App = () => {
       name: "Mathematics for Engineers",
       desc: "Môn Toán ứng dụng cho kỹ sư, cung cấp kiến thức toán học nền tảng để giải quyết các bài toán kỹ thuật.",
       price: 150000,
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: mae101,
+      bgImg: mae101,
     },
     {
       id: 2,
@@ -738,8 +750,8 @@ const App = () => {
       name: "Mathematical Statistics",
       desc: "Môn Xác suất – Thống kê, giúp sinh viên phân tích và xử lý dữ liệu, áp dụng trong CNTT và phần mềm.",
       price: 150000,
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: mas291,
+      bgImg: mas291,
     },
     {
       id: 3,
@@ -747,8 +759,8 @@ const App = () => {
       name: "Discrete Mathematics",
       desc: "Môn Toán rời rạc, trang bị tư duy logic, tập hợp, quan hệ, đồ thị, ứng dụng trong cấu trúc dữ liệu và thuật toán.",
       price: 150000,
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: mad101,
+      bgImg: mad101,
     },
     {
       id: 4,
@@ -756,8 +768,8 @@ const App = () => {
       name: "Object-Oriented Programming with Java",
       desc: "Môn Lập trình hướng đối tượng, làm quen với Java, class, object, kế thừa, đa hình.",
       price: 250000,
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: pro192,
+      bgImg: pro192,
     },
     {
       id: 5,
@@ -765,8 +777,8 @@ const App = () => {
       name: "Advanced Programming Lab",
       desc: "Môn Thực hành lập trình nâng cao, rèn luyện kỹ năng code Java thông qua bài tập và dự án nhỏ.",
       price: 250000,
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: lab211,
+      bgImg: lab211,
     },
     {
       id: 6,
@@ -774,8 +786,8 @@ const App = () => {
       name: "Web Design & Development",
       desc: "Môn Phát triển Web, học HTML, CSS, JavaScript và xây dựng website cơ bản đến nâng cao.",
       price: 250000,
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: wed201,
+      bgImg: wed201,
     },
     {
       id: 7,
@@ -783,8 +795,8 @@ const App = () => {
       name: "Database Systems",
       desc: "Môn Cơ sở dữ liệu, học SQL, thiết kế và quản lý hệ thống cơ sở dữ liệu quan hệ.",
       price: 250000,
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: dbi202,
+      bgImg: dbi202,
     },
     {
       id: 8,
@@ -792,8 +804,8 @@ const App = () => {
       name: "Data Structures & Algorithms",
       desc: "Môn Cấu trúc dữ liệu và giải thuật, học về mảng, danh sách, ngăn xếp, cây, đồ thị và thuật toán tìm kiếm/sắp xếp.",
       price: 250000,
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: csd201,
+      bgImg: csd201,
     },
   ];
 
@@ -801,12 +813,12 @@ const App = () => {
   const englishServices = [
     {
       id: "luk",
-      name: "Học LUK",
+      name: "Hỗ trợ project LUK",
       services: ["Edit Video", "Làm Kịch Bản", "Làm Slide", "Hỗ Trợ Debate"],
       price: 70000,
       icon: "🎬",
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: avt2,
+      bgImg: avt2,
     },
     {
       id: "trans",
@@ -814,8 +826,8 @@ const App = () => {
       services: ["Hỗ Trợ Tài Liệu Ôn Thi"],
       price: 70000,
       icon: "📖",
-      img: "/images/logo.jpg",
-      bgImg: "/images/logo.jpg",
+      img: avt1,
+      bgImg: avt1,
     },
   ];
 
@@ -1107,33 +1119,37 @@ const handleLogin = async (e) => {
         </nav>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-50 via-white to-pink-50 text-gray-800 py-24">
-        <div className="container mx-auto px-6 text-center relative z-10">
-          {/* Heading */}
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-300 bg-clip-text text-transparent animate-gradient-x">
-            Nâng cao kiến thức, <br className="hidden md:block" /> Vững bước
-            tương lai
-          </h2>
+     <section
+  className="relative bg-gradient-to-br from-blue-50 via-white to-pink-50 text-gray-800 py-24"
+  style={{
+    backgroundImage: `url(${avt})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  }}
+>
+  {/* Overlay để làm mờ ảnh */}
+ <div className="absolute inset-0 bg-black/30"></div> 
 
-          {/* Subheading */}
-          <p className="text-lg md:text-xl mb-10 text-gray-700 opacity-90">
-            Khóa học chất lượng cao với giá cả phải chăng
-          </p>
+  <div className="container mx-auto px-6 text-center relative z-10">
+    {/* Heading */}
+    <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight text-white drop-shadow-lg">
+  Nâng cao kiến thức, <br className="hidden md:block" /> Vững bước tương lai
+</h2>
 
-          {/* Call to Action */}
-          <a
-            href="#courses"
-            className="inline-block bg-gradient-to-r from-purple-500 to-pink-400 text-white px-10 py-4 rounded-xl font-semibold shadow-lg hover:shadow-2xl transition transform hover:scale-105 hover:-translate-y-1"
-          >
-            Khám phá ngay
-          </a>
+    {/* Subheading */}
+    <p className="text-lg md:text-xl mb-10 text-gray-100 opacity-90">
+      Khóa học chất lượng cao với giá cả phải chăng
+    </p>
 
-          {/* Optional decorative shapes */}
-          <div className="absolute top-0 left-0 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply opacity-30 animate-pulse-slow"></div>
-          <div className="absolute bottom-0 right-0 w-48 h-48 bg-pink-200 rounded-full mix-blend-multiply opacity-30 animate-pulse-slow"></div>
-        </div>
-      </section>
+    {/* Call to Action */}
+    <a
+      href="#courses"
+      className="inline-block bg-gradient-to-r from-purple-500 to-pink-400 text-white px-10 py-4 rounded-xl font-semibold shadow-lg hover:shadow-2xl transition transform hover:scale-105 hover:-translate-y-1"
+    >
+      Khám phá ngay
+    </a>
+  </div>
+</section>
 
       {/* Courses Section */}
       <section id="courses" className="py-20 font-sans bg-gray-50">
@@ -1509,11 +1525,12 @@ const handleLogin = async (e) => {
                         <p className="text-sm text-gray-600 mb-2">
                           QR Code thanh toán sẽ hiển thị tại đây
                         </p>
-                        <img
-                          src="./qr.png"
-                          alt="QR Code thanh toán"
-                          className="w-48 h-48 mx-auto rounded-lg"
-                        />
+                       <img
+  src={QR}
+  alt="QR Code thanh toán"
+  className="w-full max-w-sm mx-auto rounded-lg object-contain"
+/>
+
                       </div>
                     </div>
 
