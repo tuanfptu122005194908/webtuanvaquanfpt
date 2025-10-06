@@ -33,7 +33,7 @@ import {
   Facebook,
 } from "lucide-react";
 
-const API_URL = "https://webtuanvaquanfpt.onrender.com";
+const API_URL = "https://webtuanvaquanfpt-frontend.onrender.com/api";
 
 // ============ ADMIN DASHBOARD COMPONENT ============
 const AdminDashboard = ({ onBackToMain }) => {
