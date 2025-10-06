@@ -91,28 +91,50 @@ app.post("/api/admin/login", (req, res) => {
   }
 });
 
-// Middleware kiểm tra admin token
+// Middleware kiểm tra admin token - IMPROVED VERSION
 const checkAdminAuth = (req, res, next) => {
-  const token = req.headers.authorization?.replace("Bearer ", "");
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
+  console.log("🔐 Auth check:");
+  console.log("   Header:", authHeader ? "Present" : "Missing");
+
+  if (!authHeader) {
+    console.log("❌ No authorization header");
     return res.status(401).json({
       success: false,
-      message: "Không có quyền truy cập!",
+      message: "Không có quyền truy cập! (Missing token)",
+    });
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+
+  if (!token) {
+    console.log("❌ No token after Bearer");
+    return res.status(401).json({
+      success: false,
+      message: "Không có quyền truy cập! (Invalid format)",
     });
   }
 
   try {
     const decoded = Buffer.from(token, "base64").toString("utf-8");
+    console.log(
+      "   Decoded token starts with:",
+      decoded.substring(0, 20) + "..."
+    );
+
     if (decoded.startsWith(ADMIN_EMAIL + ":")) {
+      console.log("✅ Admin authenticated");
       next();
     } else {
+      console.log("❌ Token does not match admin email");
       res.status(401).json({
         success: false,
         message: "Token không hợp lệ!",
       });
     }
   } catch (error) {
+    console.log("❌ Token decode error:", error.message);
     res.status(401).json({
       success: false,
       message: "Token không hợp lệ!",
@@ -144,14 +166,50 @@ app.get("/api/admin/stats", checkAdminAuth, (req, res) => {
     });
   }
 });
+// Endpoint kiểm tra một đơn hàng cụ thể
+app.get("/api/admin/orders/:id/check", checkAdminAuth, (req, res) => {
+  const orderId = Number(req.params.id);
+  const order = orders.find((o) => o.id === orderId);
 
-// Xóa đơn hàng (admin only)
+  res.json({
+    requestedId: req.params.id,
+    convertedId: orderId,
+    found: !!order,
+    order: order || null,
+    totalOrders: orders.length,
+    allOrderIds: orders.map((o) => o.id),
+  });
+});
+// Xóa đơn hàng (admin only) - FIXED VERSION
 app.delete("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
   try {
-    const orderId = parseInt(req.params.id);
+    // FIX 1: Chuyển sang Number thay vì parseInt để xử lý số lớn
+    const orderId = Number(req.params.id);
+
+    console.log("🔍 Delete request received:");
+    console.log("   Order ID from params:", req.params.id);
+    console.log("   Converted to number:", orderId);
+    console.log("   Total orders in DB:", orders.length);
+
+    // FIX 2: Kiểm tra ID hợp lệ
+    if (isNaN(orderId)) {
+      console.log("❌ Invalid order ID");
+      return res.status(400).json({
+        success: false,
+        message: "ID đơn hàng không hợp lệ!",
+      });
+    }
+
     const orderIndex = orders.findIndex((o) => o.id === orderId);
 
+    console.log("   Order index found:", orderIndex);
+
     if (orderIndex === -1) {
+      console.log("❌ Order not found");
+      console.log(
+        "   Available order IDs:",
+        orders.map((o) => o.id)
+      );
       return res.status(404).json({
         success: false,
         message: "Không tìm thấy đơn hàng!",
@@ -159,9 +217,12 @@ app.delete("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
     }
 
     const deletedOrder = orders[orderIndex];
+
+    // FIX 3: Xóa đơn hàng
     orders.splice(orderIndex, 1);
 
-    console.log(`🗑️ Đơn hàng #${orderId} đã bị xóa bởi admin`);
+    console.log(`✅ Đơn hàng #${orderId} đã bị xóa bởi admin`);
+    console.log(`   Remaining orders: ${orders.length}`);
 
     res.json({
       success: true,
@@ -170,17 +231,18 @@ app.delete("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
         id: deletedOrder.id,
         customerName: deletedOrder.customerInfo.name,
         total: deletedOrder.total,
+        status: deletedOrder.status,
       },
     });
   } catch (error) {
-    console.error("Delete order error:", error);
+    console.error("❌ Delete order error:", error);
     res.status(500).json({
       success: false,
       message: "Lỗi khi xóa đơn hàng!",
+      error: error.message,
     });
   }
 });
-
 // Lấy tất cả đơn hàng (admin only)
 app.get("/api/admin/orders", checkAdminAuth, (req, res) => {
   try {

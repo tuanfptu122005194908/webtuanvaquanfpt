@@ -50,6 +50,7 @@ const AdminDashboard = ({ onBackToMain }) => {
   });
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
+  
   const [activeTab, setActiveTab] = useState("dashboard");
 
   useEffect(() => {
@@ -165,6 +166,49 @@ const AdminDashboard = ({ onBackToMain }) => {
       alert("Lỗi kết nối server!");
     }
   };
+  
+  // Đặt ngay sau hàm updateOrderStatus (khoảng dòng 170)
+
+const deleteOrder = async (orderId) => {
+  // Confirm trước khi xóa
+  if (!window.confirm(`⚠️ Bạn có chắc muốn xóa đơn hàng #${orderId}?\nHành động này không thể hoàn tác!`)) {
+    return;
+  }
+
+  try {
+    console.log('🗑️ Attempting to delete order:', orderId);
+    console.log('🔑 Using token:', adminToken?.substring(0, 20) + '...');
+
+    const response = await fetch(`${API_URL}/admin/orders/${orderId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('📡 Response status:', response.status);
+    const data = await response.json();
+    console.log('📦 Response data:', data);
+
+    if (response.ok && data.success) {
+      // Xóa đơn khỏi state
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+      
+      // Refresh dashboard data
+      fetchDashboardData(adminToken);
+      
+      alert('✅ ' + (data.message || 'Xóa đơn hàng thành công!'));
+      console.log('✅ Order deleted successfully');
+    } else {
+      alert('❌ ' + (data.message || 'Không thể xóa đơn hàng!'));
+      console.error('❌ Delete failed:', data);
+    }
+  } catch (error) {
+    console.error('❌ Delete error:', error);
+    alert('Lỗi khi xóa đơn hàng: ' + error.message);
+  }
+};
 const getStatusBadge = (status) => {
     const statusConfig = {
       pending: {
