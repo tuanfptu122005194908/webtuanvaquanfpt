@@ -2056,7 +2056,15 @@ const handleLogin = async (e) => {
         </div>
         
       )}
-     
+
+      
+      {/* Order History Modal */}
+      {showOrderHistory && currentUser && (
+        <OrderHistory 
+          userId={currentUser.id} 
+          onClose={() => setShowOrderHistory(false)} 
+        />
+      )}
     </div>
   );
 };
