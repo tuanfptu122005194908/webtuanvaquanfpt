@@ -15,8 +15,6 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // Email Transporter
 const transporter = nodemailer.createTransport({
