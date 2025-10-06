@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
 require("dotenv").config();
 
@@ -14,6 +15,24 @@ app.use(
   })
 );
 app.use(express.json());
+
+// Email Transporter
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+
+// Verify email configuration
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("❌ Email configuration error:", error);
+  } else {
+    console.log("✅ Email server is ready to send messages");
+  }
+});
 
 // In-memory database
 let users = [];
@@ -71,7 +90,7 @@ app.post("/api/admin/login", (req, res) => {
   }
 });
 
-// Middleware kiểm tra admin token
+// Middleware kiểm tra admin token - IMPROVED VERSION
 const checkAdminAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -146,7 +165,6 @@ app.get("/api/admin/stats", checkAdminAuth, (req, res) => {
     });
   }
 });
-
 // Endpoint kiểm tra một đơn hàng cụ thể
 app.get("/api/admin/orders/:id/check", checkAdminAuth, (req, res) => {
   const orderId = Number(req.params.id);
@@ -161,10 +179,10 @@ app.get("/api/admin/orders/:id/check", checkAdminAuth, (req, res) => {
     allOrderIds: orders.map((o) => o.id),
   });
 });
-
-// Xóa đơn hàng (admin only)
+// Xóa đơn hàng (admin only) - FIXED VERSION
 app.delete("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
   try {
+    // FIX 1: Chuyển sang Number thay vì parseInt để xử lý số lớn
     const orderId = Number(req.params.id);
 
     console.log("🔍 Delete request received:");
@@ -172,6 +190,7 @@ app.delete("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
     console.log("   Converted to number:", orderId);
     console.log("   Total orders in DB:", orders.length);
 
+    // FIX 2: Kiểm tra ID hợp lệ
     if (isNaN(orderId)) {
       console.log("❌ Invalid order ID");
       return res.status(400).json({
@@ -197,6 +216,8 @@ app.delete("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
     }
 
     const deletedOrder = orders[orderIndex];
+
+    // FIX 3: Xóa đơn hàng
     orders.splice(orderIndex, 1);
 
     console.log(`✅ Đơn hàng #${orderId} đã bị xóa bởi admin`);
@@ -221,7 +242,6 @@ app.delete("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
     });
   }
 });
-
 // Lấy tất cả đơn hàng (admin only)
 app.get("/api/admin/orders", checkAdminAuth, (req, res) => {
   try {
@@ -237,12 +257,13 @@ app.get("/api/admin/orders", checkAdminAuth, (req, res) => {
   }
 });
 
-// Lấy tất cả users (admin only)
+// Lấy tất cả users (admin only) - PHIÊN BẢN MỚI VỚI TOTALSPENT
 app.get("/api/admin/users", checkAdminAuth, (req, res) => {
   try {
     const safeUsers = users.map((u) => {
+      // Chỉ tính các đơn hàng đã hoàn thành (completed)
       const userOrders = orders.filter(
-        (o) => o.userId === u.id && o.status === "completed"
+        (o) => o.userId === u.id && o.status === "completed" // ĐỔI TỪ "Hoàn thành" SANG "completed"
       );
       const totalSpent = userOrders.reduce(
         (sum, order) => sum + order.total,
@@ -273,6 +294,7 @@ app.get("/api/admin/users", checkAdminAuth, (req, res) => {
 });
 
 // Cập nhật trạng thái đơn hàng
+// Cập nhật trạng thái đơn hàng
 app.patch("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
   try {
     const orderId = parseInt(req.params.id);
@@ -287,13 +309,16 @@ app.patch("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
       });
     }
 
+    // Cập nhật trạng thái
     orders[orderIndex].status = status;
 
+    // Nếu đơn hàng được đánh dấu là "completed" thì cập nhật thông tin người dùng
     if (status === "completed") {
       const order = orders[orderIndex];
       const userIndex = users.findIndex((u) => u.id === order.userId);
 
       if (userIndex !== -1) {
+        // Đếm lại số đơn hoàn thành của user
         const completedOrders = orders.filter(
           (o) => o.userId === order.userId && o.status === "completed"
         );
@@ -301,6 +326,7 @@ app.patch("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
         const totalSpent = completedOrders.reduce((sum, o) => sum + o.total, 0);
         const orderCount = completedOrders.length;
 
+        // Ghi thông tin cập nhật vào user
         users[userIndex].totalSpent = totalSpent;
         users[userIndex].orderCount = orderCount;
 
@@ -314,7 +340,7 @@ app.patch("/api/admin/orders/:id", checkAdminAuth, (req, res) => {
 
     res.json({
       success: true,
-      message: "Cập nhật trạng thái đơn hàng thành công!",
+      message: "Cập nhật trạng thái đơn hàng và tổng chi tiêu thành công!",
       order: orders[orderIndex],
     });
   } catch (error) {
@@ -355,6 +381,7 @@ app.post("/api/register", async (req, res) => {
       user: { id: newUser.id, name: newUser.name, email: newUser.email },
     });
   } catch (error) {
+    console.error(" Register error:", req.body);
     console.error("Register error:", error);
     res.status(500).json({
       success: false,
@@ -410,9 +437,76 @@ app.post("/api/orders", async (req, res) => {
 
     orders.push(newOrder);
 
-    console.log(`✅ Đơn hàng mới #${newOrder.id} đã được tạo`);
-    console.log(`   Khách hàng: ${customerInfo.name}`);
-    console.log(`   Tổng tiền: ${total.toLocaleString()}đ`);
+    const itemsList = items
+      .map(
+        (item) => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #E5E7EB;">
+          ${item.name} ${item.code ? `(${item.code})` : ""}
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #E5E7EB; text-align: right;">
+          ${item.price.toLocaleString()}đ
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+
+    // await transporter.sendMail({
+    //   from: process.env.EMAIL_USER,
+    //   to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+    //   subject: `🛒 Đơn hàng mới #${newOrder.id}`,
+    //   html: `
+    //     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    //       <h2>🎉 Đơn hàng mới #${newOrder.id}</h2>
+    //       <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    //         <h3>👤 Thông tin khách hàng</h3>
+    //         <p><strong>Tên:</strong> ${customerInfo.name}</p>
+    //         <p><strong>Số điện thoại:</strong> ${customerInfo.phone}</p>
+    //         <p><strong>Email:</strong> ${customerInfo.email}</p>
+    //         ${
+    //           customerInfo.note
+    //             ? `<p><strong>Ghi chú:</strong> ${customerInfo.note}</p>`
+    //             : ""
+    //         }
+    //       </div>
+    //       <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    //         <h3>🛍️ Sản phẩm</h3>
+    //         <table style="width: 100%; border-collapse: collapse;">
+    //           <tbody>
+    //             ${itemsList}
+    //           </tbody>
+    //           <tfoot>
+    //             <tr style="background: #DBEAFE;">
+    //               <td style="padding: 10px; font-weight: bold;">TỔNG CỘNG</td>
+    //               <td style="padding: 10px; text-align: right; font-weight: bold;">
+    //                 ${total.toLocaleString()}đ
+    //               </td>
+    //             </tr>
+    //           </tfoot>
+    //         </table>
+    //       </div>
+    //     </div>
+    //   `,
+    // });
+
+    // await transporter.sendMail({
+    //   from: process.env.EMAIL_USER,
+    //   to: customerInfo.email,
+    //   subject: `Xác nhận đơn hàng #${newOrder.id}`,
+    //   html: `
+    //     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    //       <h2>Cảm ơn bạn đã đặt hàng! 🎉</h2>
+    //       <p>Xin chào <strong>${customerInfo.name}</strong>,</p>
+    //       <p>Đơn hàng của bạn đã được ghi nhận thành công!</p>
+    //       <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    //         <p><strong>Mã đơn:</strong> #${newOrder.id}</p>
+    //         <p><strong>Tổng tiền:</strong> ${total.toLocaleString()}đ</p>
+    //       </div>
+    //       <p>Chúng tôi sẽ liên hệ với bạn sớm nhất!</p>
+    //     </div>
+    //   `,
+    // });
 
     res.status(201).json({
       success: true,
@@ -448,14 +542,29 @@ app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
 
-    console.log(`📧 Tin nhắn liên hệ mới:`);
-    console.log(`   Từ: ${name} (${email})`);
-    console.log(`   Chủ đề: ${subject}`);
-    console.log(`   Nội dung: ${message}`);
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+      subject: `📧 Tin nhắn liên hệ: ${subject}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>📧 Tin nhắn liên hệ mới</h2>
+          <div style="background: #F3F4F6; padding: 20px; border-radius: 8px;">
+            <p><strong>Từ:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Chủ đề:</strong> ${subject}</p>
+          </div>
+          <div style="margin: 20px 0; padding: 20px; background: white; border-left: 4px solid #4F46E5;">
+            <h3>Nội dung:</h3>
+            <p>${message}</p>
+          </div>
+        </div>
+      `,
+    });
 
     res.json({
       success: true,
-      message: "Tin nhắn đã được ghi nhận! Chúng tôi sẽ phản hồi sớm.",
+      message: "Tin nhắn đã được gửi thành công!",
     });
   } catch (error) {
     console.error("Contact error:", error);
@@ -475,8 +584,7 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
-
-// Debug endpoints
+// Thêm vào backend (server.js) - TRƯỚC app.listen()
 app.get("/api/debug/users", (req, res) => {
   res.json({
     totalUsers: users.length,
@@ -500,9 +608,8 @@ app.get("/api/debug/orders", (req, res) => {
     })),
   });
 });
-
-app.listen(PORT, () => {
+app.listen(process.env.PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📧 Email: ${process.env.EMAIL_USER}`);
   console.log(`🔐 Admin Email: ${ADMIN_EMAIL}`);
-  console.log(`⚠️ Email service disabled - orders will be logged only`);
 });
