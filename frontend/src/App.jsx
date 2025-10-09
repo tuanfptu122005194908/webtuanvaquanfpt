@@ -902,13 +902,14 @@ const App = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 const [showOrderHistory, setShowOrderHistory] = useState(false);
 
-   // Component nhỏ: Form Coursera
+  // Component nhỏ: Form Coursera
   const CourseraForm = ({ addToCart }) => {
     const PRICE_PER_MOOC = 30000;
     const [courseName, setCourseName] = useState("");
     const [moocCount, setMoocCount] = useState(1);
     const [error, setError] = useState("");
 
+  
     const handleAdd = () => {
       if (!courseName.trim()) {
         setError("⚠️ Vui lòng nhập tên khóa học!");
