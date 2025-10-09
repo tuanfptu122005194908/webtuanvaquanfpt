@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import mas291 from "./mas291.png";
 import csd201 from "./csd201.png";
@@ -11,7 +10,7 @@ import wed201 from "./wed201.png";
 import QR from "./QR.png";
 import avt from "./avt.png";
 import avt2 from "./avt2.png";
-import avt1 from "./avt1.png";
+import avt1 from "./avt1.png"; 
 import {
   ShoppingCart,
   LogOut,
@@ -32,68 +31,20 @@ import {
   Calendar,
   Award,
   Facebook,
-  AlertCircle,
-  Tag,
 } from "lucide-react";
 
 const API_URL = "https://webtuanvaquanfpt.onrender.com/api";
 
-// ============ TOAST NOTIFICATION COMPONENT ============
-const Toast = ({ message, type = "success", onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 4000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  const icons = {
-    success: <CheckCircle className="w-6 h-6" />,
-    error: <XCircle className="w-6 h-6" />,
-    info: <AlertCircle className="w-6 h-6" />,
-  };
-
-  const colors = {
-    success: "bg-green-500",
-    error: "bg-red-500",
-    info: "bg-blue-500",
-  };
-
-  return (
-    <div className="fixed top-4 right-4 z-[9999] animate-slide-in-right">
-      <div className={`${colors[type]} text-white px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-3 min-w-[300px] max-w-md`}>
-        {icons[type]}
-        <p className="flex-1 font-medium">{message}</p>
-        <button onClick={onClose} className="hover:bg-white/20 p-1 rounded">
-          <X className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// ============ TOAST MANAGER ============
-const ToastManager = ({ toasts, removeToast }) => {
-  return (
-    <div className="fixed top-4 right-4 z-[9999] space-y-2">
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          message={toast.message}
-          type={toast.type}
-          onClose={() => removeToast(toast.id)}
-        />
-      ))}
-    </div>
-  );
-};
-
 // ============ ADMIN DASHBOARD COMPONENT ============
-const AdminDashboard = ({ onBackToMain, showToast }) => {
+const AdminDashboard = ({ onBackToMain }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminToken, setAdminToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+
   const [stats, setStats] = useState({
+    
     totalOrders: 0,
     totalRevenue: 0,
     totalUsers: 0,
@@ -114,7 +65,7 @@ const AdminDashboard = ({ onBackToMain, showToast }) => {
 
   const handleLogin = async () => {
     if (!loginEmail || !loginPassword) {
-      showToast("Vui lòng nhập đầy đủ thông tin!", "error");
+      alert("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
 
@@ -136,13 +87,12 @@ const AdminDashboard = ({ onBackToMain, showToast }) => {
         fetchDashboardData(data.token);
         setLoginEmail("");
         setLoginPassword("");
-        showToast("Đăng nhập thành công!", "success");
       } else {
-        showToast(data.message || "Đăng nhập thất bại!", "error");
+        alert(data.message || "Đăng nhập thất bại!");
       }
     } catch (error) {
       console.error("Login error:", error);
-      showToast("Lỗi kết nối server!", "error");
+      alert("Lỗi kết nối server!");
     } finally {
       setLoading(false);
     }
@@ -160,7 +110,6 @@ const AdminDashboard = ({ onBackToMain, showToast }) => {
     });
     setOrders([]);
     setUsers([]);
-    showToast("Đã đăng xuất!", "info");
   };
 
   const fetchDashboardData = async (token) => {
@@ -209,13 +158,13 @@ const AdminDashboard = ({ onBackToMain, showToast }) => {
           )
         );
         fetchDashboardData(adminToken);
-        showToast("Cập nhật trạng thái thành công!", "success");
+        alert("Cập nhật trạng thái thành công!");
       } else {
-        showToast(data.message || "Cập nhật thất bại!", "error");
+        alert(data.message || "Cập nhật thất bại!");
       }
     } catch (error) {
       console.error("Update error:", error);
-      showToast("Lỗi kết nối server!", "error");
+      alert("Lỗi kết nối server!");
     }
   };
 
@@ -238,13 +187,13 @@ const AdminDashboard = ({ onBackToMain, showToast }) => {
       if (response.ok && data.success) {
         setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
         fetchDashboardData(adminToken);
-        showToast(data.message || 'Xóa đơn hàng thành công!', 'success');
+        alert(data.message || 'Xóa đơn hàng thành công!');
       } else {
-        showToast(data.message || 'Không thể xóa đơn hàng!', 'error');
+        alert(data.message || 'Không thể xóa đơn hàng!');
       }
     } catch (error) {
       console.error('Delete error:', error);
-      showToast('Lỗi khi xóa đơn hàng: ' + error.message, 'error');
+      alert('Lỗi khi xóa đơn hàng: ' + error.message);
     }
   };
 
@@ -270,13 +219,13 @@ const AdminDashboard = ({ onBackToMain, showToast }) => {
         const message = data.deletedOrdersCount > 0 
           ? `Đã xóa người dùng và ${data.deletedOrdersCount} đơn hàng liên quan!`
           : `Đã xóa người dùng thành công!`;
-        showToast(message, 'success');
+        alert(message);
       } else {
-        showToast(data.message || 'Không thể xóa người dùng!', 'error');
+        alert(data.message || 'Không thể xóa người dùng!');
       }
     } catch (error) {
       console.error('Delete error:', error);
-      showToast('Lỗi khi xóa người dùng: ' + error.message, 'error');
+      alert('Lỗi khi xóa người dùng: ' + error.message);
     }
   };
 
