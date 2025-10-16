@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
 const mysql = require("mysql2/promise"); // SỬ DỤNG mysql2/promise
 require("dotenv").config();
 
