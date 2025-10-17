@@ -140,18 +140,18 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
   };
 
   const fetchDashboardData = async (token) => {
-    try {
-      const [statsRes, ordersRes, usersRes] = await Promise.all([
-        fetch(`${API_URL}/admin/stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${API_URL}/admin/orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${API_URL}/admin/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
+  try {
+    const [statsRes, ordersRes, usersRes] = await Promise.all([
+      fetch(`${API_URL}/api/admin/stats`, { // <== SỬA TẠI ĐÂY
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      fetch(`${API_URL}/api/admin/orders`, { // <== SỬA TẠI ĐÂY
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      fetch(`${API_URL}/api/admin/users`, { // <== SỬA TẠI ĐÂY
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ]);
 
       const statsData = await statsRes.json();
       const ordersData = await ordersRes.json();
@@ -167,7 +167,7 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch(`${API_URL}/admin/orders/${orderId}`, {
+     const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -201,7 +201,7 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/admin/orders/${orderId}`, {
+     const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -976,11 +976,11 @@ const [notification, setNotification] = useState({ message: '', type: '' });
         setCouponMessage('');
 
        try {
-            const response = await fetch(`${API_URL}/coupons/validate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ couponCode }),
-            });
+           const response = await fetch(`${API_URL}/api/coupons/validate`, { // <== SỬA ĐOẠN NÀY
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ couponCode }),
+    });
             const data = await response.json();
 
             const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
@@ -1395,7 +1395,7 @@ const handleLogin = async (e) => {
         };
 
     try {
-      const response = await fetch(`${API_URL}/orders`, {
+      const response = await fetch(`${API_URL}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
