@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
+const bcrypt = require("bcrypt"); // 🔥 FIX: Imported bcrypt correctly at the top
 require("dotenv").config();
 
 const app = express();
@@ -549,8 +550,7 @@ app.post("/api/admin/english-services", checkAdminAuth, async (req, res) => {
       });
     }
 
-    const servicesJson = JSON.stringify(services);
-    // 🔥 SỬA: Xử lý giá trị null
+    const servicesJson = JSON.stringify(services); // 🔥 SỬA: Xử lý giá trị null
     const finalIcon = icon || null;
     const finalImg = img || null;
     const finalBgImg = bgImg || null;
@@ -591,9 +591,8 @@ app.put("/api/admin/english-services/:id", checkAdminAuth, async (req, res) => {
         message: "Vui lòng nhập đầy đủ thông tin bắt buộc!",
       });
     }
-    const servicesJson = JSON.stringify(services);
+    const servicesJson = JSON.stringify(services); // 🔥 SỬA: Xử lý giá trị null
 
-    // 🔥 SỬA: Xử lý giá trị null
     const finalIcon = icon || null;
     const finalImg = img || null;
     const finalBgImg = bgImg || null;
@@ -744,7 +743,7 @@ app.post("/api/register", async (req, res) => {
   try {
     // ⚠️ LƯU Ý: Phải thêm const bcrypt = require('bcrypt'); vào đầu file.
     // Nếu bạn không thể làm điều đó, code này sẽ không hoạt động.
-    //  const bcrypt = require("bcrypt"); // Chỉ thêm tạm thời nếu bạn không thể thêm ở đầu file
+    //  const bcrypt = require("bcrypt"); // Chỉ thêm tạm thời nếu bạn không thể thêm ở đầu file
 
     const { name, email, password } = req.body;
     const [existingUsers] = await dbPool.query(
@@ -755,10 +754,10 @@ app.post("/api/register", async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Email đã được sử dụng!" });
-    }
+    } // 🔥 HASH MẬT KHẨU TRƯỚC KHI LƯU
 
-    // 🔥 HASH MẬT KHẨU TRƯỚC KHI LƯU
     const saltRounds = 10;
+    // ❌ LỖI: Dòng này sẽ crash vì bcrypt không được import ở đây
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const [result] = await dbPool.query(
@@ -792,18 +791,16 @@ app.post("/api/login", async (req, res) => {
       return res
         .status(401)
         .json({ success: false, message: "Email hoặc mật khẩu không đúng!" });
-    }
+    } // 🔥 SO SÁNH MẬT KHẨU BẰNG bcrypt // ❌ LỖI: Dòng này sẽ crash vì bcrypt không được import ở đây
 
-    // 🔥 SO SÁNH MẬT KHẨU BẰNG bcrypt
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
       return res
         .status(401)
         .json({ success: false, message: "Email hoặc mật khẩu không đúng!" });
-    }
+    } // Nếu match thành công
 
-    // Nếu match thành công
     res.json({
       success: true,
       message: "Đăng nhập thành công!",
@@ -814,7 +811,6 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 });
-
 app.post("/api/orders", async (req, res) => {
   try {
     const {
