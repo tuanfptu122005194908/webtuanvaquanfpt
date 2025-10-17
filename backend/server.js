@@ -335,7 +335,21 @@ app.get("/api/orders", checkAdminAuth, async (req, res) => {
     const formattedOrders = allOrders.map((order) => ({
       id: order.id,
       userId: order.userId,
-      items: JSON.parse(order.items), // Rất quan trọng: Chuyển JSON string thành Object
+
+      // ⭐️ PHẦN CẦN SỬA: Bọc JSON.parse() bằng try-catch
+      items: (() => {
+        try {
+          // Trả về mảng rỗng nếu dữ liệu là NULL/undefined/rỗng, nếu không thì parse
+          if (!order.items) return [];
+          return JSON.parse(order.items);
+        } catch (e) {
+          // In lỗi ra console server để debug nhưng không làm sập request
+          console.error(
+            `❌ Lỗi parse JSON cho đơn hàng #${order.id}: ${e.message}`
+          );
+          return []; // Trả về mảng rỗng [] cho frontend
+        }
+      })(),
       customerInfo: {
         name: order.customerName,
         phone: order.customerPhone,
@@ -456,7 +470,19 @@ app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
     const formattedOrders = allOrders.map((order) => ({
       id: order.id,
       userId: order.userId,
-      items: JSON.parse(order.items),
+      // ⭐️ SỬA LỖI TẠI ĐÂY: Sử dụng khối try-catch để an toàn hơn
+      items: (() => {
+        try {
+          if (!order.items) return []; // Xử lý trường hợp NULL/undefined
+          return JSON.parse(order.items);
+        } catch (e) {
+          console.error(
+            `❌ Lỗi parse JSON cho đơn hàng #${order.id}. Data: ${order.items}`,
+            e.message
+          );
+          return []; // Trả về mảng rỗng nếu lỗi
+        }
+      })(),
       customerInfo: {
         name: order.customerName,
         phone: order.customerPhone,
@@ -752,7 +778,21 @@ app.get("/api/orders", checkAdminAuth, async (req, res) => {
     const formattedOrders = allOrders.map((order) => ({
       id: order.id,
       userId: order.userId,
-      items: JSON.parse(order.items), // Rất quan trọng: Chuyển JSON string thành Object
+
+      // ⭐️ PHẦN CẦN SỬA: Bọc JSON.parse() bằng try-catch
+      items: (() => {
+        try {
+          // Trả về mảng rỗng nếu dữ liệu là NULL/undefined/rỗng, nếu không thì parse
+          if (!order.items) return [];
+          return JSON.parse(order.items);
+        } catch (e) {
+          // In lỗi ra console server để debug nhưng không làm sập request
+          console.error(
+            `❌ Lỗi parse JSON cho đơn hàng #${order.id}: ${e.message}`
+          );
+          return []; // Trả về mảng rỗng [] cho frontend
+        }
+      })(),
       customerInfo: {
         name: order.customerName,
         phone: order.customerPhone,
