@@ -1264,20 +1264,33 @@ const [notification, setNotification] = useState({ message: '', type: '' });
   ];
 
   // Dữ liệu tài liệu
-  const documents = [
-    {
-      semester: "Kỳ 1",
-      courses: ["SSL101", "CEA201", "CSI106", "PRF192", "MAE101"],
-    },
-    {
-      semester: "Kỳ 2",
-      courses: ["NWC204", "OSG202", "MAD101", "WED201", "PRO192"],
-    },
-    {
-      semester: "Kỳ 3",
-      courses: ["LAB211", "JPD113", "DBI202", "CSD201", "MAS291"],
-    },
-  ];
+  const allDocuments = [
+    // Kỳ 1
+    { code: "SSL101", name: "Soft Skill Learning 1", price: 70000, semester: "Kỳ 1", img: mas291 },
+    { code: "CEA201", name: "Introduction to Computer Architecture", price: 70000, semester: "Kỳ 1", img: mas291 },
+    { code: "CSI106", name: "Introduction to Computer Science", price: 70000, semester: "Kỳ 1", img: mas291 },
+    { code: "PRF192", name: "Programming Fundamentals", price: 70000, semester: "Kỳ 1", img: mas291 },
+    { code: "MAE101", name: "Mathematics for Engineers", price: 70000, semester: "Kỳ 1", img: mae101 },
+    
+    // Kỳ 2
+    { code: "NWC204", name: "Networking with Windows Server", price: 70000, semester: "Kỳ 2", img: lab211 },
+    { code: "OSG202", name: "Operating Systems", price: 70000, semester: "Kỳ 2", img: lab211 },
+    { code: "MAD101", name: "Discrete Mathematics", price: 70000, semester: "Kỳ 2", img: mad101 },
+    { code: "WED201", name: "Web Design & Development", price: 70000, semester: "Kỳ 2", img: wed201 },
+    { code: "PRO192", name: "Object-Oriented Programming with Java", price: 70000, semester: "Kỳ 2", img: pro192 },
+
+    // Kỳ 3
+    { code: "LAB211", name: "Advanced Programming Lab", price: 70000, semester: "Kỳ 3", img: lab211 },
+    { code: "JPD113", name: "Japanese 1.1", price: 70000, semester: "Kỳ 3", img: csd201 },
+    { code: "DBI202", name: "Database Systems", price: 70000, semester: "Kỳ 3", img: dbi202 },
+    { code: "CSD201", name: "Data Structures & Algorithms", price: 70000, semester: "Kỳ 3", img: csd201 },
+    { code: "MAS291", name: "Mathematical Statistics", price: 70000, semester: "Kỳ 3", img: mas291 },
+  ];
+
+  const groupedDocuments = allDocuments.reduce((acc, doc) => {
+    (acc[doc.semester] = acc[doc.semester] || []).push(doc);
+    return acc;
+  }, {});
 
   const addToCart = (item) => {
         setCart([...cart, item]);
@@ -1809,72 +1822,80 @@ setDiscountAmount(0);
 
       {/* Documents Section */}
       <section
-        id="documents"
-        className="py-20 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50"
-      >
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold mb-4 shadow-lg">
-              📄 TÀI LIỆU HỌC TẬP
-            </div>
-            <h2 className="text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-              Tài liệu ôn thi
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Tài liệu đầy đủ từ kỳ 1 đến kỳ 3
-            </p>
-          </div>
+        id="documents"
+        className="py-20 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50"
+      >
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold mb-4 shadow-lg">
+              📄 TÀI LIỆU HỌC TẬP
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+              Tài liệu ôn thi từng môn
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Tài liệu chi tiết, chuẩn bị tốt nhất cho mọi kỳ thi
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {documents.map((doc, idx) => (
-              <div
-                key={idx}
-                className="group bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-400 relative overflow-hidden"
-              >
-                <h3 className="text-2xl font-bold text-blue-600 mb-4">
-                  {doc.semester}
-                </h3>
-                <div className="space-y-2">
-                  {doc.courses.map((course, cidx) => (
-                    <div
-                      key={cidx}
-                      className="flex items-center text-gray-700 bg-gray-50 p-3 rounded-lg"
-                    >
-                      <Book className="w-5 h-5 text-blue-500 mr-2" />
-                      {course}
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() =>
-                    addToCart({
-                      id: `doc-${idx}`,
-                      name: `Tài liệu ${doc.semester}`,
-                      price: 70000,
-                      type: "document",
-                      courses: doc.courses,
-                    })
-                  }
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  Mua tài liệu - 70.000đ
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 text-center">
-            <a
-              href="https://docs.google.com/document/d/1THKvW20D4o-bPxCyrillclf1R5Z_29Os5EpOX6G--dw/edit?tab=t.0"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-green-600 text-white px-8 py-4 rounded-lg hover:bg-green-700 transition transform hover:scale-105"
-            >
-              📖 Xem Demo Tài Liệu
-            </a>
-          </div>
-        </div>
-      </section>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Object.keys(groupedDocuments).map((semester, idx) => (
+              <div
+                key={idx}
+                className="group bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-4 border-transparent hover:border-blue-400"
+              >
+                <h3 className="text-3xl font-extrabold text-blue-600 mb-6 border-b pb-3">
+                  {semester}
+                </h3>
+                <div className="space-y-4">
+                  {groupedDocuments[semester].map((doc, cidx) => (
+                    <div
+                      key={cidx}
+                      className="bg-gray-50 p-4 rounded-xl flex justify-between items-center shadow-sm hover:bg-gray-100 transition"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Book className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                        <span className="font-semibold text-gray-800">
+                          {doc.code}
+                        </span>
+                        <span className="text-sm text-gray-600 hidden md:inline">
+                          ({doc.name})
+                        </span>
+                      </div>
+                      <button
+                        onClick={() =>
+                          addToCart({
+                            id: `doc-${doc.code}`,
+                            name: `Tài liệu: ${doc.code} - ${doc.name}`,
+                            code: doc.code,
+                            price: doc.price,
+                            type: "document",
+                          })
+                        }
+                        className="bg-purple-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-purple-700 transition font-semibold flex-shrink-0"
+                      >
+                        {doc.price.toLocaleString()}đ
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-12 text-center">
+             <h4 className="text-2xl font-bold text-gray-800 mb-4">Xem Tài liệu mẫu</h4>
+            <a
+              href="https://docs.google.com/document/d/1THKvW20D4o-bPxCyrillclf1R5Z_29Os5EpOX6G--dw/edit?tab=t.0"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-green-600 text-white px-8 py-4 rounded-lg hover:bg-green-700 transition transform hover:scale-105 shadow-lg"
+            >
+              📖 Xem Demo Tài Liệu
+            </a>
+          </div>
+        </div>
+      </section>
 
       {/* Coursera Section */}
       <section

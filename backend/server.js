@@ -884,11 +884,12 @@ app.get("/api/health", (req, res) => {
 
 app.post("/api/coupons/validate", (req, res) => {
   const { couponCode } = req.body;
-  const codeUpper = (couponCode || "").toUpperCase();
+  const codeUpper = (couponCode || "").toUpperCase(); // Chuyển sang chữ hoa để so sánh
 
-  const coupon = COUPONS.find((c) => c.code === codeUpper);
+  const coupon = COUPONS.find((c) => c.code === codeUpper); // Tìm mã trong danh sách
 
   if (coupon) {
+    // TRƯỜNG HỢP THÀNH CÔNG
     res.json({
       success: true,
       discount: coupon.discount,
@@ -897,6 +898,7 @@ app.post("/api/coupons/validate", (req, res) => {
       } thành công! Giảm ${coupon.discount.toLocaleString()}đ.`,
     });
   } else {
+    // TRƯỜNG HỢP THẤT BẠI
     res.status(404).json({
       success: false,
       discount: 0,
