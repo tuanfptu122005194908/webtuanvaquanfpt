@@ -99,11 +99,11 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-      });
+  const response = await fetch(`${API_URL}/api/admin/login`, { // <== SỬA ĐOẠN NÀY
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+  });
 
       const data = await response.json();
 
