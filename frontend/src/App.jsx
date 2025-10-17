@@ -725,10 +725,10 @@ const OrderHistory = ({ userId, onClose, showNotification }) => {
   }, [userId]);
 
   const fetchUserOrders = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_URL}/users/${userId}/orders`);
-      const data = await response.json();
+  try {
+    setLoading(true);
+    const response = await fetch(`${API_URL}/api/users/${userId}/orders`); // <== SỬA TẠI ĐÂY
+    const data = await response.json();
 
       if (data.success) {
         setOrders(data.orders);
@@ -1305,15 +1305,14 @@ const handleLogin = async (e) => {
 
   setLoading(true);
 
-  try {
-    const response = await fetch(`${API_URL}/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
+ try {
+  const response = await fetch(`${API_URL}/api/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  });
     const data = await response.json();
 
     if (response.ok && data.success) {
