@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt"); // 🔥 FIX: Imported bcrypt correctly at the top
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const app = express();
@@ -102,6 +103,80 @@ const safeParseJson = (jsonString, defaultValue = []) => {
   }
 };
 
+// 🔥 CẤU HÌNH NODEMAILER TRANSPORTER
+const transporter = nodemailer.createTransport({
+  service: "gmail", // Hoặc sử dụng 'smtp' cho các dịch vụ khác
+  auth: {
+    user: process.env.EMAIL_USER, // Email dùng để gửi (Ví dụ: admin@gmail.com)
+    pass: process.env.EMAIL_PASS, // Mật khẩu ứng dụng/App Password (RẤT QUAN TRỌNG)
+  },
+});
+
+const ADMIN_EMAIL_RECEIVE =
+  process.env.ADMIN_EMAIL_RECEIVE || "admin@example.com";
+async function sendOrderConfirmationEmail(orderData) {
+  const customerEmail = orderData.customerInfo.email;
+  const adminEmail = ADMIN_EMAIL_RECEIVE; // Địa chỉ email Admin nhận thông báo
+
+  const itemsList = orderData.items
+    .map(
+      (item) => `<li>${item.name} (${(item.price || 0).toLocaleString()}đ)</li>`
+    )
+    .join("");
+
+  const discountInfo =
+    orderData.discountAmount > 0
+      ? `<li>Giảm giá (${
+          orderData.couponCode || "Coupon"
+        }): -${orderData.discountAmount.toLocaleString()}đ</li>`
+      : "";
+
+  const baseHtml = `
+        <h3>Cảm ơn bạn đã đặt hàng!</h3>
+        <p>Đơn hàng **#${orderData.id}** của bạn đã được tiếp nhận.</p>
+        <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận và hoàn tất đơn hàng.</p>
+        
+        <h4>Chi tiết đơn hàng:</h4>
+        <ul>
+            ${itemsList}
+            ${discountInfo}
+        </ul>
+        <p><strong>TỔNG THANH TOÁN: ${orderData.total.toLocaleString()}đ</strong></p>
+        <hr>
+        <p>Thông tin liên hệ của bạn:</p>
+        <ul>
+            <li>Tên: ${orderData.customerInfo.name}</li>
+            <li>Điện thoại: ${orderData.customerInfo.phone}</li>
+            <li>Email: ${customerEmail}</li>
+            <li>Ghi chú: ${orderData.customerInfo.note || "Không có"}</li>
+        </ul>
+        <p>Mã đơn hàng: ${orderData.id}</p>
+    `;
+
+  // 1. Gửi cho Khách hàng
+  await transporter.sendMail({
+    from: `"${process.env.EMAIL_SENDER_NAME || "HocCungTuanVaQuan"}" <${
+      process.env.EMAIL_USER
+    }>`,
+    to: customerEmail,
+    subject: `✅ Xác nhận Đơn hàng #${orderData.id} thành công`,
+    html: baseHtml.replace("**", "<strong>").replace("**", "</strong>"),
+  });
+
+  // 2. Gửi cho Admin (Thông báo Đơn hàng mới)
+  await transporter.sendMail({
+    from: `"${process.env.EMAIL_SENDER_NAME || "HocCungTuanVaQuan"}" <${
+      process.env.EMAIL_USER
+    }>`,
+    to: adminEmail,
+    subject: `🔔 ĐƠN HÀNG MỚI #${orderData.id} - ${orderData.customerInfo.name}`,
+    html:
+      `<h4>Có đơn hàng mới vừa được tạo!</h4>` +
+      baseHtml.replace("**", "<strong>").replace("**", "</strong>"),
+  });
+
+  console.log(`✅ Email xác nhận đơn hàng #${orderData.id} đã gửi thành công.`);
+}
 // ===================== ADMIN MIDDLEWARE =====================
 
 const checkAdminAuth = (req, res, next) => {
@@ -821,8 +896,8 @@ app.post("/api/orders", async (req, res) => {
       discountAmount = 0,
       couponCode = null,
     } = req.body;
-    const newOrderId = Date.now();
-    const itemsJson = JSON.stringify(items);
+    const newOrderId = Date.now(); // Dùng timestamp làm ID đơn hàng
+    const itemsJson = JSON.stringify(items); // 1. Lưu vào Database
 
     await dbPool.query(
       "INSERT INTO orders (id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, discountAmount, couponCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
@@ -839,6 +914,22 @@ app.post("/api/orders", async (req, res) => {
         couponCode,
       ]
     );
+
+    // 🔥 2. GỬI EMAIL THÔNG BÁO
+    const fullOrderData = {
+      id: newOrderId,
+      items,
+      customerInfo,
+      total,
+      discountAmount,
+      couponCode,
+    };
+    try {
+      await sendOrderConfirmationEmail(fullOrderData);
+    } catch (emailError) {
+      // Gửi thông báo thành công cho client nhưng log lỗi email trên server
+      console.error("❌ Lỗi khi gửi email:", emailError);
+    } // 3. Trả về phản hồi thành công
 
     res.status(201).json({
       success: true,
