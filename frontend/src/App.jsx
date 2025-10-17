@@ -14,17 +14,18 @@ import Footer from "./components/Client/Footer";
 import CartModal from "./components/Client/CartModal";
 import AuthModal from "./components/Client/AuthModal";
 import OrderHistoryModal from "./components/Client/OrderHistoryModal";
+import AdminDashboard from "./components/Admin/AdminDashboard";
 
 // Admin Component (Giả định đã có, không cần thay đổi)
 import AdminDashboard from "./components/Admin/AdminDashboard"; 
 
 // Sections
-import HeroSection from "./sections/HeroSection";
-import CoursesSection from "./sections/CoursesSection";
-import EnglishSection from "./sections/EnglishSection";
-import DocumentsSection from "./sections/DocumentsSection";
-import CourseraSection from "./sections/CourseraSection";
-import ContactSection from "./sections/ContactSection";
+import HeroSection from "./sections/HeroSection.jsx"; // SỬA: Thêm .jsx
+import CoursesSection from "./sections/CoursesSection.jsx"; // SỬA
+import EnglishSection from "./sections/EnglishSection.jsx"; // SỬA
+import DocumentsSection from "./sections/DocumentsSection.jsx"; // SỬA
+import CourseraSection from "./sections/CourseraSection.jsx"; // SỬA
+import ContactSection from "./sections/ContactSection.jsx"; // SỬA
 
 
 const App = () => {
