@@ -392,7 +392,17 @@ app.get("/api/users/:userId/orders", async (req, res) => {
     const formattedOrders = userOrders.map((order) => ({
       id: order.id,
       userId: order.userId,
-      items: JSON.parse(order.items),
+      items: (() => {
+        try {
+          if (!order.items) return [];
+          return JSON.parse(order.items);
+        } catch (e) {
+          console.error(
+            `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
+          );
+          return [];
+        }
+      })(),
       customerInfo: {
         name: order.customerName,
         phone: order.customerPhone,
@@ -616,20 +626,27 @@ app.get("/api/users/:userId/orders", async (req, res) => {
         success: false,
         message: "ID người dùng không hợp lệ!",
       });
-    }
+    } // 1. Lấy đơn hàng của user, sắp xếp mới nhất trước
 
-    // 1. Lấy đơn hàng của user, sắp xếp mới nhất trước
     const [userOrders] = await dbPool.query(
       "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders WHERE userId = ? ORDER BY createdAt DESC",
       [userId]
-    );
+    ); // 2. Format lại dữ liệu cho frontend (chuyển JSON string thành Object)
 
-    // 2. Format lại dữ liệu cho frontend (chuyển JSON string thành Object)
     const formattedOrders = userOrders.map((order) => ({
       id: order.id,
-      userId: order.userId,
-      // Chuyển JSON string trong cột `items` thành JavaScript object
-      items: JSON.parse(order.items),
+      userId: order.userId, // ⭐️ ĐÃ SỬA: Xử lý JSON an toàn hơn
+      items: (() => {
+        try {
+          if (!order.items) return [];
+          return JSON.parse(order.items);
+        } catch (e) {
+          console.error(
+            `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
+          );
+          return [];
+        }
+      })(),
       customerInfo: {
         name: order.customerName,
         phone: order.customerPhone,
@@ -654,7 +671,6 @@ app.get("/api/users/:userId/orders", async (req, res) => {
     });
   }
 });
-
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
