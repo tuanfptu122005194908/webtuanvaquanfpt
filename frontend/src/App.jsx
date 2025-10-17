@@ -60,6 +60,419 @@ const Notification = ({ message, type, onClose }) => {
         </div>
     );
 };
+// ============ ADMIN CONTENT MANAGEMENT BASE COMPONENTS ============
+
+// Component quản lý Khóa học
+const AdminCourseManagement = ({ data, setData, token, showNotification, API_URL, reloadData }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa khóa học #${id} không?`)) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/admin/courses/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        showNotification("Xóa khóa học thành công!", "success");
+        setData(prev => prev.filter(item => item.id !== id));
+        reloadData(); // Cập nhật lại dữ liệu chính
+      } else {
+        showNotification(result.message || "Xóa thất bại!", "error");
+      }
+    } catch (error) {
+      showNotification("Lỗi kết nối khi xóa!", "error");
+    }
+  };
+
+  const CourseModal = ({ item, onClose }) => {
+    const [formData, setFormData] = useState({
+      code: item?.code || '',
+      name: item?.name || '',
+      description: item?.description || '',
+      price: item?.price || 0,
+      img: item?.img || '',
+      bgImg: item?.bgImg || '',
+    });
+    const isEdit = !!item;
+    const [loading, setLoading] = useState(false);
+
+    const handleChange = (e) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      const url = isEdit ? `${API_URL}/api/admin/courses/${item.id}` : `${API_URL}/api/admin/courses`;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(formData),
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          showNotification(result.message, "success");
+          reloadData(); // Tải lại dữ liệu
+          onClose();
+        } else {
+          showNotification(result.message || (isEdit ? "Cập nhật thất bại!" : "Thêm thất bại!"), "error");
+        }
+      } catch (error) {
+        showNotification("Lỗi kết nối server!", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <Modal title={isEdit ? `Chỉnh sửa KH #${item.id}` : "Thêm Khóa học mới"} onClose={onClose}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input label="Mã môn (Code)" name="code" value={formData.code} onChange={handleChange} required />
+          <Input label="Tên khóa học" name="name" value={formData.name} onChange={handleChange} required />
+          <TextArea label="Mô tả" name="description" value={formData.description} onChange={handleChange} />
+          <Input label="Giá (đ)" name="price" type="number" value={formData.price} onChange={handleChange} required min="0" />
+          <Input label="URL ảnh đại diện (img)" name="img" value={formData.img} onChange={handleChange} placeholder="Đường dẫn đến file hình ảnh" />
+          <Input label="URL ảnh nền (bgImg)" name="bgImg" value={formData.bgImg} onChange={handleChange} placeholder="Đường dẫn đến file hình ảnh" />
+          <Button type="submit" disabled={loading}>{loading ? 'Đang xử lý...' : isEdit ? 'Cập nhật' : 'Thêm mới'}</Button>
+        </form>
+      </Modal>
+    );
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex justify-between items-center">
+        Quản lý Khóa học ({data.length})
+        <button onClick={() => { setCurrentItem(null); setIsModalOpen(true); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          <span className="flex items-center"><Book className="w-5 h-5 mr-2" />Thêm mới</span>
+        </button>
+      </h2>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50">
+              <Th>ID</Th><Th>Mã môn</Th><Th>Tên khóa học</Th><Th>Giá</Th><Th>Thao tác</Th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {data.map((item) => (
+              <tr key={item.id} className="hover:bg-gray-50">
+                <Td>{item.id}</Td>
+                <Td className="font-medium text-purple-600">{item.code}</Td>
+                <Td>{item.name}</Td>
+                <Td className="font-semibold text-green-600">{Number(item.price).toLocaleString()}đ</Td>
+                <Td>
+                  <button onClick={() => { setCurrentItem(item); setIsModalOpen(true); }} className="text-blue-600 hover:text-blue-800 mr-3">Sửa</button>
+                  <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800">Xóa</button>
+                </Td>
+              </tr>
+            ))}
+            {data.length === 0 && <tr><Td colSpan="5" className="text-center text-gray-500 py-8">Chưa có khóa học nào</Td></tr>}
+          </tbody>
+        </table>
+      </div>
+      {(isModalOpen && currentItem !== undefined) && <CourseModal item={currentItem} onClose={() => setIsModalOpen(false)} />}
+    </div>
+  );
+};
+
+// Component quản lý Dịch vụ Tiếng Anh
+const AdminServiceManagement = ({ data, setData, token, showNotification, API_URL, reloadData }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa dịch vụ #${id} không?`)) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/admin/english-services/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        showNotification("Xóa dịch vụ thành công!", "success");
+        setData(prev => prev.filter(item => item.id !== id));
+        reloadData();
+      } else {
+        showNotification(result.message || "Xóa thất bại!", "error");
+      }
+    } catch (error) {
+      showNotification("Lỗi kết nối khi xóa!", "error");
+    }
+  };
+
+  const ServiceModal = ({ item, onClose }) => {
+    const [formData, setFormData] = useState({
+      code: item?.code || '',
+      name: item?.name || '',
+      services: (item?.services || []).join('\n'), // Chuyển array thành string, mỗi item 1 dòng
+      price: item?.price || 0,
+      icon: item?.icon || '',
+      img: item?.img || '',
+      bgImg: item?.bgImg || '',
+    });
+    const isEdit = !!item;
+    const [loading, setLoading] = useState(false);
+
+    const handleChange = (e) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      const servicesArray = formData.services.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      const payload = { ...formData, services: servicesArray };
+      
+      const url = isEdit ? `${API_URL}/api/admin/english-services/${item.id}` : `${API_URL}/api/admin/english-services`;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          showNotification(result.message, "success");
+          reloadData();
+          onClose();
+        } else {
+          showNotification(result.message || (isEdit ? "Cập nhật thất bại!" : "Thêm thất bại!"), "error");
+        }
+      } catch (error) {
+        showNotification("Lỗi kết nối server!", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <Modal title={isEdit ? `Chỉnh sửa DV #${item.id}` : "Thêm Dịch vụ mới"} onClose={onClose}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input label="Mã dịch vụ (Code)" name="code" value={formData.code} onChange={handleChange} required />
+          <Input label="Tên dịch vụ" name="name" value={formData.name} onChange={handleChange} required />
+          <TextArea label="Các điểm dịch vụ (Mỗi điểm 1 dòng)" name="services" value={formData.services} onChange={handleChange} required rows="5" />
+          <Input label="Giá (đ)" name="price" type="number" value={formData.price} onChange={handleChange} required min="0" />
+          <Input label="Icon (Emoji)" name="icon" value={formData.icon} onChange={handleChange} placeholder="Ví dụ: 🎬" maxLength="2"/>
+          <Input label="URL ảnh đại diện (img)" name="img" value={formData.img} onChange={handleChange} placeholder="Đường dẫn đến file hình ảnh" />
+          <Button type="submit" disabled={loading}>{loading ? 'Đang xử lý...' : isEdit ? 'Cập nhật' : 'Thêm mới'}</Button>
+        </form>
+      </Modal>
+    );
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex justify-between items-center">
+        Quản lý Dịch vụ Tiếng Anh ({data.length})
+        <button onClick={() => { setCurrentItem(null); setIsModalOpen(true); }} className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+          <span className="flex items-center"><Award className="w-5 h-5 mr-2" />Thêm mới</span>
+        </button>
+      </h2>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50">
+              <Th>ID</Th><Th>Mã DV</Th><Th>Tên dịch vụ</Th><Th>Giá</Th><Th>Thao tác</Th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {data.map((item) => (
+              <tr key={item.id} className="hover:bg-gray-50">
+                <Td>{item.id}</Td>
+                <Td className="font-medium text-purple-600">{item.code}</Td>
+                <Td>{item.name}</Td>
+                <Td className="font-semibold text-green-600">{Number(item.price).toLocaleString()}đ</Td>
+                <Td>
+                  <button onClick={() => { setCurrentItem(item); setIsModalOpen(true); }} className="text-blue-600 hover:text-blue-800 mr-3">Sửa</button>
+                  <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800">Xóa</button>
+                </Td>
+              </tr>
+            ))}
+            {data.length === 0 && <tr><Td colSpan="5" className="text-center text-gray-500 py-8">Chưa có dịch vụ nào</Td></tr>}
+          </tbody>
+        </table>
+      </div>
+      {(isModalOpen && currentItem !== undefined) && <ServiceModal item={currentItem} onClose={() => setIsModalOpen(false)} />}
+    </div>
+  );
+};
+
+// Component quản lý Tài liệu
+const AdminDocumentManagement = ({ data, setData, token, showNotification, API_URL, reloadData }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa tài liệu #${id} không?`)) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/admin/documents/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        showNotification("Xóa tài liệu thành công!", "success");
+        setData(prev => prev.filter(item => item.id !== id));
+        reloadData();
+      } else {
+        showNotification(result.message || "Xóa thất bại!", "error");
+      }
+    } catch (error) {
+      showNotification("Lỗi kết nối khi xóa!", "error");
+    }
+  };
+
+  const DocumentModal = ({ item, onClose }) => {
+    const [formData, setFormData] = useState({
+      code: item?.code || '',
+      name: item?.name || '',
+      price: item?.price || 0,
+      semester: item?.semester || '',
+      img: item?.img || '',
+    });
+    const isEdit = !!item;
+    const [loading, setLoading] = useState(false);
+
+    const handleChange = (e) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      const url = isEdit ? `${API_URL}/api/admin/documents/${item.id}` : `${API_URL}/api/admin/documents`;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(formData),
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          showNotification(result.message, "success");
+          reloadData();
+          onClose();
+        } else {
+          showNotification(result.message || (isEdit ? "Cập nhật thất bại!" : "Thêm thất bại!"), "error");
+        }
+      } catch (error) {
+        showNotification("Lỗi kết nối server!", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <Modal title={isEdit ? `Chỉnh sửa Tài liệu #${item.id}` : "Thêm Tài liệu mới"} onClose={onClose}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input label="Mã môn (Code)" name="code" value={formData.code} onChange={handleChange} required />
+          <Input label="Tên tài liệu" name="name" value={formData.name} onChange={handleChange} required />
+          <Input label="Kỳ học (Semester)" name="semester" value={formData.semester} onChange={handleChange} required placeholder="Ví dụ: Kỳ 1" />
+          <Input label="Giá (đ)" name="price" type="number" value={formData.price} onChange={handleChange} required min="0" />
+          <Input label="URL ảnh (img)" name="img" value={formData.img} onChange={handleChange} placeholder="Đường dẫn đến file hình ảnh" />
+          <Button type="submit" disabled={loading}>{loading ? 'Đang xử lý...' : isEdit ? 'Cập nhật' : 'Thêm mới'}</Button>
+        </form>
+      </Modal>
+    );
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex justify-between items-center">
+        Quản lý Tài liệu ôn thi ({data.length})
+        <button onClick={() => { setCurrentItem(null); setIsModalOpen(true); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          <span className="flex items-center"><Package className="w-5 h-5 mr-2" />Thêm mới</span>
+        </button>
+      </h2>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50">
+              <Th>ID</Th><Th>Mã môn</Th><Th>Tên tài liệu</Th><Th>Kỳ</Th><Th>Giá</Th><Th>Thao tác</Th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {data.map((item) => (
+              <tr key={item.id} className="hover:bg-gray-50">
+                <Td>{item.id}</Td>
+                <Td className="font-medium text-purple-600">{item.code}</Td>
+                <Td>{item.name}</Td>
+                <Td>{item.semester}</Td>
+                <Td className="font-semibold text-green-600">{Number(item.price).toLocaleString()}đ</Td>
+                <Td>
+                  <button onClick={() => { setCurrentItem(item); setIsModalOpen(true); }} className="text-blue-600 hover:text-blue-800 mr-3">Sửa</button>
+                  <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800">Xóa</button>
+                </Td>
+              </tr>
+            ))}
+            {data.length === 0 && <tr><Td colSpan="6" className="text-center text-gray-500 py-8">Chưa có tài liệu nào</Td></tr>}
+          </tbody>
+        </table>
+      </div>
+      {(isModalOpen && currentItem !== undefined) && <DocumentModal item={currentItem} onClose={() => setIsModalOpen(false)} />}
+    </div>
+  );
+};
+
+
+// HELPER COMPONENTS FOR ADMIN MODALS (Để code gọn hơn)
+const Modal = ({ title, children, onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-[110] flex items-center justify-center p-4">
+    <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
+        <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700"><X className="w-6 h-6" /></button>
+      </div>
+      <div className="p-6">{children}</div>
+    </div>
+  </div>
+);
+
+const Input = ({ label, name, type = 'text', value, onChange, required = false, placeholder, min }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}{required && ' *'}</label>
+    <input type={type} name={name} value={value} onChange={onChange} required={required} placeholder={placeholder} min={min} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+  </div>
+);
+
+const TextArea = ({ label, name, value, onChange, required = false, rows = '3' }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}{required && ' *'}</label>
+    <textarea name={name} value={value} onChange={onChange} required={required} rows={rows} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+  </div>
+);
+
+const Button = ({ children, type = 'button', onClick, disabled }) => (
+  <button type={type} onClick={onClick} disabled={disabled} className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+    {children}
+  </button>
+);
+
+const Th = ({ children }) => <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{children}</th>;
+const Td = ({ children, className = '' }) => <td className={`px-6 py-4 text-sm text-gray-900 ${className}`}>{children}</td>;
 
 // ============ ADMIN DASHBOARD COMPONENT ============
 const AdminDashboard = ({ onBackToMain, showNotification }) => {
@@ -70,7 +483,6 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
   const [loginPassword, setLoginPassword] = useState("");
 
   const [stats, setStats] = useState({
-    
     totalOrders: 0,
     totalRevenue: 0,
     totalUsers: 0,
@@ -78,6 +490,11 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
   });
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
+  // 🔥 THÊM CÁC STATES DỮ LIỆU MỚI
+  const [courses, setCourses] = useState([]);
+  const [englishServices, setEnglishServices] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  
   const [activeTab, setActiveTab] = useState("dashboard");
 
 
@@ -87,8 +504,36 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
       setAdminToken(token);
       setIsAuthenticated(true);
       fetchDashboardData(token);
+      fetchAllContentData(token); // 🔥 TẢI DỮ LIỆU CONTENT
     }
   }, []);
+
+  const fetchAllContentData = async (token) => {
+    try {
+      const [coursesRes, servicesRes, docsRes] = await Promise.all([
+        fetch(`${API_URL}/api/courses`),
+        fetch(`${API_URL}/api/english-services`),
+        fetch(`${API_URL}/api/documents`),
+      ]);
+
+      const coursesData = await coursesRes.json();
+      const servicesData = await servicesRes.json();
+      const docsData = await docsRes.json();
+
+      if (coursesData.success) setCourses(coursesData.courses);
+      else showNotification("Lỗi tải Khóa học", 'error');
+      
+      if (servicesData.success) setEnglishServices(servicesData.services);
+      else showNotification("Lỗi tải Dịch vụ Tiếng Anh", 'error');
+
+      if (docsData.success) setDocuments(docsData.documents);
+      else showNotification("Lỗi tải Tài liệu", 'error');
+
+    } catch (error) {
+      console.error("Fetch content error:", error);
+      showNotification("Lỗi kết nối khi tải nội dung!", "error");
+    }
+  }
 
   const handleLogin = async () => {
     if (!loginEmail || !loginPassword) {
@@ -99,11 +544,11 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
     setLoading(true);
 
     try {
-  const response = await fetch(`${API_URL}/api/admin/login`, { // <== SỬA ĐOẠN NÀY
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-  });
+      const response = await fetch(`${API_URL}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
 
       const data = await response.json();
 
@@ -112,6 +557,7 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
         setIsAuthenticated(true);
         localStorage.setItem("adminToken", data.token);
         fetchDashboardData(data.token);
+        fetchAllContentData(data.token); // 🔥 TẢI DỮ LIỆU CONTENT SAU KHI LOGIN
         setLoginEmail("");
         setLoginPassword("");
       } else {
@@ -119,7 +565,7 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
       }
     } catch (error) {
       console.error("Login error:", error);
-     showNotification("Lỗi kết nối server!", "error");
+      showNotification("Lỗi kết nối server!", "error");
     } finally {
       setLoading(false);
     }
@@ -129,29 +575,22 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
     setIsAuthenticated(false);
     setAdminToken(null);
     localStorage.removeItem("adminToken");
-    setStats({
-      totalOrders: 0,
-      totalRevenue: 0,
-      totalUsers: 0,
-      pendingOrders: 0,
-    });
+    setStats({ totalOrders: 0, totalRevenue: 0, totalUsers: 0, pendingOrders: 0, });
     setOrders([]);
     setUsers([]);
+    // 🔥 RESET CONTENT
+    setCourses([]);
+    setEnglishServices([]);
+    setDocuments([]);
   };
 
   const fetchDashboardData = async (token) => {
-  try {
-    const [statsRes, ordersRes, usersRes] = await Promise.all([
-      fetch(`${API_URL}/api/admin/stats`, { // <== SỬA TẠI ĐÂY
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch(`${API_URL}/api/admin/orders`, { // <== SỬA TẠI ĐÂY
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch(`${API_URL}/api/admin/users`, { // <== SỬA TẠI ĐÂY
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    ]);
+    try {
+      const [statsRes, ordersRes, usersRes] = await Promise.all([
+        fetch(`${API_URL}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/admin/orders`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
 
       const statsData = await statsRes.json();
       const ordersData = await ordersRes.json();
@@ -162,6 +601,7 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
       if (usersData.success) setUsers(usersData.users);
     } catch (error) {
       console.error("Fetch error:", error);
+      showNotification("Lỗi khi tải dữ liệu dashboard!", "error");
     }
   };
 
@@ -230,7 +670,8 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+      // Lưu ý: Endpoint trong code gốc có vẻ bị thiếu '/api/admin/'. Tôi sửa lại theo chuẩn đã định nghĩa trong server.js (api/admin/users/:id)
+      const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -243,7 +684,7 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
       if (response.ok && data.success) {
         setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
         fetchDashboardData(adminToken);
-        const message = data.deletedOrdersCount > 0 
+        const message = data.deletedOrdersCount > 0
           ? `Đã xóa người dùng và ${data.deletedOrdersCount} đơn hàng liên quan!`
           : `Đã xóa người dùng thành công!`;
         showNotification(message, 'success');
@@ -258,26 +699,10 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: {
-        bg: "bg-yellow-100",
-        text: "text-yellow-800",
-        label: "Chờ xử lý",
-      },
-      processing: {
-        bg: "bg-blue-100",
-        text: "text-blue-800",
-        label: "Đang xử lý",
-      },
-      completed: {
-        bg: "bg-green-100",
-        text: "text-green-800",
-        label: "Hoàn thành",
-      },
-      cancelled: {
-        bg: "bg-red-100",
-        text: "text-red-800",
-        label: "Đã hủy",
-      },
+      pending: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Chờ xử lý" },
+      processing: { bg: "bg-blue-100", text: "text-blue-800", label: "Đang xử lý" },
+      completed: { bg: "bg-green-100", text: "text-green-800", label: "Hoàn thành" },
+      cancelled: { bg: "bg-red-100", text: "text-red-800", label: "Đã hủy" },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -290,61 +715,228 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
       </span>
     );
   };
+// ----------------------------------------------------------------------
+// ------------------------- RENDER FUNCTIONS -----------------------------
+// ----------------------------------------------------------------------
+
+  // Function để render nội dung theo tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return renderDashboard();
+      case "orders":
+        return renderOrders();
+      case "users":
+        return renderUsers();
+      // 🔥 THÊM CÁC TRƯỜNG HỢP MỚI
+      case "course_management":
+        return <AdminCourseManagement data={courses} setData={setCourses} token={adminToken} showNotification={showNotification} API_URL={API_URL} reloadData={() => fetchAllContentData(adminToken)} />;
+      case "service_management":
+        return <AdminServiceManagement data={englishServices} setData={setEnglishServices} token={adminToken} showNotification={showNotification} API_URL={API_URL} reloadData={() => fetchAllContentData(adminToken)} />;
+      case "document_management":
+        return <AdminDocumentManagement data={documents} setData={setDocuments} token={adminToken} showNotification={showNotification} API_URL={API_URL} reloadData={() => fetchAllContentData(adminToken)} />;
+      default:
+        return renderDashboard();
+    }
+  };
+
+  // Tách riêng hàm renderDashboard để code gọn hơn
+  const renderDashboard = () => (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+        Thống kê tổng quan
+      </h2>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+         {[
+            { label: "Tổng đơn hàng", value: stats.totalOrders, icon: ShoppingBag, color: "blue", },
+            { label: "Doanh thu", value: `${stats.totalRevenue.toLocaleString()}đ`, icon: DollarSign, color: "green", },
+            { label: "Người dùng", value: stats.totalUsers, icon: Users, color: "purple", },
+            { label: "Đơn chờ", value: stats.pendingOrders, icon: Clock, color: "yellow", },
+         ].map((stat, idx) => {
+            const Icon = stat.icon;
+            return (
+              <div key={idx} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
+                 <div className="flex items-center justify-between mb-4">
+                    <div className={`bg-${stat.color}-100 p-3 rounded-lg`}>
+                       <Icon className={`w-6 h-6 text-${stat.color}-600`} />
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-1">{stat.label}</p>
+                  <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+              </div>
+            );
+          })}
+      </div>
+      {/* Recent Orders */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">Đơn hàng gần đây</h3>
+        <div className="space-y-3">
+          {orders.slice(0, 5).map((order) => (
+            <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <p className="font-semibold text-gray-800">Đơn #{order.id}</p>
+                <p className="text-sm text-gray-600">{order.customerInfo.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-blue-600 mb-1">{order.total.toLocaleString()}đ</p>
+                {getStatusBadge(order.status)}
+              </div>
+            </div>
+          ))}
+          {orders.length === 0 && (<p className="text-center text-gray-500 py-4">Chưa có đơn hàng nào</p>)}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Tách riêng hàm renderOrders
+  const renderOrders = () => (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Quản lý đơn hàng</h2>
+      <div className="space-y-4">
+        {orders.map((order) => (
+          <div key={order.id} className="bg-white rounded-xl shadow-sm p-6">
+            {/* ... (Nội dung hiển thị đơn hàng hiện tại) ... */}
+            <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Đơn hàng #{order.id}</h3>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <span className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      {new Date(order.createdAt).toLocaleString("vi-VN")}
+                    </span>
+                  </div>
+                </div>
+                {getStatusBadge(order.status)}
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 mb-4">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-gray-800">Thông tin khách hàng</h4>
+                  <div className="space-y-1 text-sm">
+                    <p className="flex items-center text-gray-600"><Users className="w-4 h-4 mr-2" />{order.customerInfo.name}</p>
+                    <p className="flex items-center text-gray-600"><Mail className="w-4 h-4 mr-2" />{order.customerInfo.email}</p>
+                    <p className="flex items-center text-gray-600"><Phone className="w-4 h-4 mr-2" />{order.customerInfo.phone}</p>
+                    {order.customerInfo.note && (<p className="text-gray-600 mt-2"><span className="font-medium">Ghi chú:</span> {order.customerInfo.note}</p>)}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-gray-800">Sản phẩm</h4>
+                  <div className="space-y-2">
+                    {order.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between text-sm bg-gray-50 p-2 rounded">
+                        <span className="text-gray-700">{item.name}</span>
+                        <span className="font-semibold text-gray-800">{item.price.toLocaleString()}đ</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                      <span>Tổng cộng</span>
+                      <span className="text-blue-600">{order.total.toLocaleString()}đ</span>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-2 pt-4 border-t">
+              <button onClick={() => updateOrderStatus(order.id, "processing")} disabled={order.status === "processing"} className="flex-1 min-w-[150px] bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition disabled:opacity-50 disabled:cursor-not-allowed">Đang xử lý</button>
+              <button onClick={() => updateOrderStatus(order.id, "completed")} disabled={order.status === "completed"} className="flex-1 min-w-[150px] bg-green-50 text-green-600 px-4 py-2 rounded-lg hover:bg-green-100 transition disabled:opacity-50 disabled:cursor-not-allowed">Hoàn thành</button>
+              <button onClick={() => updateOrderStatus(order.id, "cancelled")} disabled={order.status === "cancelled"} className="flex-1 min-w-[150px] bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed">Hủy đơn</button>
+              <button onClick={() => deleteOrder(order.id)} className="flex-1 min-w-[150px] bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition font-semibold">Xóa đơn</button>
+            </div>
+          </div>
+        ))}
+        {orders.length === 0 && (
+          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+            <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Chưa có đơn hàng nào</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Tách riêng hàm renderUsers
+  const renderUsers = () => (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Quản lý người dùng</h2>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số đơn hàng</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tổng chi tiêu</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày đăng ký</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm text-gray-900">{user.id}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.name}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {user.orderCount || 0} đơn
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm font-semibold text-green-600">
+                    {(user.totalSpent || 0).toLocaleString()}đ
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <button onClick={() => deleteUser(user.id)} className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-semibold text-sm">
+                      Xóa
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {users.length === 0 && (
+          <div className="p-12 text-center">
+            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Chưa có người dùng nào</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+// ----------------------------------------------------------------------
+// ------------------------- MAIN RENDER --------------------------------
+// ----------------------------------------------------------------------
 
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-          <button
-            onClick={onBackToMain}
-            className="mb-4 text-blue-600 hover:text-blue-800 flex items-center"
-          >
-            ← Quay lại trang chính
-          </button>
-
+          <button onClick={onBackToMain} className="mb-4 text-blue-600 hover:text-blue-800 flex items-center">← Quay lại trang chính</button>
           <div className="text-center mb-8">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <BarChart3 className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              Admin Dashboard
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">Admin Dashboard</h2>
             <p className="text-gray-600">Đăng nhập để quản lý hệ thống</p>
           </div>
-
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="admin@gmail.com"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="admin@gmail.com"/>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mật khẩu
-              </label>
-              <input
-                type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="••••••••"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+              <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleLogin()} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="••••••••"/>
             </div>
-
-            <button
-              onClick={handleLogin}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition transform hover:scale-105 disabled:opacity-50"
-            >
+            <button onClick={handleLogin} disabled={loading} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition transform hover:scale-105 disabled:opacity-50">
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </div>
@@ -359,34 +951,19 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-white" />
-              </div>
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-lg"><BarChart3 className="w-6 h-6 text-white" /></div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Admin Dashboard
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
                 <p className="text-sm text-gray-600">Quản lý hệ thống</p>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
-              <button
-                onClick={onBackToMain}
-                className="text-sm text-blue-600 hover:text-blue-800"
-              >
-                ← Trang chính
-              </button>
-              <button
-                onClick={() => fetchDashboardData(adminToken)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
+              <button onClick={onBackToMain} className="text-sm text-blue-600 hover:text-blue-800">← Trang chính</button>
+              <button onClick={() => { fetchDashboardData(adminToken); fetchAllContentData(adminToken); }} className="p-2 hover:bg-gray-100 rounded-lg transition">
                 <RefreshCw className="w-5 h-5 text-gray-600" />
               </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition"
-              >
+              <button onClick={handleLogout} className="flex items-center space-x-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition">
                 <LogOut className="w-5 h-5" />
                 <span>Đăng xuất</span>
               </button>
@@ -395,25 +972,20 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
         </div>
       </header>
 
-      <nav className="bg-white border-b">
+      <nav className="bg-white border-b overflow-x-auto">
         <div className="container mx-auto px-6">
-          <div className="flex space-x-8">
+          <div className="flex space-x-8 whitespace-nowrap">
             {[
               { id: "dashboard", label: "Tổng quan", icon: BarChart3 },
               { id: "orders", label: "Đơn hàng", icon: ShoppingBag },
               { id: "users", label: "Người dùng", icon: Users },
+              { id: "course_management", label: "QL Khóa học", icon: Book },
+              { id: "service_management", label: "QL Dịch vụ TA", icon: Award },
+              { id: "document_management", label: "QL Tài liệu", icon: Package },
             ].map((tab) => {
               const Icon = tab.icon;
               return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 border-b-2 transition ${
-                    activeTab === tab.id
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-600 hover:text-gray-900"
-                  }`}
-                >
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center space-x-2 py-4 border-b-2 transition ${activeTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-600 hover:text-gray-900"}`}>
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{tab.label}</span>
                 </button>
@@ -928,19 +1500,28 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
-const [notification, setNotification] = useState({ message: '', type: '' });
+  const [notification, setNotification] = useState({ message: '', type: '' });
 
-    const showNotification = (message, type = 'info', duration = 3000) => {
-        setNotification({ message, type });
-        setTimeout(() => {
-            setNotification({ message: '', type: '' });
-        }, duration);
-    };
-    // 🔥 THÊM CÁC STATES MỚI CHO COUPON
-    const [couponCode, setCouponCode] = useState('');
-    const [discountAmount, setDiscountAmount] = useState(0);
-    const [couponMessage, setCouponMessage] = useState('');
-    const [couponLoading, setCouponLoading] = useState(false);
+    const showNotification = (message, type = 'info', duration = 3000) => {
+        setNotification({ message, type });
+        setTimeout(() => {
+            setNotification({ message: '', type: '' });
+        }, duration);
+    };
+
+    // 🔥 THÊM CÁC STATES DỮ LIỆU TỪ API (Sẽ dùng để hiển thị trên trang chính)
+    const [apiCourses, setApiCourses] = useState([]);
+    const [apiEnglishServices, setApiEnglishServices] = useState([]);
+    const [apiAllDocuments, setApiAllDocuments] = useState([]);
+    // 🔥 THÊM CÁC STATES MỚI CHO COUPON
+    const [couponCode, setCouponCode] = useState('');
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [couponMessage, setCouponMessage] = useState('');
+    const [couponLoading, setCouponLoading] = useState(false);
+
+
+
+
 // Khôi phục component Notification (Cần có trong file của bạn)
     const Notification = ({ message, type, onClose }) => {
         if (!message) return null;
@@ -964,7 +1545,28 @@ const [notification, setNotification] = useState({ message: '', type: '' });
     };
     
     
+const fetchContent = async () => {
+    try {
+        const [coursesRes, servicesRes, docsRes] = await Promise.all([
+            fetch(`${API_URL}/api/courses`),
+            fetch(`${API_URL}/api/english-services`),
+            fetch(`${API_URL}/api/documents`),
+        ]);
 
+        const coursesData = await coursesRes.json();
+        const servicesData = await servicesRes.json();
+        const docsData = await docsRes.json();
+
+        // 🔥 Cập nhật states mới
+        if (coursesData.success) setApiCourses(coursesData.courses);
+        if (servicesData.success) setApiEnglishServices(servicesData.services);
+        if (docsData.success) setApiAllDocuments(docsData.documents);
+
+    } catch (error) {
+        console.error("Fetch content error:", error);
+        // showNotification("Lỗi tải dữ liệu nội dung!", "error"); // Tùy chọn, có thể bỏ qua để tránh spam notification khi server khởi động
+    }
+};
 
     // 🔥 LOGIC COUPON MỚI
     const handleApplyCoupon = async (e) => {
@@ -981,23 +1583,24 @@ const [notification, setNotification] = useState({ message: '', type: '' });
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ couponCode }),
     });
-            const data = await response.json();
+           const data = await response.json();
 
-            const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
+            const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
 
-            if (data.success) {
+            if (data.success) {
                 // Kiểm tra tổng tiền tối thiểu (Mã 10k chỉ áp dụng cho đơn > 10k)
-                const minTotal = data.discount; 
-                
-                if (cartTotal < minTotal) {
-                    setCouponMessage(`❌ Mã này chỉ áp dụng cho đơn hàng trên ${minTotal.toLocaleString()}đ.`);
-                    setDiscountAmount(0);
-                    showNotification(`Mã cần đơn hàng tối thiểu ${minTotal.toLocaleString()}đ.`, 'warning');
-                } else {
-                    setDiscountAmount(data.discount);
-                    setCouponMessage(data.message);
-                    showNotification(data.message, 'success');
-                }
+                const minTotal = data.discount; 
+                
+                // 🔥 SỬA LOGIC: Điều kiện ĐÚNG phải là TỔNG TIỀN >= MIN_TOTAL
+                if (cartTotal < minTotal) {
+                    setCouponMessage(`❌ Mã này chỉ áp dụng cho đơn hàng tối thiểu ${minTotal.toLocaleString()}đ.`); // Đổi text hiển thị thành TỐI THIỂU
+                    setDiscountAmount(0);
+                    showNotification(`Mã cần đơn hàng tối thiểu ${minTotal.toLocaleString()}đ.`, 'warning');
+                } else {
+                    setDiscountAmount(data.discount);
+                    setCouponMessage(data.message);
+                    showNotification(data.message, 'success');
+                }
             } else {
                 setCouponMessage(data.message);
                 showNotification(data.message || 'Mã giảm giá không hợp lệ.', 'error');
@@ -1106,15 +1709,16 @@ const [notification, setNotification] = useState({ message: '', type: '' });
   };
 
   // Load user from localStorage
-  useEffect(() => {
+ useEffect(() => {
     const savedUser = localStorage.getItem("currentUser");
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser));
     }
+  fetchContent(); 
   }, []);
 
   // Dữ liệu khóa học
-  const courses = [
+const staticCourses = [
     {
       id: 1,
       code: "MAE101",
@@ -1189,8 +1793,8 @@ const [notification, setNotification] = useState({ message: '', type: '' });
     },
   ];
 
-  // Dữ liệu dịch vụ tiếng Anh
-  const englishServices = [
+  // Dữ liệu dịch vụ tiếng Anh (Dữ liệu tĩnh gốc - dùng làm fallback)
+  const staticEnglishServices = [
     {
       id: "luk-video",
       name: "Edit Video LUK",
@@ -1263,34 +1867,39 @@ const [notification, setNotification] = useState({ message: '', type: '' });
     },
   ];
 
-  // Dữ liệu tài liệu
-  const allDocuments = [
-    // Kỳ 1
-    { code: "SSL101", name: "Soft Skill Learning 1", price: 70000, semester: "Kỳ 1", img: mas291 },
-    { code: "CEA201", name: "Introduction to Computer Architecture", price: 70000, semester: "Kỳ 1", img: mas291 },
-    { code: "CSI106", name: "Introduction to Computer Science", price: 70000, semester: "Kỳ 1", img: mas291 },
-    { code: "PRF192", name: "Programming Fundamentals", price: 70000, semester: "Kỳ 1", img: mas291 },
-    { code: "MAE101", name: "Mathematics for Engineers", price: 70000, semester: "Kỳ 1", img: mae101 },
-    
-    // Kỳ 2
-    { code: "NWC204", name: "Networking with Windows Server", price: 70000, semester: "Kỳ 2", img: lab211 },
-    { code: "OSG202", name: "Operating Systems", price: 70000, semester: "Kỳ 2", img: lab211 },
-    { code: "MAD101", name: "Discrete Mathematics", price: 70000, semester: "Kỳ 2", img: mad101 },
-    { code: "WED201", name: "Web Design & Development", price: 70000, semester: "Kỳ 2", img: wed201 },
-    { code: "PRO192", name: "Object-Oriented Programming with Java", price: 70000, semester: "Kỳ 2", img: pro192 },
+  // Dữ liệu tài liệu (Dữ liệu tĩnh gốc - dùng làm fallback)
+  const staticAllDocuments = [
+    // Kỳ 1
+    { code: "SSL101", name: "Soft Skill Learning 1", price: 70000, semester: "Kỳ 1", img: mas291 },
+    { code: "CEA201", name: "Introduction to Computer Architecture", price: 70000, semester: "Kỳ 1", img: mas291 },
+    { code: "CSI106", name: "Introduction to Computer Science", price: 70000, semester: "Kỳ 1", img: mas291 },
+    { code: "PRF192", name: "Programming Fundamentals", price: 70000, semester: "Kỳ 1", img: mas291 },
+    { code: "MAE101", name: "Mathematics for Engineers", price: 70000, semester: "Kỳ 1", img: mae101 },
+    
+    // Kỳ 2
+    { code: "NWC204", name: "Networking with Windows Server", price: 70000, semester: "Kỳ 2", img: lab211 },
+    { code: "OSG202", name: "Operating Systems", price: 70000, semester: "Kỳ 2", img: lab211 },
+    { code: "MAD101", name: "Discrete Mathematics", price: 70000, semester: "Kỳ 2", img: mad101 },
+    { code: "WED201", name: "Web Design & Development", price: 70000, semester: "Kỳ 2", img: wed201 },
+    { code: "PRO192", name: "Object-Oriented Programming with Java", price: 70000, semester: "Kỳ 2", img: pro192 },
 
-    // Kỳ 3
-    { code: "LAB211", name: "Advanced Programming Lab", price: 70000, semester: "Kỳ 3", img: lab211 },
-    { code: "JPD113", name: "Japanese 1.1", price: 70000, semester: "Kỳ 3", img: csd201 },
-    { code: "DBI202", name: "Database Systems", price: 70000, semester: "Kỳ 3", img: dbi202 },
-    { code: "CSD201", name: "Data Structures & Algorithms", price: 70000, semester: "Kỳ 3", img: csd201 },
-    { code: "MAS291", name: "Mathematical Statistics", price: 70000, semester: "Kỳ 3", img: mas291 },
-  ];
+    // Kỳ 3
+    { code: "LAB211", name: "Advanced Programming Lab", price: 70000, semester: "Kỳ 3", img: lab211 },
+    { code: "JPD113", name: "Japanese 1.1", price: 70000, semester: "Kỳ 3", img: csd201 },
+    { code: "DBI202", name: "Database Systems", price: 70000, semester: "Kỳ 3", img: dbi202 },
+    { code: "CSD201", name: "Data Structures & Algorithms", price: 70000, semester: "Kỳ 3", img: csd201 },
+    { code: "MAS291", name: "Mathematical Statistics", price: 70000, semester: "Kỳ 3", img: mas291 },
+  ];
 
-  const groupedDocuments = allDocuments.reduce((acc, doc) => {
-    (acc[doc.semester] = acc[doc.semester] || []).push(doc);
-    return acc;
-  }, {});
+  // 🔥 TÍCH HỢP DỮ LIỆU TỪ API VÀO TRANG CHÍNH
+const mergedCourses = apiCourses.length > 0 ? apiCourses : staticCourses;
+const mergedEnglishServices = apiEnglishServices.length > 0 ? apiEnglishServices : staticEnglishServices;
+const mergedAllDocuments = apiAllDocuments.length > 0 ? apiAllDocuments : staticAllDocuments;
+
+const groupedDocuments = mergedAllDocuments.reduce((acc, doc) => {
+    (acc[doc.semester] = acc[doc.semester] || []).push(doc);
+    return acc;
+}, {});
 
   const addToCart = (item) => {
         setCart([...cart, item]);
@@ -1708,7 +2317,7 @@ setDiscountAmount(0);
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {courses.map((course) => (
+            {mergedCourses.map((course) => ( // 🔥 THAY courses -> mergedCourses
               <div
                 key={course.id}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-3 hover:scale-105 overflow-hidden flex flex-col h-[28rem]"
@@ -1768,7 +2377,7 @@ setDiscountAmount(0);
 
           {/* Services Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto">
-            {englishServices.map((service) => (
+            {mergedEnglishServices.map((service) => ( // 🔥 THAY englishServices -> mergedEnglishServices
               <div
                 key={service.id}
                 className="bg-white rounded-3xl shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-2 flex flex-col min-h-[32rem] overflow-hidden"
@@ -1839,7 +2448,7 @@ setDiscountAmount(0);
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Object.keys(groupedDocuments).map((semester, idx) => (
+            {Object.keys(groupedDocuments).map((semester, idx) => ( // groupedDocuments đã được tính từ mergedAllDocuments ở trên
               <div
                 key={idx}
                 className="group bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-4 border-transparent hover:border-blue-400"

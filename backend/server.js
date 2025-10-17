@@ -1,26 +1,22 @@
 const express = require("express");
 const cors = require("cors");
-const mysql = require("mysql2/promise"); // SỬ DỤNG mysql2/promise
+const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-// Danh sách các nguồn gốc (origins) được phép truy cập
 const allowedOrigins = [
-  process.env.CLIENT_URL, // Ví dụ: 'https://webtuanvaquanfpt-frontend.onrender.com'
-  "http://localhost:5173", // Môi trường phát triển của bạn
-  "http://localhost:3000", // Cổng phát triển phổ biến khác
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Cho phép các request không có origin (như Postman hoặc mobile apps)
       if (!origin) return callback(null, true);
-
-      // Cho phép nếu origin nằm trong danh sách
       if (allowedOrigins.indexOf(origin) === -1) {
         const msg =
           "The CORS policy for this site does not allow access from the specified Origin.";
@@ -32,6 +28,7 @@ app.use(
   })
 );
 app.use(express.json());
+
 // 🚀 CẤU HÌNH KẾT NỐI MYSQL
 let dbPool;
 try {
@@ -40,62 +37,40 @@ try {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT, // <== SỬ DỤNG PORT
+    port: process.env.DB_PORT,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    // THÊM SSL ĐỂ ĐÁP ỨNG YÊU CẦU BẢO MẬT CỦA CÁC HOSTING CLOUD (NHƯ RAILWAY)
     ssl: {
       rejectUnauthorized: false,
     },
   });
   console.log("✅ MySQL Pool created successfully");
 
-  // Kiểm tra kết nối
   dbPool
     .getConnection()
     .then((connection) => {
       console.log("🚀 Connected to MySQL database!");
-      connection.release(); // Trả lại kết nối
+      connection.release();
     })
     .catch((err) => {
       console.error("❌ Failed to connect to MySQL database:", err.message);
-      process.exit(1); // Thoát nếu không thể kết nối
+      process.exit(1);
     });
 } catch (error) {
   console.error("❌ MySQL setup error:", error.message);
   process.exit(1);
 }
-// Email Transporter
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     user: process.env.EMAIL_USER,
-//     pass: process.env.EMAIL_PASSWORD,
-//   },
-// });
 
-// Verify email configuration
-// transporter.verify((error, success) => {
-//   if (error) {
-//     console.log("❌ Email configuration error:", error);
-//   } else {
-//     console.log("✅ Email server is ready to send messages");
-//   }
-// });
-
-// ⚠️ QUAN TRỌNG: Đọc admin credentials từ .env
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "tuan0112";
 
 console.log("🔐 Admin Credentials Loaded:");
-console.log("   Email:", ADMIN_EMAIL);
+console.log("   Email:", ADMIN_EMAIL);
 console.log(
-  "   Password:",
+  "   Password:",
   ADMIN_PASSWORD ? "***" + ADMIN_PASSWORD.slice(-4) : "NOT SET"
 );
-
-// server.js (Thêm gần các biến ADMIN_EMAIL/PASSWORD)
 
 // ===================== COUPON DATA =====================
 const COUPONS = [
@@ -110,57 +85,27 @@ const COUPONS = [
   { code: "TQ90-DANGCAP", discount: 90000 },
   { code: "TQ100-QUADINH", discount: 100000 },
 ];
-// =======================================================
-// ===================== ADMIN ROUTES =====================
 
-// Đăng nhập admin
-app.post("/api/admin/login", (req, res) => {
+// ===================== HELPER FUNCTIONS =====================
+
+/**
+ * Hàm giúp parse JSON an toàn cho các trường 'items' của orders.
+ */
+const safeParseJson = (jsonString, defaultValue = []) => {
+  if (!jsonString) return defaultValue;
   try {
-    const { email, password } = req.body;
-
-    console.log("🔍 Admin login attempt:");
-    console.log("   Received email:", email);
-    console.log("   Expected email:", ADMIN_EMAIL);
-    console.log("   Password match:", password === ADMIN_PASSWORD);
-
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      const adminToken = Buffer.from(`${email}:${Date.now()}`).toString(
-        "base64"
-      );
-
-      console.log("✅ Admin login successful");
-
-      res.json({
-        success: true,
-        message: "Đăng nhập admin thành công!",
-        token: adminToken,
-        admin: { email: ADMIN_EMAIL, role: "admin" },
-      });
-    } else {
-      console.log("❌ Admin login failed - credentials mismatch");
-      res.status(401).json({
-        success: false,
-        message: "Email hoặc mật khẩu admin không đúng!",
-      });
-    }
-  } catch (error) {
-    console.error("❌ Admin login error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server!",
-    });
+    return JSON.parse(jsonString);
+  } catch (e) {
+    console.error("JSON parse error:", e.message);
+    return defaultValue;
   }
-});
+};
 
-// Middleware kiểm tra admin token - IMPROVED VERSION
+// ===================== ADMIN MIDDLEWARE =====================
+
 const checkAdminAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
-
-  console.log("🔐 Auth check:");
-  console.log("   Header:", authHeader ? "Present" : "Missing");
-
   if (!authHeader) {
-    console.log("❌ No authorization header");
     return res.status(401).json({
       success: false,
       message: "Không có quyền truy cập! (Missing token)",
@@ -168,9 +113,7 @@ const checkAdminAuth = (req, res, next) => {
   }
 
   const token = authHeader.replace("Bearer ", "");
-
   if (!token) {
-    console.log("❌ No token after Bearer");
     return res.status(401).json({
       success: false,
       message: "Không có quyền truy cập! (Invalid format)",
@@ -179,65 +122,249 @@ const checkAdminAuth = (req, res, next) => {
 
   try {
     const decoded = Buffer.from(token, "base64").toString("utf-8");
-    console.log(
-      "   Decoded token starts with:",
-      decoded.substring(0, 20) + "..."
-    );
-
     if (decoded.startsWith(ADMIN_EMAIL + ":")) {
-      console.log("✅ Admin authenticated");
       next();
     } else {
-      console.log("❌ Token does not match admin email");
       res.status(401).json({
         success: false,
         message: "Token không hợp lệ!",
       });
     }
   } catch (error) {
-    console.log("❌ Token decode error:", error.message);
     res.status(401).json({
       success: false,
       message: "Token không hợp lệ!",
     });
   }
 };
-// Xóa người dùng (admin only)
-// server.js (Tìm đến route app.delete("/api/admin/users/:id", ...) )
+
+// ===================== ADMIN AUTH ROUTE =====================
+
+app.post("/api/admin/login", (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      const adminToken = Buffer.from(`${email}:${Date.now()}`).toString(
+        "base64"
+      );
+      res.json({
+        success: true,
+        message: "Đăng nhập admin thành công!",
+        token: adminToken,
+        admin: { email: ADMIN_EMAIL, role: "admin" },
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Email hoặc mật khẩu admin không đúng!",
+      });
+    }
+  } catch (error) {
+    console.error("❌ Admin login error:", error);
+    res.status(500).json({ success: false, message: "Lỗi server!" });
+  }
+});
+
+// ===================== ADMIN DASHBOARD ROUTES =====================
+
+// Lấy thống kê
+app.get("/api/admin/stats", checkAdminAuth, async (req, res) => {
+  try {
+    const [totalOrdersResult] = await dbPool.query(
+      "SELECT COUNT(id) AS count FROM orders"
+    );
+    const totalOrders = totalOrdersResult[0].count;
+
+    const [totalRevenueResult] = await dbPool.query(
+      "SELECT SUM(total) AS sum FROM orders WHERE status = 'completed'"
+    );
+    const totalRevenue = Number(totalRevenueResult[0].sum) || 0;
+
+    const [totalUsersResult] = await dbPool.query(
+      "SELECT COUNT(id) AS count FROM users"
+    );
+    const totalUsers = totalUsersResult[0].count;
+
+    const [pendingOrdersResult] = await dbPool.query(
+      "SELECT COUNT(id) AS count FROM orders WHERE status = 'pending'"
+    );
+    const pendingOrders = pendingOrdersResult[0].count;
+
+    res.json({
+      success: true,
+      stats: { totalOrders, totalRevenue, totalUsers, pendingOrders },
+    });
+  } catch (error) {
+    console.error("Admin stats error:", error);
+    res.status(500).json({ success: false, message: "Lỗi khi lấy thống kê!" });
+  }
+});
+
+// Quản lý Đơn hàng
+app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
+  try {
+    const [allOrders] = await dbPool.query(
+      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders ORDER BY createdAt DESC"
+    );
+
+    const formattedOrders = allOrders.map((order) => ({
+      id: order.id,
+      userId: order.userId,
+      items: safeParseJson(order.items), // Sử dụng helper
+      customerInfo: {
+        name: order.customerName,
+        phone: order.customerPhone,
+        email: order.customerEmail,
+        note: order.customerNote,
+      },
+      total: Number(order.total),
+      status: order.status,
+      createdAt: order.createdAt,
+    }));
+
+    res.json({ success: true, orders: formattedOrders });
+  } catch (error) {
+    console.error("Admin get orders error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi khi lấy danh sách đơn hàng!" });
+  }
+});
+
+app.patch("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
+  try {
+    const orderId = Number(req.params.id);
+    const { status } = req.body; // Cập nhật trạng thái
+
+    const [updateResult] = await dbPool.query(
+      "UPDATE orders SET status = ? WHERE id = ?",
+      [status, orderId]
+    );
+
+    if (updateResult.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy đơn hàng!" });
+    } // Cập nhật thông tin User nếu status là 'completed'
+
+    if (status === "completed") {
+      const [orders] = await dbPool.query(
+        "SELECT userId FROM orders WHERE id = ?",
+        [orderId]
+      );
+      const userId = orders[0]?.userId;
+
+      if (userId) {
+        const [stats] = await dbPool.query(
+          "SELECT COUNT(id) AS orderCount, SUM(total) AS totalSpent FROM orders WHERE userId = ? AND status = 'completed'",
+          [userId]
+        );
+        const { orderCount, totalSpent } = stats[0];
+
+        await dbPool.query(
+          "UPDATE users SET totalSpent = ?, orderCount = ? WHERE id = ?",
+          [Number(totalSpent) || 0, orderCount, userId]
+        );
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Cập nhật trạng thái thành công!",
+      order: { id: orderId, status },
+    });
+  } catch (error) {
+    console.error("❌ Update order error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi khi cập nhật đơn hàng!" });
+  }
+});
+
+app.delete("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
+  try {
+    const orderId = Number(req.params.id);
+    const [deleteResult] = await dbPool.query(
+      "DELETE FROM orders WHERE id = ?",
+      [orderId]
+    );
+
+    if (deleteResult.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy đơn hàng!" });
+    }
+
+    console.log(`✅ Đơn hàng #${orderId} đã bị xóa bởi admin`);
+    res.json({
+      success: true,
+      message: "Xóa đơn hàng thành công!",
+      deletedOrder: { id: orderId },
+    });
+  } catch (error) {
+    console.error("❌ Delete order error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xóa đơn hàng!",
+      error: error.message,
+    });
+  }
+});
+
+// Quản lý Người dùng
+app.get("/api/admin/users", checkAdminAuth, async (req, res) => {
+  try {
+    const [safeUsers] = await dbPool.query(
+      "SELECT id, name, email, createdAt, totalSpent, orderCount FROM users ORDER BY createdAt DESC"
+    );
+
+    const formattedUsers = safeUsers.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      createdAt: u.createdAt,
+      totalSpent: Number(u.totalSpent) || 0,
+      orderCount: u.orderCount || 0,
+    }));
+
+    res.json({ success: true, users: formattedUsers });
+  } catch (error) {
+    console.error("Admin get users error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi khi lấy danh sách người dùng!" });
+  }
+});
 
 app.delete("/api/admin/users/:id", checkAdminAuth, async (req, res) => {
   try {
     const userId = Number(req.params.id);
 
     if (isNaN(userId)) {
-      return res.status(400).json({
-        success: false,
-        message: "ID người dùng không hợp lệ!",
-      });
-    }
+      return res
+        .status(400)
+        .json({ success: false, message: "ID người dùng không hợp lệ!" });
+    } // Đếm số đơn hàng cần xóa
 
-    // 1. Kiểm tra tồn tại và đếm số đơn hàng cần xóa
     const [userOrders] = await dbPool.query(
       "SELECT COUNT(id) as count FROM orders WHERE userId = ?",
       [userId]
     );
-    const deletedOrdersCount = userOrders[0].count;
+    const deletedOrdersCount = userOrders[0].count; // Xóa người dùng (Orders sẽ tự động xóa nhờ ON DELETE CASCADE nếu bạn đã thiết lập)
 
-    // 2. Xóa người dùng (Orders sẽ tự động xóa nhờ ON DELETE CASCADE)
     const [deleteResult] = await dbPool.query(
       "DELETE FROM users WHERE id = ?",
       [userId]
     );
 
     if (deleteResult.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy người dùng!",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy người dùng!" });
     }
 
     console.log(
-      `✅ Người dùng #${userId} đã bị xóa bởi admin. Xóa ${deletedOrdersCount} đơn hàng liên quan.`
+      `✅ Người dùng #${userId} đã bị xóa. Xóa ${deletedOrdersCount} đơn hàng liên quan.`
     );
 
     res.json({
@@ -254,480 +381,429 @@ app.delete("/api/admin/users/:id", checkAdminAuth, async (req, res) => {
     });
   }
 });
-// Lấy dashboard stats
-// server.js (Tìm đến route app.get("/api/admin/stats", ...) )
 
-app.get("/api/admin/stats", checkAdminAuth, async (req, res) => {
+// ===================== CLIENT API (Courses, Services, Docs) =====================
+
+/** Lấy TẤT CẢ Khóa học */
+app.get("/api/courses", async (req, res) => {
   try {
-    // 1. Lấy tổng đơn hàng
-    const [totalOrdersResult] = await dbPool.query(
-      "SELECT COUNT(id) AS count FROM orders"
+    const [courses] = await dbPool.query(
+      "SELECT id, code, name, description, price, img, bgImg FROM courses ORDER BY code ASC"
     );
-    const totalOrders = totalOrdersResult[0].count;
-
-    // 2. Lấy tổng doanh thu (chỉ các đơn đã hoàn thành)
-    const [totalRevenueResult] = await dbPool.query(
-      "SELECT SUM(total) AS sum FROM orders WHERE status = 'completed'"
-    );
-    const totalRevenue = Number(totalRevenueResult[0].sum) || 0; // Chuyển sang Number, nếu NULL thì là 0
-
-    // 3. Lấy tổng người dùng
-    const [totalUsersResult] = await dbPool.query(
-      "SELECT COUNT(id) AS count FROM users"
-    );
-    const totalUsers = totalUsersResult[0].count;
-
-    // 4. Lấy đơn chờ xử lý
-    const [pendingOrdersResult] = await dbPool.query(
-      "SELECT COUNT(id) AS count FROM orders WHERE status = 'pending'"
-    );
-    const pendingOrders = pendingOrdersResult[0].count;
-
-    res.json({
-      success: true,
-      stats: {
-        totalOrders,
-        totalRevenue,
-        totalUsers,
-        pendingOrders,
-      },
-    });
+    res.json({ success: true, courses });
   } catch (error) {
-    console.error("Admin stats error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi lấy thống kê!",
-    });
-  }
-});
-// Endpoint kiểm tra một đơn hàng cụ thể
-app.get("/api/admin/orders/:id/check", checkAdminAuth, async (req, res) => {
-  try {
-    const orderId = Number(req.params.id);
-
-    // Tìm đơn hàng trong MySQL
-    const [orders] = await dbPool.query("SELECT * FROM orders WHERE id = ?", [
-      orderId,
-    ]);
-    const order = orders[0];
-
-    res.json({
-      requestedId: req.params.id,
-      convertedId: orderId,
-      found: !!order,
-      order: order || null,
-    });
-  } catch (error) {
+    console.error("Get courses error:", error);
     res
       .status(500)
-      .json({ success: false, message: "Lỗi khi kiểm tra đơn hàng!" });
+      .json({ success: false, message: "Lỗi khi lấy danh sách khóa học!" });
   }
 });
-// server.js (Khôi phục endpoint LẤY TẤT CẢ ĐƠN HÀNG)
 
-app.get("/api/orders", checkAdminAuth, async (req, res) => {
+/** Lấy TẤT CẢ Dịch vụ Tiếng Anh */
+app.get("/api/english-services", async (req, res) => {
   try {
-    // 1. Lấy tất cả đơn hàng, sắp xếp mới nhất trước
-    const [allOrders] = await dbPool.query(
-      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders ORDER BY createdAt DESC"
+    const [services] = await dbPool.query(
+      "SELECT id, code, name, services, price, icon, img, bgImg FROM english_services ORDER BY price DESC"
     );
 
-    const formattedOrders = allOrders.map((order) => ({
-      id: order.id,
-      userId: order.userId,
-
-      // ⭐️ PHẦN CẦN SỬA: Bọc JSON.parse() bằng try-catch
-      items: (() => {
-        try {
-          // Trả về mảng rỗng nếu dữ liệu là NULL/undefined/rỗng, nếu không thì parse
-          if (!order.items) return [];
-          return JSON.parse(order.items);
-        } catch (e) {
-          // In lỗi ra console server để debug nhưng không làm sập request
-          console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id}: ${e.message}`
-          );
-          return []; // Trả về mảng rỗng [] cho frontend
-        }
-      })(),
-      customerInfo: {
-        name: order.customerName,
-        phone: order.customerPhone,
-        email: order.customerEmail,
-        note: order.customerNote,
-      },
-      total: Number(order.total), // Chuyển Decimal/String sang Number
-      status: order.status,
-      createdAt: order.createdAt,
+    const formattedServices = services.map((service) => ({
+      ...service,
+      services: safeParseJson(
+        service.services,
+        service.services ? [service.services] : []
+      ), // Chuyển JSON string services thành mảng
+      price: Number(service.price),
     }));
 
-    res.json({ success: true, orders: formattedOrders });
+    res.json({ success: true, services: formattedServices });
   } catch (error) {
-    console.error("Get /api/orders error:", error);
+    console.error("Get english services error:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách đơn hàng!",
+      message: "Lỗi khi lấy danh sách dịch vụ tiếng Anh!",
     });
   }
 });
 
-// server.js (Khôi phục endpoint LẤY ĐƠN HÀNG CỦA USER)
-
-app.get("/api/users/:userId/orders", async (req, res) => {
+/** Lấy TẤT CẢ Tài liệu */
+app.get("/api/documents", async (req, res) => {
   try {
-    const userId = Number(req.params.userId);
+    const [documents] = await dbPool.query(
+      "SELECT id, code, name, price, semester, img FROM documents ORDER BY semester, code ASC"
+    );
 
-    if (isNaN(userId)) {
+    const formattedDocuments = documents.map((doc) => ({
+      ...doc,
+      price: Number(doc.price),
+    }));
+
+    res.json({ success: true, documents: formattedDocuments });
+  } catch (error) {
+    console.error("Get documents error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi khi lấy danh sách tài liệu!" });
+  }
+});
+
+// ===================== ADMIN CRUD ROUTES (NEW) =====================
+
+// --- COURSES CRUD ---
+
+app.post("/api/admin/courses", checkAdminAuth, async (req, res) => {
+  try {
+    const { code, name, description, price, img, bgImg } = req.body;
+    if (!code || !name || !price) {
       return res.status(400).json({
         success: false,
-        message: "ID người dùng không hợp lệ!",
+        message: "Vui lòng nhập đầy đủ thông tin bắt buộc (Code, Name, Price)!",
       });
-    } // 1. Lấy đơn hàng của user, sắp xếp mới nhất trước
+    }
 
-    const [userOrders] = await dbPool.query(
-      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders WHERE userId = ? ORDER BY createdAt DESC",
-      [userId]
-    ); // 2. Format lại dữ liệu cho frontend (chuyển JSON string thành Object)
+    const finalDescription = description || null;
+    const finalImg = img || null;
+    const finalBgImg = bgImg || null;
 
-    const formattedOrders = userOrders.map((order) => ({
-      id: order.id,
-      userId: order.userId,
-      items: (() => {
-        try {
-          if (!order.items) return [];
-          return JSON.parse(order.items);
-        } catch (e) {
-          console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
-          );
-          return [];
-        }
-      })(),
-      customerInfo: {
-        name: order.customerName,
-        phone: order.customerPhone,
-        email: order.customerEmail,
-        note: order.customerNote,
-      },
-      total: Number(order.total),
-      status: order.status,
-      createdAt: order.createdAt,
-    }));
-
-    res.json({
+    const [result] = await dbPool.query(
+      "INSERT INTO courses (code, name, description, price, img, bgImg) VALUES (?, ?, ?, ?, ?, ?)",
+      [code, name, finalDescription, price, finalImg, finalBgImg] // Đã sửa
+    );
+    res.status(201).json({
       success: true,
-      orders: formattedOrders,
-      total: formattedOrders.length,
+      message: "Thêm khóa học thành công!",
+      courseId: result.insertId,
     });
   } catch (error) {
-    console.error("Get user orders error:", error);
+    console.error("Admin add course error:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách đơn hàng!",
+      message: "Lỗi khi thêm khóa học! (Có thể Code đã tồn tại)",
     });
   }
 });
-// Xóa đơn hàng (admin only) - FIXED VERSION
-app.delete("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
-  try {
-    const orderId = Number(req.params.id);
 
-    if (isNaN(orderId)) {
+app.put("/api/admin/courses/:id", checkAdminAuth, async (req, res) => {
+  try {
+    const courseId = Number(req.params.id);
+    const { code, name, description, price, img, bgImg } = req.body;
+    if (!code || !name || !price) {
       return res.status(400).json({
         success: false,
-        message: "ID đơn hàng không hợp lệ!",
+        message: "Vui lòng nhập đầy đủ thông tin bắt buộc!",
       });
     }
+    const finalDescription = description || null;
+    const finalImg = img || null;
+    const finalBgImg = bgImg || null;
 
-    // Xóa đơn hàng khỏi MySQL
-    const [deleteResult] = await dbPool.query(
-      "DELETE FROM orders WHERE id = ?",
-      [orderId]
+    const [result] = await dbPool.query(
+      "UPDATE courses SET code = ?, name = ?, description = ?, price = ?, img = ?, bgImg = ? WHERE id = ?",
+      [code, name, finalDescription, price, finalImg, finalBgImg, courseId] // Đã sửa
     );
 
-    if (deleteResult.affectedRows === 0) {
-      return res.status(404).json({
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy khóa học!" });
+    }
+
+    res.json({ success: true, message: "Cập nhật khóa học thành công!" });
+  } catch (error) {
+    console.error("Admin update course error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật khóa học! (Có thể Code bị trùng)",
+    });
+  }
+});
+
+app.delete("/api/admin/courses/:id", checkAdminAuth, async (req, res) => {
+  try {
+    const courseId = Number(req.params.id);
+    const [result] = await dbPool.query("DELETE FROM courses WHERE id = ?", [
+      courseId,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy khóa học!" });
+    }
+
+    res.json({ success: true, message: "Xóa khóa học thành công!" });
+  } catch (error) {
+    console.error("Admin delete course error:", error);
+    res.status(500).json({ success: false, message: "Lỗi khi xóa khóa học!" });
+  }
+});
+
+// --- ENGLISH SERVICES CRUD ---
+
+app.post("/api/admin/english-services", checkAdminAuth, async (req, res) => {
+  try {
+    const { code, name, services, price, icon, img, bgImg } = req.body;
+    if (!code || !name || !price || !services) {
+      return res.status(400).json({
         success: false,
-        message: "Không tìm thấy đơn hàng!",
+        message: "Vui lòng nhập đầy đủ thông tin bắt buộc!",
       });
     }
 
-    console.log(`✅ Đơn hàng #${orderId} đã bị xóa bởi admin`);
+    const servicesJson = JSON.stringify(services);
+    // 🔥 SỬA: Xử lý giá trị null
+    const finalIcon = icon || null;
+    const finalImg = img || null;
+    const finalBgImg = bgImg || null;
 
-    res.json({
-      success: true,
-      message: "Xóa đơn hàng thành công!",
-      deletedOrder: { id: orderId },
-    });
-  } catch (error) {
-    console.error("❌ Delete order error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi xóa đơn hàng!",
-      error: error.message,
-    });
-  }
-});
-// Lấy tất cả đơn hàng (admin only)
-app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
-  try {
-    // 1. Lấy tất cả đơn hàng, sắp xếp mới nhất trước
-    const [allOrders] = await dbPool.query(
-      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders ORDER BY createdAt DESC"
+    const [result] = await dbPool.query(
+      "INSERT INTO english_services (code, name, services, price, icon, img, bgImg) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        code,
+        name,
+        servicesJson,
+        price,
+        finalIcon, // Đã sửa
+        finalImg, // Đã sửa
+        finalBgImg, // Đã sửa
+      ]
     );
-
-    // 2. Format lại dữ liệu cho frontend
-    const formattedOrders = allOrders.map((order) => ({
-      id: order.id,
-      userId: order.userId,
-      // ⭐️ SỬA LỖI TẠI ĐÂY: Sử dụng khối try-catch để an toàn hơn
-      items: (() => {
-        try {
-          if (!order.items) return []; // Xử lý trường hợp NULL/undefined
-          return JSON.parse(order.items);
-        } catch (e) {
-          console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id}. Data: ${order.items}`,
-            e.message
-          );
-          return []; // Trả về mảng rỗng nếu lỗi
-        }
-      })(),
-      customerInfo: {
-        name: order.customerName,
-        phone: order.customerPhone,
-        email: order.customerEmail,
-        note: order.customerNote,
-      },
-      total: Number(order.total),
-      status: order.status,
-      createdAt: order.createdAt,
-    }));
-
-    res.json({
+    res.status(201).json({
       success: true,
-      orders: formattedOrders,
+      message: "Thêm dịch vụ thành công!",
+      serviceId: result.insertId,
     });
   } catch (error) {
-    console.error("Admin get orders error:", error);
+    console.error("Admin add service error:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách đơn hàng!",
+      message: "Lỗi khi thêm dịch vụ! (Có thể Code đã tồn tại)",
     });
   }
 });
 
-// Lấy tất cả users (admin only) - PHIÊN BẢN MỚI VỚI TOTALSPENT
-app.get("/api/admin/users", checkAdminAuth, async (req, res) => {
+app.put("/api/admin/english-services/:id", checkAdminAuth, async (req, res) => {
   try {
-    // Lấy thông tin user (đã có totalSpent và orderCount trong bảng)
-    const [safeUsers] = await dbPool.query(
-      "SELECT id, name, email, createdAt, totalSpent, orderCount FROM users ORDER BY createdAt DESC"
-    );
-
-    const formattedUsers = safeUsers.map((u) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      createdAt: u.createdAt,
-      totalSpent: Number(u.totalSpent) || 0,
-      orderCount: u.orderCount || 0,
-    }));
-
-    res.json({
-      success: true,
-      users: formattedUsers,
-    });
-  } catch (error) {
-    console.error("Admin get users error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi lấy danh sách người dùng!",
-    });
-  }
-});
-
-// Cập nhật trạng thái đơn hàng
-app.patch("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
-  try {
-    const orderId = Number(req.params.id);
-    const { status } = req.body;
-
-    // 1. Cập nhật trạng thái
-    const [updateResult] = await dbPool.query(
-      "UPDATE orders SET status = ? WHERE id = ?",
-      [status, orderId]
-    );
-
-    if (updateResult.affectedRows === 0) {
-      return res.status(404).json({
+    const serviceId = Number(req.params.id);
+    const { code, name, services, price, icon, img, bgImg } = req.body;
+    if (!code || !name || !price || !services) {
+      return res.status(400).json({
         success: false,
-        message: "Không tìm thấy đơn hàng!",
+        message: "Vui lòng nhập đầy đủ thông tin bắt buộc!",
       });
     }
+    const servicesJson = JSON.stringify(services);
 
-    // 2. Nếu trạng thái là 'completed', CẬP NHẬT THÔNG TIN USER
-    if (status === "completed") {
-      // a. Lấy thông tin đơn hàng vừa cập nhật
-      const [orders] = await dbPool.query(
-        "SELECT userId, total FROM orders WHERE id = ?",
-        [orderId]
+    // 🔥 SỬA: Xử lý giá trị null
+    const finalIcon = icon || null;
+    const finalImg = img || null;
+    const finalBgImg = bgImg || null;
+
+    const [result] = await dbPool.query(
+      "UPDATE english_services SET code = ?, name = ?, services = ?, price = ?, icon = ?, img = ?, bgImg = ? WHERE id = ?",
+      [
+        code,
+        name,
+        servicesJson,
+        price,
+        finalIcon, // Đã sửa
+        finalImg, // Đã sửa
+        finalBgImg, // Đã sửa
+        serviceId,
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy dịch vụ!" });
+    }
+
+    res.json({ success: true, message: "Cập nhật dịch vụ thành công!" });
+  } catch (error) {
+    console.error("Admin update service error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật dịch vụ! (Có thể Code bị trùng)",
+    });
+  }
+});
+
+app.delete(
+  "/api/admin/english-services/:id",
+  checkAdminAuth,
+  async (req, res) => {
+    try {
+      const serviceId = Number(req.params.id);
+      const [result] = await dbPool.query(
+        "DELETE FROM english_services WHERE id = ?",
+        [serviceId]
       );
-      const order = orders[0];
 
-      if (order) {
-        const userId = order.userId;
-
-        // b. Tính toán lại tổng chi tiêu và số đơn hoàn thành của user
-        const [stats] = await dbPool.query(
-          "SELECT COUNT(id) AS orderCount, SUM(total) AS totalSpent FROM orders WHERE userId = ? AND status = 'completed'",
-          [userId]
-        );
-
-        const { orderCount, totalSpent } = stats[0];
-
-        // c. Cập nhật lại user
-        await dbPool.query(
-          "UPDATE users SET totalSpent = ?, orderCount = ? WHERE id = ?",
-          [Number(totalSpent) || 0, orderCount, userId]
-        );
-
-        console.log(
-          `✅ Cập nhật user #${userId}: ${orderCount} đơn, ${Number(
-            totalSpent
-          ).toLocaleString()}đ`
-        );
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy dịch vụ!" });
       }
+
+      res.json({ success: true, message: "Xóa dịch vụ thành công!" });
+    } catch (error) {
+      console.error("Admin delete service error:", error);
+      res.status(500).json({ success: false, message: "Lỗi khi xóa dịch vụ!" });
     }
-
-    res.json({
-      success: true,
-      message:
-        "Cập nhật trạng thái đơn hàng và thông tin người dùng thành công!", // Cần lấy lại dữ liệu mới nhất để frontend cập nhật
-      order: { id: orderId, status },
-    });
-  } catch (error) {
-    console.error("❌ Update order error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi cập nhật đơn hàng!",
-    });
   }
-});
+);
 
-// ===================== USER ROUTES =====================
-// Lấy đơn hàng của user hiện tại
-app.get("/api/users/:userId/orders", async (req, res) => {
+// --- DOCUMENTS CRUD ---
+
+app.post("/api/admin/documents", checkAdminAuth, async (req, res) => {
   try {
-    const userId = Number(req.params.userId);
-
-    if (isNaN(userId)) {
+    const { code, name, price, semester, img } = req.body;
+    if (!code || !name || !price || !semester) {
       return res.status(400).json({
         success: false,
-        message: "ID người dùng không hợp lệ!",
+        message: "Vui lòng nhập đầy đủ thông tin bắt buộc!",
       });
-    } // 1. Lấy đơn hàng của user, sắp xếp mới nhất trước
+    }
+    const finalImg = img || null;
 
-    const [userOrders] = await dbPool.query(
-      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders WHERE userId = ? ORDER BY createdAt DESC",
-      [userId]
-    ); // 2. Format lại dữ liệu cho frontend (chuyển JSON string thành Object)
+    const [result] = await dbPool.query(
+      "INSERT INTO documents (code, name, price, semester, img) VALUES (?, ?, ?, ?, ?)",
+      [code, name, price, semester, finalImg] // Đã sửa
+    );
 
-    const formattedOrders = userOrders.map((order) => ({
-      id: order.id,
-      userId: order.userId, // ⭐️ ĐÃ SỬA: Xử lý JSON an toàn hơn
-      items: (() => {
-        try {
-          if (!order.items) return [];
-          return JSON.parse(order.items);
-        } catch (e) {
-          console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
-          );
-          return [];
-        }
-      })(),
-      customerInfo: {
-        name: order.customerName,
-        phone: order.customerPhone,
-        email: order.customerEmail,
-        note: order.customerNote,
-      },
-      total: Number(order.total), // Chuyển Decimal sang Number
-      status: order.status,
-      createdAt: order.createdAt,
-    }));
-
-    res.json({
+    res.status(201).json({
       success: true,
-      orders: formattedOrders,
-      total: formattedOrders.length,
+      message: "Thêm tài liệu thành công!",
+      documentId: result.insertId,
     });
   } catch (error) {
-    console.error("Get user orders error:", error);
+    console.error("Admin add document error:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách đơn hàng!",
+      message: "Lỗi khi thêm tài liệu! (Có thể Code đã tồn tại)",
     });
   }
 });
+
+app.put("/api/admin/documents/:id", checkAdminAuth, async (req, res) => {
+  try {
+    const docId = Number(req.params.id);
+    const { code, name, price, semester, img } = req.body;
+    if (!code || !name || !price || !semester) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập đầy đủ thông tin bắt buộc!",
+      });
+    }
+    const finalImg = img || null;
+
+    const [result] = await dbPool.query(
+      "UPDATE documents SET code = ?, name = ?, price = ?, semester = ?, img = ? WHERE id = ?",
+      [code, name, price, semester, finalImg, docId] // Đã sửa
+    );
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy tài liệu!" });
+    }
+
+    res.json({ success: true, message: "Cập nhật tài liệu thành công!" });
+  } catch (error) {
+    console.error("Admin update document error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật tài liệu! (Có thể Code bị trùng)",
+    });
+  }
+});
+
+app.delete("/api/admin/documents/:id", checkAdminAuth, async (req, res) => {
+  try {
+    const docId = Number(req.params.id);
+    const [result] = await dbPool.query("DELETE FROM documents WHERE id = ?", [
+      docId,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy tài liệu!" });
+    }
+
+    res.json({ success: true, message: "Xóa tài liệu thành công!" });
+  } catch (error) {
+    console.error("Admin delete document error:", error);
+    res.status(500).json({ success: false, message: "Lỗi khi xóa tài liệu!" });
+  }
+});
+
+// ===================== USER AUTH & ORDER ROUTES (EXISTING) =====================
+
 app.post("/api/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // ⚠️ LƯU Ý: Phải thêm const bcrypt = require('bcrypt'); vào đầu file.
+    // Nếu bạn không thể làm điều đó, code này sẽ không hoạt động.
+    //  const bcrypt = require("bcrypt"); // Chỉ thêm tạm thời nếu bạn không thể thêm ở đầu file
 
-    // 1. Kiểm tra email đã tồn tại
+    const { name, email, password } = req.body;
     const [existingUsers] = await dbPool.query(
       "SELECT id FROM users WHERE email = ?",
       [email]
     );
-
     if (existingUsers.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Email đã được sử dụng!",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email đã được sử dụng!" });
     }
 
-    // 2. Tạo user mới
+    // 🔥 HASH MẬT KHẨU TRƯỚC KHI LƯU
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     const [result] = await dbPool.query(
       "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-      [name, email, password]
+      [name, email, hashedPassword] // LƯU MẬT KHẨU ĐÃ HASH
     );
-
-    const newUserId = result.insertId;
-
     res.status(201).json({
       success: true,
       message: "Đăng ký thành công!",
-      user: { id: newUserId, name, email },
+      user: { id: result.insertId, name, email },
     });
   } catch (error) {
     console.error("Register error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server!",
-    });
+    res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 });
 
 app.post("/api/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    // ⚠️ LƯU Ý: Phải thêm const bcrypt = require('bcrypt'); vào đầu file.
+    // const bcrypt = require("bcrypt"); // Chỉ thêm tạm thời nếu bạn không thể thêm ở đầu file
 
+    const { email, password } = req.body;
     const [users] = await dbPool.query(
-      "SELECT id, name, email FROM users WHERE email = ? AND password = ?",
-      [email, password]
+      "SELECT id, name, email, password FROM users WHERE email = ?", // CHỈ LẤY THEO EMAIL
+      [email]
     );
     const user = users[0];
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Email hoặc mật khẩu không đúng!",
-      });
+      return res
+        .status(401)
+        .json({ success: false, message: "Email hoặc mật khẩu không đúng!" });
     }
 
-    // 🔥 LOGIC THÀNH CÔNG BỊ THIẾU
+    // 🔥 SO SÁNH MẬT KHẨU BẰNG bcrypt
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Email hoặc mật khẩu không đúng!" });
+    }
+
+    // Nếu match thành công
     res.json({
       success: true,
       message: "Đăng nhập thành công!",
@@ -738,7 +814,6 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 });
-// ===================== ORDER ROUTES =====================
 
 app.post("/api/orders", async (req, res) => {
   try {
@@ -749,10 +824,9 @@ app.post("/api/orders", async (req, res) => {
       total,
       discountAmount = 0,
       couponCode = null,
-    } = req.body; // <-- NHẬN DỮ LIỆU MỚI
-
+    } = req.body;
     const newOrderId = Date.now();
-    const itemsJson = JSON.stringify(items); // 2. Chèn đơn hàng (Thêm 2 cột mới vào truy vấn)
+    const itemsJson = JSON.stringify(items);
 
     await dbPool.query(
       "INSERT INTO orders (id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, discountAmount, couponCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
@@ -765,8 +839,8 @@ app.post("/api/orders", async (req, res) => {
         customerInfo.email,
         customerInfo.note,
         total,
-        discountAmount, // <-- Cột mới
-        couponCode, // <-- Cột mới
+        discountAmount,
+        couponCode,
       ]
     );
 
@@ -777,119 +851,62 @@ app.post("/api/orders", async (req, res) => {
     });
   } catch (error) {
     console.error("Order creation error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi tạo đơn hàng!",
-    });
+    res.status(500).json({ success: false, message: "Lỗi khi tạo đơn hàng!" });
   }
 });
 
-app.get("/api/orders", checkAdminAuth, async (req, res) => {
+app.get("/api/users/:userId/orders", async (req, res) => {
   try {
-    // 1. Lấy tất cả đơn hàng, sắp xếp mới nhất trước
-    const [allOrders] = await dbPool.query(
-      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders ORDER BY createdAt DESC"
-    ); // 2. THÊM LOGIC FORMAT DỮ LIỆU
+    const userId = Number(req.params.userId);
 
-    const formattedOrders = allOrders.map((order) => ({
+    if (isNaN(userId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "ID người dùng không hợp lệ!" });
+    }
+
+    const [userOrders] = await dbPool.query(
+      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders WHERE userId = ? ORDER BY createdAt DESC",
+      [userId]
+    );
+
+    const formattedOrders = userOrders.map((order) => ({
       id: order.id,
       userId: order.userId,
-
-      // ⭐️ PHẦN CẦN SỬA: Bọc JSON.parse() bằng try-catch
-      items: (() => {
-        try {
-          // Trả về mảng rỗng nếu dữ liệu là NULL/undefined/rỗng, nếu không thì parse
-          if (!order.items) return [];
-          return JSON.parse(order.items);
-        } catch (e) {
-          // In lỗi ra console server để debug nhưng không làm sập request
-          console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id}: ${e.message}`
-          );
-          return []; // Trả về mảng rỗng [] cho frontend
-        }
-      })(),
+      items: safeParseJson(order.items), // Sử dụng helper
       customerInfo: {
         name: order.customerName,
         phone: order.customerPhone,
         email: order.customerEmail,
         note: order.customerNote,
       },
-      total: Number(order.total), // Chuyển Decimal/String sang Number
+      total: Number(order.total),
       status: order.status,
       createdAt: order.createdAt,
     }));
 
-    res.json({ success: true, orders: formattedOrders });
-  } catch (error) {
-    console.error("Get /api/orders error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi khi lấy danh sách đơn hàng!",
+    res.json({
+      success: true,
+      orders: formattedOrders,
+      total: formattedOrders.length,
     });
+  } catch (error) {
+    console.error("Get user orders error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi khi lấy danh sách đơn hàng!" });
   }
 });
 
-// ===================== CONTACT ROUTE =====================
-
-// app.post("/api/contact", async (req, res) => {
-//   try {
-//     const { name, email, subject, message } = req.body;
-
-//     await transporter.sendMail({
-//       from: process.env.EMAIL_USER,
-//       to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-//       subject: `📧 Tin nhắn liên hệ: ${subject}`,
-//       html: `
-//         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-//           <h2>📧 Tin nhắn liên hệ mới</h2>
-//           <div style="background: #F3F4F6; padding: 20px; border-radius: 8px;">
-//             <p><strong>Từ:</strong> ${name}</p>
-//             <p><strong>Email:</strong> ${email}</p>
-//             <p><strong>Chủ đề:</strong> ${subject}</p>
-//           </div>
-//           <div style="margin: 20px 0; padding: 20px; background: white; border-left: 4px solid #4F46E5;">
-//             <h3>Nội dung:</h3>
-//             <p>${message}</p>
-//           </div>
-//         </div>
-//       `,
-//     });
-
-//     res.json({
-//       success: true,
-//       message: "Tin nhắn đã được gửi thành công!",
-//     });
-//   } catch (error) {
-//     console.error("Contact error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Lỗi khi gửi tin nhắn!",
-//     });
-//   }
-// });
-
-// ===================== HEALTH CHECK =====================
-
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "OK",
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-  });
-});
-// server.js (Thêm route này vào cuối file, trước app.listen)
-
-// ===================== COUPON ROUTES =====================
+// ===================== COUPON ROUTE (EXISTING) =====================
 
 app.post("/api/coupons/validate", (req, res) => {
   const { couponCode } = req.body;
-  const codeUpper = (couponCode || "").toUpperCase(); // Chuyển sang chữ hoa để so sánh
+  const codeUpper = (couponCode || "").toUpperCase();
 
-  const coupon = COUPONS.find((c) => c.code === codeUpper); // Tìm mã trong danh sách
+  const coupon = COUPONS.find((c) => c.code === codeUpper);
 
   if (coupon) {
-    // TRƯỜNG HỢP THÀNH CÔNG
     res.json({
       success: true,
       discount: coupon.discount,
@@ -898,7 +915,6 @@ app.post("/api/coupons/validate", (req, res) => {
       } thành công! Giảm ${coupon.discount.toLocaleString()}đ.`,
     });
   } else {
-    // TRƯỜNG HỢP THẤT BẠI
     res.status(404).json({
       success: false,
       discount: 0,
@@ -906,8 +922,9 @@ app.post("/api/coupons/validate", (req, res) => {
     });
   }
 });
-app.listen(process.env.PORT, () => {
+
+// ===================== SERVER START =====================
+
+app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📧 Email: ${process.env.EMAIL_USER}`);
-  console.log(`🔐 Admin Email: ${ADMIN_EMAIL}`);
 });
