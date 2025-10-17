@@ -40,9 +40,14 @@ try {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
+    port: process.env.DB_PORT, // <== SỬ DỤNG PORT
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    // THÊM SSL ĐỂ ĐÁP ỨNG YÊU CẦU BẢO MẬT CỦA CÁC HOSTING CLOUD (NHƯ RAILWAY)
+    ssl: {
+      rejectUnauthorized: false,
+    },
   });
   console.log("✅ MySQL Pool created successfully");
 
