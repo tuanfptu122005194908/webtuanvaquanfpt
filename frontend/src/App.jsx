@@ -2571,110 +2571,110 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       id: 101,
       name: "Claude 4 Sonnet MaxMode",
       duration: "7 ngày",
-      price: 50000,
+      price: 100000,
       type: 'claude',
       stats: { carts: 2, sold: 21 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'purple-600'
     },
     {
       id: 102,
       name: "ChatGPT PLUS - 1 tháng - Shared 3 slots",
       duration: "1 tháng",
-      price: 89000,
+      price: 100000,
       type: 'chatgpt',
       stats: { carts: 1282, sold: 18 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'green-600'
     },
     {
       id: 103,
       name: "Claude 4 Sonnet MaxMode",
       duration: "30 ngày",
-      price: 230000,
+      price: 250000,
       type: 'claude',
       stats: { carts: 4, sold: 743 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'purple-600'
     },
     {
       id: 104,
       name: "Tài khoản Quizlet Plus 30 Ngày",
       duration: "1 tháng",
-      price: 10000,
+      price: 20000,
       type: 'quizlet',
       stats: { carts: 6528, sold: 5 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'blue-600'
     },
     {
       id: 105,
       name: "NETFLIX 4K 1 THÁNG CAO CẤP",
       duration: "1 tháng",
-      price: 60000,
+      price: 80000,
       type: 'netflix',
       stats: { carts: 252, sold: 42 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'red-600'
     },
     {
       id: 106,
       name: "STUDoCU Premium",
       duration: "3 tháng",
-      price: 15000,
+      price: 30000,
       type: 'studocu',
       stats: { carts: 317, sold: 0 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'gray-700'
     },
     {
       id: 107,
       name: "Capcut Pro 1 tháng - Dùng riêng",
       duration: "1 tháng",
-      price: 50000,
+      price: 70000,
       type: 'capcut',
       stats: { carts: 138, sold: 159 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'pink-600'
     },
     {
       id: 108,
       name: "Canva Pro 1 Năm CHÍNH CHỦ",
       duration: "1 năm",
-      price: 79000,
+      price: 100000,
       type: 'canva',
       stats: { carts: 182, sold: 9999 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'indigo-600'
     },
     {
       id: 109,
       name: "Super Gnak A.I",
       duration: "1 tháng",
-      price: 60000,
+      price: 100000,
       type: 'supergnak',
       stats: { carts: 115, sold: 0 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'cyan-600'
     },
     {
       id: 110,
       name: "Quizlet Plus 1 Năm",
       duration: "1 năm CHÍNH CHỦ",
-      price: 200000,
+      price: 230000,
       type: 'quizlet',
       stats: { carts: 54, sold: 9999 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'blue-600'
     },
     {
       id: 111,
       name: "DUOLINGO SUPER 1 Năm CHÍNH CHỦ",
       duration: "1 năm CHÍNH CHỦ",
-      price: 385000,
+      price: 200000,
       type: 'duolingo',
       stats: { carts: 15, sold: 9999 },
-      logoText: "FUO",
+      logoText: "T&Q",
       color: 'yellow-600'
     },
   ];
@@ -3896,19 +3896,21 @@ setDiscountAmount(0);
                 </div>
 
                 {/* Body Content */}
-                <div className="p-4 flex flex-col flex-1 justify-between">
-                    <div className="text-center mt-6"> 
-                      <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
-                        {account.name}
-                      </h4>
-                      {/* Logo Text (FUO) */}
-                      <p className="text-xs font-black text-yellow-400 mb-3">
-                        {account.logoText}
-                      </p>
-                    </div>
+               <div className="p-4 flex flex-col flex-1"> 
+    
+    <div className="text-center"> {/* CHỈNH SỬA TẠI ĐÂY: Xóa mt-6 */}
+        <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
+            {account.name}
+        </h4>
+        {/* Logo Text (FUO) */}
+        <p className="text-xs font-black text-yellow-400 mb-3">
+            {account.logoText}
+        </p>
+    </div>
 
                     {/* Stats Bar */}
-                    <div className="flex justify-around items-center bg-gray-700 rounded-lg p-2 text-xs font-semibold mb-4">
+                    {/* Stats Bar */}
+    <div className="flex justify-around items-center bg-gray-700 rounded-lg p-2 text-xs font-semibold my-4"> {/* Đã đổi mb-4 thành my-4 (margin top/bottom) */}
                         <div className="flex items-center text-blue-400">
                           <ShoppingCart className="w-3 h-3 mr-1" /> {account.stats.carts.toLocaleString()}
                         </div>
@@ -3918,10 +3920,10 @@ setDiscountAmount(0);
                     </div>
 
                     {/* Price & Button */}
-                    <div className="mt-auto">
-                      <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
-                        {account.price.toLocaleString("vi-VN")} đ
-                      </p>
+                   <div> {/* CHỈNH SỬA TẠI ĐÂY: Xóa mt-auto */}
+        <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
+            {account.price.toLocaleString("vi-VN")} đ
+        </p>
                       <button
                         onClick={() =>
                           addToCart({
@@ -3930,10 +3932,10 @@ setDiscountAmount(0);
                             price: account.price,
                           })
                         }
-                        className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
-                      >
-                        Mua hàng
-                      </button>
+                       className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
+        >
+            Mua hàng
+        </button>
                     </div>
                 </div>
               </div>
