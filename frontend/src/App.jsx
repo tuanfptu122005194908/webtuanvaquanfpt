@@ -26,50 +26,39 @@ import avt1 from "./avt1.png";
 
 import {
 
-  ShoppingCart,
-
+ ShoppingCart,
   LogOut,
-
   Menu,
-
   X,
-
   Book,
-
   CheckCircle,
-
   BarChart3,
-
   Users,
-
   ShoppingBag,
-
   DollarSign,
-
   RefreshCw,
-
   Clock,
-
   XCircle,
-
   Package,
-
   Mail,
-
   Phone,
-
   Calendar,
-
   Award,
-
-  Facebook,Info,
-
+  Facebook,
+  Info,
   AlertTriangle,
-
   Check,
-
   Zap,
-  Bot, MonitorPlay, PenTool, Speech, Layers, Brain, BookOpen, Music, Film
+  Bot,
+  MonitorPlay,
+  PenTool,
+  Speech,
+  Layers,
+  Brain,
+  BookOpen,
+  Music,
+  Film,
+  List,
 } from "lucide-react";
 
 
@@ -2578,130 +2567,189 @@ const [notification, setNotification] = useState({ message: '', type: '' });
 
 // 🔥 THÊM DỮ LIỆU TÀI KHOẢN PREMIUM
   const accounts = [
-    {
-      id: 1,
-      name: "Quizlet Plus",
-      duration: "1 tháng",
-      price: 29000,
-      icon: Bot, // Icon mặc định nếu không có icon cụ thể
-      bgColor: 'quizlet-blue', // Màu nền cho Quizlet
-    },
-    {
-      id: 2,
-      name: "Netflix Premium",
-      duration: "1 tháng",
-      price: 69000,
-      icon: MonitorPlay, // Icon mặc định
-      bgColor: 'netflix-red', // Màu nền cho Netflix
-    },
-    {
-      id: 3,
-      name: "Spotify Premium",
-      duration: "1 tháng",
-      price: 25000,
-      icon: Music, // Ví dụ: icon Music cho Spotify
-      bgColor: 'green-600', // Màu nền Spotify
-    },
-    {
-      id: 4,
-      name: "Canva Pro",
-      duration: "1 tháng",
-      price: 35000,
-      icon: PenTool, // Ví dụ: icon PenTool cho Canva
-      bgColor: 'blue-500', // Màu nền Canva
-    },
-    {
-      id: 5,
-      name: "Grammarly Premium",
-      duration: "1 tháng",
-      price: 39000,
-      icon: Speech, // Ví dụ: icon Speech cho Grammarly
-      bgColor: 'yellow-600', // Màu nền Grammarly
-    },
-    {
-      id: 6,
-      name: "Microsoft Office 365",
-      duration: "1 năm",
-      price: 159000,
-      icon: Layers, // Ví dụ: icon Layers cho Office
-      bgColor: 'red-800', // Màu nền Office
-    },
-    {
-        id: 7,
-        name: "Elevate Pro",
-        duration: "1 tháng",
-        price: 20000,
-        icon: Brain, // Ví dụ: icon Brain cho Elevate
-        bgColor: 'purple-600', // Màu nền Elevate
-    },
-    {
-        id: 8,
-        name: "Eloquent Pro",
-        duration: "1 tháng",
-        price: 30000,
-        icon: BookOpen, // Ví dụ: icon BookOpen cho Eloquent
-        bgColor: 'indigo-700', // Màu nền Eloquent
-    },
-    {
-        id: 9,
-        name: "Youtube Premium",
-        duration: "1 tháng",
-        price: 49000,
-        icon: Film, // Ví dụ: icon Film cho Youtube
-        bgColor: 'red-700', // Màu nền Youtube
-    },
-  ];
+    {
+      id: 101,
+      name: "Claude 4 Sonnet MaxMode",
+      duration: "7 ngày",
+      price: 50000,
+      type: 'claude',
+      stats: { carts: 2, sold: 21 },
+      logoText: "FUO",
+      color: 'purple-600'
+    },
+    {
+      id: 102,
+      name: "ChatGPT PLUS - 1 tháng - Shared 3 slots",
+      duration: "1 tháng",
+      price: 89000,
+      type: 'chatgpt',
+      stats: { carts: 1282, sold: 18 },
+      logoText: "FUO",
+      color: 'green-600'
+    },
+    {
+      id: 103,
+      name: "Claude 4 Sonnet MaxMode",
+      duration: "30 ngày",
+      price: 230000,
+      type: 'claude',
+      stats: { carts: 4, sold: 743 },
+      logoText: "FUO",
+      color: 'purple-600'
+    },
+    {
+      id: 104,
+      name: "Tài khoản Quizlet Plus 30 Ngày",
+      duration: "1 tháng",
+      price: 10000,
+      type: 'quizlet',
+      stats: { carts: 6528, sold: 5 },
+      logoText: "FUO",
+      color: 'blue-600'
+    },
+    {
+      id: 105,
+      name: "NETFLIX 4K 1 THÁNG CAO CẤP",
+      duration: "1 tháng",
+      price: 60000,
+      type: 'netflix',
+      stats: { carts: 252, sold: 42 },
+      logoText: "FUO",
+      color: 'red-600'
+    },
+    {
+      id: 106,
+      name: "STUDoCU Premium",
+      duration: "3 tháng",
+      price: 15000,
+      type: 'studocu',
+      stats: { carts: 317, sold: 0 },
+      logoText: "FUO",
+      color: 'gray-700'
+    },
+    {
+      id: 107,
+      name: "Capcut Pro 1 tháng - Dùng riêng",
+      duration: "1 tháng",
+      price: 50000,
+      type: 'capcut',
+      stats: { carts: 138, sold: 159 },
+      logoText: "FUO",
+      color: 'pink-600'
+    },
+    {
+      id: 108,
+      name: "Canva Pro 1 Năm CHÍNH CHỦ",
+      duration: "1 năm",
+      price: 79000,
+      type: 'canva',
+      stats: { carts: 182, sold: 9999 },
+      logoText: "FUO",
+      color: 'indigo-600'
+    },
+    {
+      id: 109,
+      name: "Super Gnak A.I",
+      duration: "1 tháng",
+      price: 60000,
+      type: 'supergnak',
+      stats: { carts: 115, sold: 0 },
+      logoText: "FUO",
+      color: 'cyan-600'
+    },
+    {
+      id: 110,
+      name: "Quizlet Plus 1 Năm",
+      duration: "1 năm CHÍNH CHỦ",
+      price: 200000,
+      type: 'quizlet',
+      stats: { carts: 54, sold: 9999 },
+      logoText: "FUO",
+      color: 'blue-600'
+    },
+    {
+      id: 111,
+      name: "DUOLINGO SUPER 1 Năm CHÍNH CHỦ",
+      duration: "1 năm CHÍNH CHỦ",
+      price: 385000,
+      type: 'duolingo',
+      stats: { carts: 15, sold: 9999 },
+      logoText: "FUO",
+      color: 'yellow-600'
+    },
+  ];
 
  const getLogoColor = (accountName) => {
-  switch (accountName) {
-    case "Quizlet Plus":
-    case "Quizlet Plus 1 Năm":
-      return "text-blue-600"; // Màu xanh Quizlet
-    case "NETFLIX 4K 1 THÁNG CAO CẤP":
-      return "text-red-600"; // Màu đỏ Netflix
-    case "Capcut Pro 1 tháng":
-      return "text-pink-600";
-    case "Canva Pro 1 Năm":
-      return "text-indigo-600";
-    case "DUOLINGO SUPER 1 Năm":
-      return "text-green-600";
-    case "Claude 4 Sonnet MaxMode":
-      return "text-purple-600";
-    default:
-      return "text-gray-900";
-  }
+  switch (accountName.toLowerCase().trim()) {
+    case "quizlet plus":
+    case "tài khoản quizlet plus 30 ngày":
+    case "quizlet plus 1 năm":
+      return "text-blue-600";
+    case "netflix 4k 1 tháng cao cấp":
+      return "text-red-600";
+    case "capcut pro 1 tháng - dùng riêng":
+      return "text-pink-600";
+    case "canva pro 1 năm chính chủ":
+      return "text-indigo-600";
+    case "duolingo super 1 năm chính chủ":
+      return "text-green-600";
+    case "chatgpt plus - 1 tháng - shared 3 slots":
+      return "text-green-500";
+    case "super gnak a.i":
+      return "text-cyan-500";
+    case "studocu premium":
+      return "text-yellow-600";
+    case "claude 4 sonnet maxmode":
+      return "text-purple-600";
+    default:
+      return "text-gray-900";
+  }
 };
-
 const getAccountIconWrapper = (accountName, IconComponent) => {
-    const iconColorClass = getLogoColor(accountName);
+    // Custom Icon/Text for the logo circle
+    let iconContent;
+    const colorClass = getLogoColor(accountName);
 
-    // Đây là cấu trúc tạo hiệu ứng logo: NỀN MÀU (badgeColor) + HÌNH TRÒN TRẮNG + ICON/CHỮ MÀU CHỦ ĐẠO
-    return (
-        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg">
-            {/* Nếu bạn có file ảnh logo, hãy thay thế IconComponent bằng thẻ <img /> */}
-            <IconComponent className={`h-8 w-8 ${iconColorClass}`} />
-        </div>
-    );
+    if (accountName.includes("ChatGPT")) {
+      iconContent = <Bot className={`h-8 w-8 ${colorClass}`} />;
+    } else if (accountName.includes("NETFLIX")) {
+      iconContent = <span className={`text-3xl font-bold ${colorClass}`}>N</span>;
+    } else if (accountName.includes("Capcut")) {
+      iconContent = <span className={`text-2xl font-black ${colorClass}`}>⍋</span>; // Capcut logo shape
+    } else if (accountName.includes("Canva")) {
+      iconContent = <span className={`text-3xl font-black ${colorClass}`}>C</span>;
+    } else if (accountName.includes("DUOLINGO")) {
+      iconContent = <span className={`text-3xl font-black ${colorClass}`}>D</span>;
+    } else if (accountName.includes("Quizlet")) {
+      iconContent = <span className={`text-2xl font-black ${colorClass}`}>Q</span>;
+    } else if (accountName.includes("STUDoCU")) {
+      iconContent = <span className={`text-2xl font-black ${colorClass}`}>S</span>;
+    } else if (accountName.includes("Super Gnak")) {
+      iconContent = <span className={`text-2xl font-black ${colorClass}`}>AI</span>;
+    } else if (accountName.includes("Claude")) {
+      iconContent = <span className={`text-2xl font-black ${colorClass}`}>X1</span>;
+    } else {
+      iconContent = <IconComponent className={`h-8 w-8 ${colorClass}`} />;
+    }
+
+    return (
+        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg transform translate-y-8 border-4 border-gray-900/10">
+            {iconContent}
+        </div>
+    );
 };
 
 const getAccountBgColor = (accountName) => {
-    switch (accountName) {
-        case "Quizlet Plus 30 Ngày":
-        case "Quizlet Plus 1 Năm":
-            return "bg-blue-600";
-        case "NETFLIX 4K 1 THÁNG CAO CẤP":
-            return "bg-red-600";
-        case "Capcut Pro 1 tháng":
-            return "bg-pink-600";
-        case "Canva Pro 1 Năm":
-            return "bg-indigo-600";
-        case "DUOLINGO SUPER 1 Năm":
-            return "bg-green-600";
-        case "Claude 4 Sonnet MaxMode":
-            return "bg-purple-600";
-        default:
-            return "bg-gray-500";
-    }
+    // Dựa vào màu nền của các box trong ảnh
+    if (accountName.includes("Quizlet")) return "from-[#3949AB] to-[#5C6BC0]";
+    if (accountName.includes("NETFLIX")) return "from-[#B71C1C] to-[#E53935]";
+    if (accountName.includes("Capcut")) return "from-[#E91E63] to-[#F06292]";
+    if (accountName.includes("Canva")) return "from-[#4A148C] to-[#7B1FA2]";
+    if (accountName.includes("DUOLINGO")) return "from-[#1B5E20] to-[#4CAF50]";
+    if (accountName.includes("Claude") || accountName.includes("ChatGPT")) return "from-[#4527A0] to-[#7E57C2]";
+    if (accountName.includes("STUDoCU")) return "from-[#FBC02D] to-[#FFEB3B]";
+    if (accountName.includes("Super Gnak")) return "from-[#00BCD4] to-[#4DD0E1]";
+    return "from-gray-700 to-gray-500";
 };
   const groupedDocuments = allDocuments.reduce((acc, doc) => {
 
@@ -3968,75 +4016,95 @@ setDiscountAmount(0);
 
       </section>
 
-{/* ACCOUNTS Section */}
-  <section id="accounts" className="py-20 font-sans bg-white">
+<section id="accounts" className="py-20 font-sans bg-gray-900 text-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
             ⚡ Tài khoản Premium
           </h2>
-          <p className="text-gray-600 text-lg md:text-xl">
+          <p className="text-gray-400 text-lg md:text-xl">
             Nâng cấp trải nghiệm học tập và làm việc với các tài khoản chất lượng
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {accounts.map((account) => { // Sử dụng 'accounts' thay vì 'premiumAccounts'
-            let IconComponent = Zap; 
-            
-            // Logic chọn icon component
-            if (account.name.includes("Claude")) IconComponent = Bot;
-            else if (account.name.includes("Netflix")) IconComponent = MonitorPlay;
-            else if (account.name.includes("Quizlet")) IconComponent = Layers;
-            else if (account.name.includes("Canva")) IconComponent = PenTool;
-            else if (account.name.includes("Capcut")) IconComponent = PenTool;
-            else if (account.name.includes("DUOLINGO")) IconComponent = Speech;
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {accounts.map((account) => { 
+            const badgeGradient = getAccountBgColor(account.name);
+            const isNew = account.name.includes("STUDoCU"); // Dựa vào ảnh có label "OFF NOW" trên Studocu
+            const isHot = account.name.includes("Quizlet Plus 30 Ngày"); // Quizlet Plus 1 tháng có chữ Q nổi bật
 
-            const badgeColor = getAccountBgColor(account.name);
-            const buttonColor = badgeColor; // Dùng màu nền làm màu nút
+            // Tạo IconComponent giả, vì chúng ta đang dùng logic getAccountIconWrapper
+            let IconComponent = Zap; 
+            if (account.name.includes("Claude")) IconComponent = Bot;
 
             return (
               <div
                 key={account.id}
-                className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2 overflow-hidden flex flex-col border border-gray-100"
+                className="bg-gray-800 rounded-xl shadow-2xl hover:shadow-3xl transition transform hover:scale-[1.02] overflow-hidden flex flex-col relative border border-gray-700"
               >
-                <div className={`p-6 flex flex-col flex-1 justify-between text-center relative ${badgeColor} bg-opacity-90`}>
-                    
-                  {/* Logo đã được CSS lại */}
-                  <div className="mx-auto mb-4">
-                    {getAccountIconWrapper(account.name, IconComponent)}
+                {/* Background Header - Gradient Block */}
+                <div className={`p-4 pt-12 text-center bg-gradient-to-br ${badgeGradient} relative h-40`}>
+                    
+                  {/* Label "OFF NOW" - Studocu only */}
+                  {isNew && (
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                      OFF NOW!
+                    </div>
+                  )}
+                  
+                  {/* Header Content */}
+                  <div className="absolute inset-0 flex flex-col justify-end p-4 pb-2">
+                    {/* Logo/Icon */}
+                    <div className="w-full flex justify-center mb-1">
+                      {getAccountIconWrapper(account.name, IconComponent)}
+                    </div>
+                    {/* Duration Label */}
+                    <div className="text-white text-center font-bold text-xl py-1 rounded-md bg-opacity-70 bg-gray-900/40 mt-1">
+                      {account.duration}
+                    </div>
                   </div>
-                  
-                  <div className="relative z-10 text-white">
-                    <p className="text-sm font-semibold mb-1 text-gray-200">
-                      {account.code}
-                    </p>
-                    <h4 className="font-bold text-2xl mb-2">
-                      {account.name}
-                    </h4>
-                  </div>
-
-                  <div className="text-gray-200 text-sm mt-3 pt-3 border-t border-white/20 relative z-10 min-h-[40px] flex items-center justify-center">
-                    {account.desc}
-                  </div>
-
                 </div>
-                <div className="p-6 pt-4 flex flex-col flex-1 justify-end">
-                  <span className="text-3xl font-extrabold text-gray-900 text-center mb-4">
-                    {account.price.toLocaleString()}đ
-                  </span>
-                  <button
-                    onClick={() =>
-                      addToCart({
-                        ...account,
-                        type: "premium_account",
-                        price: account.price,
-                      })
-                    }
-                    className={`w-full text-white px-4 py-3 rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 ${buttonColor} font-semibold`}
-                  >
-                    MUA NGAY
-                  </button>
+
+                {/* Body Content */}
+                <div className="p-4 flex flex-col flex-1 justify-between">
+                    <div className="text-center mt-6"> 
+                      <h4 className="font-bold text-lg text-gray-100 mb-1">
+                        {account.name}
+                      </h4>
+                      {/* Logo Text (FUO) */}
+                      <p className="text-xs font-black text-yellow-400 mb-3">
+                        {account.logoText}
+                      </p>
+                    </div>
+
+                    {/* Stats Bar */}
+                    <div className="flex justify-around items-center bg-gray-700 rounded-lg p-2 text-xs font-semibold mb-4">
+                        <div className="flex items-center text-blue-400">
+                          <ShoppingCart className="w-3 h-3 mr-1" /> {account.stats.carts.toLocaleString()}
+                        </div>
+                        <div className="flex items-center text-red-400">
+                          <DollarSign className="w-3 h-3 mr-1" /> {account.stats.sold.toLocaleString()}
+                        </div>
+                    </div>
+
+                    {/* Price & Button */}
+                    <div className="mt-auto">
+                      <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
+                        {account.price.toLocaleString("vi-VN")} đ
+                      </p>
+                      <button
+                        onClick={() =>
+                          addToCart({
+                            ...account,
+                            type: "premium_account",
+                            price: account.price,
+                          })
+                        }
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
+                      >
+                        Mua hàng
+                      </button>
+                    </div>
                 </div>
               </div>
             );
@@ -4044,7 +4112,6 @@ setDiscountAmount(0);
         </div>
       </div>
     </section>
-
       {/* Contact Section */}
 
       <section id="contact" className="py-20 bg-gray-900 text-white">
