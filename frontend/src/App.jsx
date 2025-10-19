@@ -2705,17 +2705,19 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       return "text-gray-900";
   }
 };
+// Cập nhật để căn chỉnh logo tròn nổi bật lên phía trên
 const getAccountIconWrapper = (accountName, IconComponent) => {
-    // Custom Icon/Text for the logo circle
+    // Sử dụng IconComponent mặc định (Zap) nếu không tìm thấy custom logic
     let iconContent;
     const colorClass = getLogoColor(accountName);
 
+    // Logic lấy chữ cái đầu hoặc icon đặc trưng
     if (accountName.includes("ChatGPT")) {
       iconContent = <Bot className={`h-8 w-8 ${colorClass}`} />;
     } else if (accountName.includes("NETFLIX")) {
       iconContent = <span className={`text-3xl font-bold ${colorClass}`}>N</span>;
     } else if (accountName.includes("Capcut")) {
-      iconContent = <span className={`text-2xl font-black ${colorClass}`}>⍋</span>; // Capcut logo shape
+      iconContent = <span className={`text-2xl font-black ${colorClass}`}>⍋</span>;
     } else if (accountName.includes("Canva")) {
       iconContent = <span className={`text-3xl font-black ${colorClass}`}>C</span>;
     } else if (accountName.includes("DUOLINGO")) {
@@ -2733,23 +2735,22 @@ const getAccountIconWrapper = (accountName, IconComponent) => {
     }
 
     return (
-        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg transform translate-y-8 border-4 border-gray-900/10">
+        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg transform -translate-y-8 border-4 border-gray-900/10">
             {iconContent}
         </div>
     );
 };
 
 const getAccountBgColor = (accountName) => {
-    // Dựa vào màu nền của các box trong ảnh
-    if (accountName.includes("Quizlet")) return "from-[#3949AB] to-[#5C6BC0]";
-    if (accountName.includes("NETFLIX")) return "from-[#B71C1C] to-[#E53935]";
-    if (accountName.includes("Capcut")) return "from-[#E91E63] to-[#F06292]";
-    if (accountName.includes("Canva")) return "from-[#4A148C] to-[#7B1FA2]";
-    if (accountName.includes("DUOLINGO")) return "from-[#1B5E20] to-[#4CAF50]";
-    if (accountName.includes("Claude") || accountName.includes("ChatGPT")) return "from-[#4527A0] to-[#7E57C2]";
-    if (accountName.includes("STUDoCU")) return "from-[#FBC02D] to-[#FFEB3B]";
-    if (accountName.includes("Super Gnak")) return "from-[#00BCD4] to-[#4DD0E1]";
-    return "from-gray-700 to-gray-500";
+    if (accountName.includes("Quizlet")) return "bg-blue-700";
+    if (accountName.includes("NETFLIX")) return "bg-red-700";
+    if (accountName.includes("Capcut")) return "bg-pink-700";
+    if (accountName.includes("Canva")) return "bg-indigo-700";
+    if (accountName.includes("DUOLINGO")) return "bg-green-700";
+    if (accountName.includes("Claude") || accountName.includes("ChatGPT")) return "bg-purple-700";
+    if (accountName.includes("STUDoCU")) return "bg-yellow-600";
+    if (accountName.includes("Super Gnak")) return "bg-cyan-700";
+    return "bg-gray-700";
 };
   const groupedDocuments = allDocuments.reduce((acc, doc) => {
 
@@ -3095,232 +3096,133 @@ setDiscountAmount(0);
 
     onClose={() => setNotification({ message: '', type: '' })} 
 
-  />   {/* Header */}
+  /> {/* Header */}
+      <header className="bg-white shadow-xl sticky top-0 z-50">
+        <nav className="container mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            {/* Logo */}
+            <div className="flex items-center space-x-4">
+              {/* Box Icon: Tạo hiệu ứng đổ bóng mạnh hơn */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-xl shadow-lg shadow-blue-500/50">
+                <Book className="w-8 h-8" />
+              </div>
+              <div>
+                {/* Tên thương hiệu: Dùng font chữ lớn, gradient và đổ bóng chữ (shadow) */}
+                <h1 
+                  className="text-3xl md:text-4xl font-black bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent"
+                  style={{ textShadow: '2px 2px 4px rgba(100, 100, 100, 0.2)' }}
+                >
+                  Học cùng Tuấn và Quân
+                </h1>
+                <p className="text-xs md:text-sm text-gray-500 font-semibold italic">
+                  Nền tảng học tập chất lượng
+                </p>
+              </div>
+            </div>
 
-      <header className="bg-white shadow-md sticky top-0 z-50">
-
-        <nav className="container mx-auto px-6 py-4">
-
-          <div className="flex justify-between items-center">
-
-            {/* Logo */}
-
-            <div className="flex items-center space-x-4">
-
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-lg shadow-md">
-
-                <Book className="w-8 h-8" />
-
-              </div>
-
-              <div>
-
-                <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-
-                  Học cùng Tuấn và Quân
-
-                </h1>
-
-                <p className="text-xs md:text-sm text-gray-500">
-
-                  Nền tảng học tập chất lượng
-
-                </p>
-
-              </div>
-
-            </div>
-
-
-
-            {/* Desktop Menu */}
-
-
-
-            <div className="hidden md:flex items-center space-x-6 font-medium">
-
-              {[
-
-               { name: "Khóa học", id: "courses" },
+            {/* Desktop Menu - Đã tăng khoảng cách space-x-6 lên space-x-8 */}
+            <div className="hidden md:flex items-center space-x-8 font-medium">
+              {[
+               { name: "Khóa học", id: "courses" },
                 { name: "Tiếng Anh", id: "english" },
                 { name: "Tài liệu", id: "documents" },
                 { name: "Coursera", id: "coursera" },
-                { name: "Tài khoản Premium", id: "accounts" }, // <== ĐÃ THÊM
+                { name: "Tài khoản Premium", id: "accounts" }, 
                 { name: "Liên hệ", id: "contact" },
+              ].map((item, idx) => (
+                <a
+                  key={idx}
+                  href={`#${item.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById(item.id)?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-gray-700 hover:text-blue-600 transition-colors duration-300 whitespace-nowrap"
+                >
+                  {item.name}
+                </a>
+              ))}
+              <button
+                onClick={() => setShowAdminDashboard(true)}
+                className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium whitespace-nowrap"
+              >
+                Admin
+              </button>
+              {/* Cart */}
+              <button
+                onClick={() => setShowCart(true)}
+                className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <ShoppingCart className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-bounce">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
 
-              ].map((item, idx) => (
-
-                <a
-
-                  key={idx}
-
-                  href={`#${item.id}`}
-
-                  onClick={(e) => {
-
-                    e.preventDefault();
-
-                    document.getElementById(item.id)?.scrollIntoView({
-
-                      behavior: "smooth",
-
-                      block: "start",
-
-                    });
-
-                    setMobileMenuOpen(false);
-
-                  }}
-
-                  className="text-gray-700 hover:text-blue-600 transition-colors duration-300"
-
-                >
-
-                  {item.name}
-
-                </a>
-
-              ))}
-
-              <button
-
-                onClick={() => setShowAdminDashboard(true)}
-
-                className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium"
-
-              >
-
-                Admin
-
-              </button>
-
-              {/* Cart */}
-
-              <button
-
-                onClick={() => setShowCart(true)}
-
-                className="relative p-2 hover:bg-gray-100 rounded-lg transition"
-
-              >
-
-                <ShoppingCart className="w-6 h-6 text-gray-700" />
-
-                {cart.length > 0 && (
-
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
-
-                    {cart.length}
-
-                  </span>
-
-                )}
-
-              </button>
-
-
-
-             {/* User */}
-
+             {/* User - Tăng không gian và font chữ cho tên người dùng */}
 {currentUser ? (
-
-  <div className="flex items-center space-x-3">
-
-    <button
-
-      onClick={() => setShowOrderHistory(true)}
-
-      className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition px-3 py-2 rounded-lg hover:bg-gray-100"
-
-    >
-
-      <ShoppingBag className="w-5 h-5" />
-
-      <span className="text-sm font-medium">Đơn hàng</span>
-
-    </button>
-
-    <span className="text-sm text-gray-700">
-
-      Xin chào, {currentUser.name}
-
-    </span>
-
-    <button
-
-      onClick={handleLogout}
-
-      className="p-2 hover:bg-gray-100 rounded-lg transition"
-
-    >
-
-      <LogOut className="w-5 h-5 text-gray-700" />
-
-    </button>
-
-  </div>
-
+  <div className="flex items-center space-x-3 ml-4">
+    <button
+      onClick={() => setShowOrderHistory(true)}
+      className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition px-3 py-2 rounded-lg hover:bg-blue-50 whitespace-nowrap"
+    >
+      <ShoppingBag className="w-5 h-5 text-purple-600" />
+      <span className="text-sm font-semibold">Đơn hàng</span>
+    </button>
+    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-full">
+      <span className="text-sm text-gray-800 font-medium whitespace-nowrap">
+        Xin chào, <span className="text-purple-700 font-bold">{currentUser.name}</span>
+      </span>
+      <button
+        onClick={handleLogout}
+        className="p-1 hover:bg-red-100 rounded-full transition"
+      >
+        <LogOut className="w-5 h-5 text-red-500" />
+      </button>
+    </div>
+  </div>
 ) : (
-
-  <button
-
-    onClick={() => setShowLogin(true)}
-
-    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition transform hover:-translate-y-0.5"
-
-  >
-
-    Đăng nhập
-
-  </button>
-
+  <button
+    onClick={() => setShowLogin(true)}
+    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full font-bold hover:shadow-lg transition transform hover:-translate-y-0.5 whitespace-nowrap"
+  >
+    Đăng nhập
+  </button>
 )}
+            </div>
 
-            </div>
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-md hover:bg-gray-100 transition"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
 
-
-
-            {/* Mobile Menu Button */}
-
-            <button
-
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-
-              className="md:hidden p-2 rounded-md hover:bg-gray-100 transition"
-
-            >
-
-              {mobileMenuOpen ? (
-
-                <X className="w-6 h-6" />
-
-              ) : (
-
-                <Menu className="w-6 h-6" />
-
-              )}
-
-            </button>
-
-          </div>
-
-
-
-          {/* Mobile Menu */}
-
-          {mobileMenuOpen && (
-
-           <div className="md:hidden mt-4 space-y-3 pb-4 border-t border-gray-200">
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+           <div className="md:hidden mt-4 space-y-3 pb-4 border-t border-gray-200">
               {[
                 { name: "Khóa học", id: "courses" },
                 { name: "Tiếng Anh", id: "english" },
                 { name: "Tài liệu", id: "documents" },
                 { name: "Coursera", id: "coursera" },
-                { name: "Tài khoản Premium", id: "accounts" }, // <== ĐÃ THÊM
+                { name: "Tài khoản Premium", id: "accounts" }, 
                 { name: "Liên hệ", id: "contact" },
               ].map(
                 (item, idx) => {
-                  const id = item.id; // 🔥 Dùng ID đã định nghĩa
+                  const id = item.id; 
                   return (
                   <a
                     key={idx}
@@ -3340,153 +3242,80 @@ setDiscountAmount(0);
                 )
               })}
 
-              
+              
+              {/* Admin button for mobile */}
+              <button
+                onClick={() => {
+                  setShowAdminDashboard(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left text-gray-700 hover:text-blue-600 py-2 font-medium"
+              >
+                Admin
+              </button>
 
-              {/* Admin button for mobile */}
+              {/* Cart button for mobile */}
+              <button
+                onClick={() => {
+                  setShowCart(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg hover:bg-gray-200 transition"
+              >
+                <span className="font-medium text-gray-700">Giỏ hàng</span>
+                <div className="flex items-center space-x-2">
+                  {cart.length > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      {cart.length}
+                    </span>
+                  )}
+                  <ShoppingCart className="w-5 h-5 text-gray-700" />
+                </div>
+              </button>
 
-              <button
-
-                onClick={() => {
-
-                  setShowAdminDashboard(true);
-
-                  setMobileMenuOpen(false);
-
-                }}
-
-                className="w-full text-left text-gray-700 hover:text-blue-600 py-2 font-medium"
-
-              >
-
-                Admin
-
-              </button>
-
-
-
-              {/* Cart button for mobile */}
-
-              <button
-
-                onClick={() => {
-
-                  setShowCart(true);
-
-                  setMobileMenuOpen(false);
-
-                }}
-
-                className="w-full flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg hover:bg-gray-200 transition"
-
-              >
-
-                <span className="font-medium text-gray-700">Giỏ hàng</span>
-
-                <div className="flex items-center space-x-2">
-
-                  {cart.length > 0 && (
-
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-
-                      {cart.length}
-
-                    </span>
-
-                  )}
-
-                  <ShoppingCart className="w-5 h-5 text-gray-700" />
-
-                </div>
-
-              </button>
-
-
-
-             {/* User section for mobile */}
-
+             {/* User section for mobile */}
 {currentUser ? (
-
-  <div className="space-y-2">
-
-    <button
-
-      onClick={() => {
-
-        setShowOrderHistory(true);
-
-        setMobileMenuOpen(false);
-
-      }}
-
-      className="w-full flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-3 rounded-lg hover:bg-blue-100 transition"
-
-    >
-
-      <ShoppingBag className="w-5 h-5" />
-
-      <span className="font-medium">Lịch sử đơn hàng</span>
-
-    </button>
-
-    <div className="flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg">
-
-      <span className="text-sm text-gray-700">
-
-        Xin chào, {currentUser.name}
-
-      </span>
-
-      <button
-
-        onClick={() => {
-
-          handleLogout();
-
-          setMobileMenuOpen(false);
-
-        }}
-
-        className="p-2 hover:bg-gray-200 rounded-lg transition"
-
-      >
-
-        <LogOut className="w-5 h-5 text-gray-700" />
-
-      </button>
-
-    </div>
-
-  </div>
-
+  <div className="space-y-2">
+    <button
+      onClick={() => {
+        setShowOrderHistory(true);
+        setMobileMenuOpen(false);
+      }}
+      className="w-full flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-3 rounded-lg hover:bg-blue-100 transition"
+    >
+      <ShoppingBag className="w-5 h-5" />
+      <span className="font-medium">Lịch sử đơn hàng</span>
+    </button>
+    <div className="flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg">
+      <span className="text-sm text-gray-700">
+        Xin chào, {currentUser.name}
+      </span>
+      <button
+        onClick={() => {
+          handleLogout();
+          setMobileMenuOpen(false);
+        }}
+        className="p-2 hover:bg-gray-200 rounded-lg transition"
+      >
+        <LogOut className="w-5 h-5 text-gray-700" />
+      </button>
+    </div>
+  </div>
 ) : (
-
-  <button
-
-    onClick={() => {
-
-      setShowLogin(true);
-
-      setMobileMenuOpen(false);
-
-    }}
-
-    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-md transition transform hover:-translate-y-0.5"
-
-  >
-
-    Đăng nhập
-
-  </button>
-
+  <button
+    onClick={() => {
+      setShowLogin(true);
+      setMobileMenuOpen(false);
+    }}
+    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-md transition transform hover:-translate-y-0.5"
+  >
+    Đăng nhập
+  </button>
 )}
-
-            </div>
-
-          )}
-
-        </nav>
-
-      </header>
+            </div>
+          )}
+        </nav>
+      </header>
 
 
 
@@ -4027,48 +3856,46 @@ setDiscountAmount(0);
           </p>
         </div>
 
+        {/* Đảm bảo dùng grid và gap để các box không đè lên nhau */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {accounts.map((account) => { 
-            const badgeGradient = getAccountBgColor(account.name);
-            const isNew = account.name.includes("STUDoCU"); // Dựa vào ảnh có label "OFF NOW" trên Studocu
-            const isHot = account.name.includes("Quizlet Plus 30 Ngày"); // Quizlet Plus 1 tháng có chữ Q nổi bật
+            const badgeColorClass = getAccountBgColor(account.name);
+            const isStudocu = account.name.includes("STUDoCU");
 
-            // Tạo IconComponent giả, vì chúng ta đang dùng logic getAccountIconWrapper
-            let IconComponent = Zap; 
+            let IconComponent = Zap; 
             if (account.name.includes("Claude")) IconComponent = Bot;
 
             return (
               <div
                 key={account.id}
-                className="bg-gray-800 rounded-xl shadow-2xl hover:shadow-3xl transition transform hover:scale-[1.02] overflow-hidden flex flex-col relative border border-gray-700"
+                className="bg-gray-800 rounded-xl shadow-2xl hover:shadow-3xl transition transform hover:scale-[1.02] overflow-hidden flex flex-col relative border border-gray-700 min-h-[300px]"
               >
-                {/* Background Header - Gradient Block */}
-                <div className={`p-4 pt-12 text-center bg-gradient-to-br ${badgeGradient} relative h-40`}>
-                    
+                  
+                {/* Header Block (Cố định chiều cao và áp dụng màu nền) */}
+                <div className={`p-4 pt-12 text-center relative h-32 ${badgeColorClass} flex justify-center`}>
+                   
+                  {/* Logo (Nổi lên phía trên, cố định position) */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2"> 
+                    {getAccountIconWrapper(account.name, IconComponent)}
+                  </div>
+                  
+                  {/* Duration Label */}
+                  <p className="absolute bottom-2 text-white text-sm font-bold opacity-80">
+                    {account.duration}
+                  </p>
+
                   {/* Label "OFF NOW" - Studocu only */}
-                  {isNew && (
+                  {isStudocu && (
                     <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                       OFF NOW!
                     </div>
                   )}
-                  
-                  {/* Header Content */}
-                  <div className="absolute inset-0 flex flex-col justify-end p-4 pb-2">
-                    {/* Logo/Icon */}
-                    <div className="w-full flex justify-center mb-1">
-                      {getAccountIconWrapper(account.name, IconComponent)}
-                    </div>
-                    {/* Duration Label */}
-                    <div className="text-white text-center font-bold text-xl py-1 rounded-md bg-opacity-70 bg-gray-900/40 mt-1">
-                      {account.duration}
-                    </div>
-                  </div>
                 </div>
 
                 {/* Body Content */}
                 <div className="p-4 flex flex-col flex-1 justify-between">
-                    <div className="text-center mt-6"> 
-                      <h4 className="font-bold text-lg text-gray-100 mb-1">
+                    <div className="text-center mt-6"> 
+                      <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
                         {account.name}
                       </h4>
                       {/* Logo Text (FUO) */}
@@ -4100,7 +3927,7 @@ setDiscountAmount(0);
                             price: account.price,
                           })
                         }
-                        className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
+                        className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
                       >
                         Mua hàng
                       </button>
