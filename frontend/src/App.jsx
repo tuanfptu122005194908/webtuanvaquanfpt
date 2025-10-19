@@ -24,6 +24,14 @@ import avt2 from "./avt2.png";
 
 import avt1 from "./avt1.png"; 
 
+import tk1 from "./tk1.png";
+
+import tk2 from "./tk2.png";
+
+import tk3 from "./tk3.png";
+import tk4 from "./tk4.png";
+import tk5 from "./tk5.png";
+import tk6 from "./tk6.png";
 import {
 
  ShoppingCart,
@@ -2567,16 +2575,7 @@ const [notification, setNotification] = useState({ message: '', type: '' });
 
 // 🔥 THÊM DỮ LIỆU TÀI KHOẢN PREMIUM
   const accounts = [
-    {
-      id: 101,
-      name: "Claude 4 Sonnet MaxMode",
-      duration: "7 ngày",
-      price: 100000,
-      type: 'claude',
-      stats: { carts: 2, sold: 21 },
-      logoText: "T&Q",
-      color: 'purple-600'
-    },
+    
     {
       id: 102,
       name: "ChatGPT PLUS - 1 tháng - Shared 3 slots",
@@ -2585,18 +2584,10 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       type: 'chatgpt',
       stats: { carts: 1282, sold: 18 },
       logoText: "T&Q",
-      color: 'green-600'
+      color: 'green-600',
+      img: tk3
     },
-    {
-      id: 103,
-      name: "Claude 4 Sonnet MaxMode",
-      duration: "30 ngày",
-      price: 250000,
-      type: 'claude',
-      stats: { carts: 4, sold: 743 },
-      logoText: "T&Q",
-      color: 'purple-600'
-    },
+    
     {
       id: 104,
       name: "Tài khoản Quizlet Plus 30 Ngày",
@@ -2605,7 +2596,8 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       type: 'quizlet',
       stats: { carts: 6528, sold: 5 },
       logoText: "T&Q",
-      color: 'blue-600'
+      color: 'blue-600',
+      img: tk2
     },
     {
       id: 105,
@@ -2615,18 +2607,10 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       type: 'netflix',
       stats: { carts: 252, sold: 42 },
       logoText: "T&Q",
-      color: 'red-600'
+      color: 'red-600',
+      img: tk1
     },
-    {
-      id: 106,
-      name: "STUDoCU Premium",
-      duration: "3 tháng",
-      price: 30000,
-      type: 'studocu',
-      stats: { carts: 317, sold: 0 },
-      logoText: "T&Q",
-      color: 'gray-700'
-    },
+    
     {
       id: 107,
       name: "Capcut Pro 1 tháng - Dùng riêng",
@@ -2635,7 +2619,8 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       type: 'capcut',
       stats: { carts: 138, sold: 159 },
       logoText: "T&Q",
-      color: 'pink-600'
+      color: 'pink-600',
+      img: tk4
     },
     {
       id: 108,
@@ -2645,18 +2630,10 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       type: 'canva',
       stats: { carts: 182, sold: 9999 },
       logoText: "T&Q",
-      color: 'indigo-600'
+      color: 'indigo-600' ,
+      img : tk5
     },
-    {
-      id: 109,
-      name: "Super Gnak A.I",
-      duration: "1 tháng",
-      price: 100000,
-      type: 'supergnak',
-      stats: { carts: 115, sold: 0 },
-      logoText: "T&Q",
-      color: 'cyan-600'
-    },
+    
     {
       id: 110,
       name: "Quizlet Plus 1 Năm",
@@ -2665,18 +2642,10 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       type: 'quizlet',
       stats: { carts: 54, sold: 9999 },
       logoText: "T&Q",
-      color: 'blue-600'
+      color: 'blue-600',
+      img: tk2
     },
-    {
-      id: 111,
-      name: "DUOLINGO SUPER 1 Năm CHÍNH CHỦ",
-      duration: "1 năm CHÍNH CHỦ",
-      price: 200000,
-      type: 'duolingo',
-      stats: { carts: 15, sold: 9999 },
-      logoText: "T&Q",
-      color: 'yellow-600'
-    },
+    
   ];
 
  const getLogoColor = (accountName) => {
