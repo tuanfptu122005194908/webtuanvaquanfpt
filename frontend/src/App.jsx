@@ -31,7 +31,7 @@ import tk2 from "./tk2.png";
 import tk3 from "./tk3.png";
 import tk4 from "./tk4.png";
 import tk5 from "./tk5.png";
-import tk6 from "./tk6.png";
+
 import {
 
  ShoppingCart,
@@ -124,6 +124,12 @@ const Notification = ({ message, type, onClose }) => {
 
 
 // ============ ADMIN DASHBOARD COMPONENT ============
+const STATS_COLOR_MAP = {
+    blue: { bg: "bg-blue-100", text: "text-blue-600" },
+    green: { bg: "bg-green-100", text: "text-green-600" },
+    purple: { bg: "bg-purple-100", text: "text-purple-600" },
+    yellow: { bg: "bg-yellow-100", text: "text-yellow-600" },
+};
 
 const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
@@ -461,7 +467,7 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
     try {
 
-      const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
 
         method: 'DELETE',
 
@@ -913,43 +919,29 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
                 },
 
-              ].map((stat, idx) => {
-
-                const Icon = stat.icon;
-
-                return (
-
-                  <div
-
-                    key={idx}
-
-                    className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition"
-
-                  >
-
-                    <div className="flex items-center justify-between mb-4">
-
-                      <div className={`bg-${stat.color}-100 p-3 rounded-lg`}>
-
-                        <Icon className={`w-6 h-6 text-${stat.color}-600`} />
-
-                      </div>
-
-                    </div>
-
-                    <p className="text-gray-600 text-sm mb-1">{stat.label}</p>
-
-                    <p className="text-2xl font-bold text-gray-800">
-
-                      {stat.value}
-
-                    </p>
-
-                  </div>
-
-                );
-
-              })}
+             ].map((stat, idx) => {
+                const Icon = stat.icon;
+                // 🔥 SỬA LỖI TAILWIND TẠI ĐÂY
+                const colorClasses = STATS_COLOR_MAP[stat.color] || { bg: "bg-gray-100", text: "text-gray-600" }; 
+                // <== ĐÃ LẤY RA OBJECT CHỨA CÁC CLASS ĐẦY ĐỦ
+                return (
+                  <div
+                    key={idx}
+                    className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      {/* SỬ DỤNG colorClasses.bg VÀ colorClasses.text */}
+                      <div className={`${colorClasses.bg} p-3 rounded-lg`}>
+                        <Icon className={`w-6 h-6 ${colorClasses.text}`} />
+                      </div>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-1">{stat.label}</p>
+                    <p className="text-2xl font-bold text-gray-800">
+                      {stat.value}
+                    </p>
+                  </div>
+                );
+              })}
 
             </div>
 
@@ -2648,8 +2640,8 @@ const [notification, setNotification] = useState({ message: '', type: '' });
     
   ];
 
- const getLogoColor = (accountName) => {
-  switch (accountName.toLowerCase().trim()) {
+const getLogoColor = (accountName) => {
+  switch (accountName.toLowerCase().trim()) {
     case "quizlet plus":
     case "tài khoản quizlet plus 30 ngày":
     case "quizlet plus 1 năm":
@@ -2674,41 +2666,8 @@ const [notification, setNotification] = useState({ message: '', type: '' });
       return "text-gray-900";
   }
 };
-// Cập nhật để căn chỉnh logo tròn nổi bật lên phía trên
-const getAccountIconWrapper = (accountName, IconComponent) => {
-    // Sử dụng IconComponent mặc định (Zap) nếu không tìm thấy custom logic
-    let iconContent;
-    const colorClass = getLogoColor(accountName);
 
-    // Logic lấy chữ cái đầu hoặc icon đặc trưng
-    if (accountName.includes("ChatGPT")) {
-      iconContent = <Bot className={`h-8 w-8 ${colorClass}`} />;
-    } else if (accountName.includes("NETFLIX")) {
-      iconContent = <span className={`text-3xl font-bold ${colorClass}`}>N</span>;
-    } else if (accountName.includes("Capcut")) {
-      iconContent = <span className={`text-2xl font-black ${colorClass}`}>⍋</span>;
-    } else if (accountName.includes("Canva")) {
-      iconContent = <span className={`text-3xl font-black ${colorClass}`}>C</span>;
-    } else if (accountName.includes("DUOLINGO")) {
-      iconContent = <span className={`text-3xl font-black ${colorClass}`}>D</span>;
-    } else if (accountName.includes("Quizlet")) {
-      iconContent = <span className={`text-2xl font-black ${colorClass}`}>Q</span>;
-    } else if (accountName.includes("STUDoCU")) {
-      iconContent = <span className={`text-2xl font-black ${colorClass}`}>S</span>;
-    } else if (accountName.includes("Super Gnak")) {
-      iconContent = <span className={`text-2xl font-black ${colorClass}`}>AI</span>;
-    } else if (accountName.includes("Claude")) {
-      iconContent = <span className={`text-2xl font-black ${colorClass}`}>X1</span>;
-    } else {
-      iconContent = <IconComponent className={`h-8 w-8 ${colorClass}`} />;
-    }
 
-    return (
-        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg transform -translate-y-8 border-4 border-gray-900/10">
-            {iconContent}
-        </div>
-    );
-};
 
 const getAccountBgColor = (accountName) => {
     if (accountName.includes("Quizlet")) return "bg-blue-700";
@@ -3847,9 +3806,16 @@ setDiscountAmount(0);
                 <div className={`p-4 pt-12 text-center relative h-32 ${badgeColorClass} flex justify-center`}>
                    
                   {/* Logo (Nổi lên phía trên, cố định position) */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2"> 
-                    {getAccountIconWrapper(account.name, IconComponent)}
-                  </div>
+                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2"> 
+    {/* 🔥 THẺ ẢNH MỚI - ĐẢM BẢO CÂN ĐỐI */}
+    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg transform -translate-y-8 border-4 border-gray-900/10 overflow-hidden">
+        <img 
+            src={account.img} 
+            alt={account.name} 
+            className="w-full h-full object-cover p-1" // object-cover và p-1 giúp ảnh vừa vặn và cân đối trong vòng tròn
+        />
+    </div>
+</div>
                   
                   {/* Duration Label */}
                   <p className="absolute bottom-2 text-white text-sm font-bold opacity-80">
@@ -3864,22 +3830,21 @@ setDiscountAmount(0);
                   )}
                 </div>
 
-                {/* Body Content */}
-               <div className="p-4 flex flex-col flex-1"> 
-    
-    <div className="text-center"> {/* CHỈNH SỬA TẠI ĐÂY: Xóa mt-6 */}
-        <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
-            {account.name}
-        </h4>
-        {/* Logo Text (FUO) */}
-        <p className="text-xs font-black text-yellow-400 mb-3">
-            {account.logoText}
-        </p>
-    </div>
+             {/* Body Content */}
+                <div className="p-4 flex flex-col flex-1"> 
+                  
+                  <div className="text-center flex-1"> {/* CHỈNH SỬA: Đã thêm flex-1 để chiếm hết không gian */}
+                      <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
+                          {account.name}
+                      </h4>
+                      {/* Logo Text (FUO) */}
+                      <p className="text-xs font-black text-yellow-400 mb-3">
+                          {account.logoText}
+                      </p>
+                  </div>
 
                     {/* Stats Bar */}
-                    {/* Stats Bar */}
-    <div className="flex justify-around items-center bg-gray-700 rounded-lg p-2 text-xs font-semibold my-4"> {/* Đã đổi mb-4 thành my-4 (margin top/bottom) */}
+                   <div className="flex justify-around items-center bg-gray-700 rounded-lg p-2 text-xs font-semibold my-4">
                         <div className="flex items-center text-blue-400">
                           <ShoppingCart className="w-3 h-3 mr-1" /> {account.stats.carts.toLocaleString()}
                         </div>
@@ -3889,7 +3854,7 @@ setDiscountAmount(0);
                     </div>
 
                     {/* Price & Button */}
-                   <div> {/* CHỈNH SỬA TẠI ĐÂY: Xóa mt-auto */}
+                   <div className="mt-auto"> {/* CHỈNH SỬA TẠI ĐÂY: Xóa mt-auto */}
         <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
             {account.price.toLocaleString("vi-VN")} đ
         </p>
