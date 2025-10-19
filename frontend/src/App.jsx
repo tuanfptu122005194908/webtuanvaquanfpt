@@ -3793,32 +3793,30 @@ setDiscountAmount(0);
             const badgeColorClass = getAccountBgColor(account.name);
             const isStudocu = account.name.includes("STUDoCU");
 
-            let IconComponent = Zap; 
-            if (account.name.includes("Claude")) IconComponent = Bot;
-
             return (
               <div
                 key={account.id}
                 className="bg-gray-800 rounded-xl shadow-2xl hover:shadow-3xl transition transform hover:scale-[1.02] overflow-hidden flex flex-col relative border border-gray-700 min-h-[300px]"
               >
-                  
-                {/* Header Block (Cố định chiều cao và áp dụng màu nền) */}
-                <div className={`p-4 pt-12 text-center relative h-32 ${badgeColorClass} flex justify-center`}>
+                  
+                {/* Header Block - GIẢM CHIỀU CAO VÀ CHỈNH LẠI CĂN CHỈNH */}
+                <div className={`p-4 pt-12 text-center relative h-28 ${badgeColorClass} flex justify-center items-end`}>
                    
-                  {/* Logo (Nổi lên phía trên, cố định position) */}
+                  {/* Logo - TĂNG KÍCH THƯỚC VÀ ĐẨY LÊN ÍT HƠN */}
                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2"> 
-    {/* 🔥 THẺ ẢNH MỚI - ĐẢM BẢO CÂN ĐỐI */}
-    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg transform -translate-y-8 border-4 border-gray-900/10 overflow-hidden">
-        <img 
-            src={account.img} 
-            alt={account.name} 
-            className="w-full h-full object-cover p-1" // object-cover và p-1 giúp ảnh vừa vặn và cân đối trong vòng tròn
-        />
-    </div>
-</div>
+                   {/* Thay đổi w-16 h-16 thành w-20 h-20 (Tăng kích thước) */}
+                   {/* Thay đổi -translate-y-8 thành -translate-y-1/2 (Căn giữa theo chiều dọc của Logo so với đường cắt ngang) */}
+                    <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg transform -translate-y-1/2 border-4 border-gray-900/10 overflow-hidden">
+                        <img 
+                            src={account.img} 
+                            alt={account.name} 
+                            className="w-full h-full object-cover p-1"
+                        />
+                    </div>
+                  </div>
                   
                   {/* Duration Label */}
-                  <p className="absolute bottom-2 text-white text-sm font-bold opacity-80">
+                  <p className="text-white text-sm font-bold opacity-80">
                     {account.duration}
                   </p>
 
@@ -3831,9 +3829,9 @@ setDiscountAmount(0);
                 </div>
 
              {/* Body Content */}
-                <div className="p-4 flex flex-col flex-1"> 
+                <div className="p-4 flex flex-col flex-1"> 
                   
-                  <div className="text-center flex-1"> {/* CHỈNH SỬA: Đã thêm flex-1 để chiếm hết không gian */}
+                  <div className="text-center flex-1 mt-4"> {/* Đã thêm mt-4 để tạo khoảng trống dưới logo */}
                       <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
                           {account.name}
                       </h4>
@@ -3854,10 +3852,10 @@ setDiscountAmount(0);
                     </div>
 
                     {/* Price & Button */}
-                   <div className="mt-auto"> {/* CHỈNH SỬA TẠI ĐÂY: Xóa mt-auto */}
-        <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
-            {account.price.toLocaleString("vi-VN")} đ
-        </p>
+                   <div className="mt-auto">
+                      <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
+                          {account.price.toLocaleString("vi-VN")} đ
+                      </p>
                       <button
                         onClick={() =>
                           addToCart({
@@ -3867,9 +3865,9 @@ setDiscountAmount(0);
                           })
                         }
                        className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
-        >
-            Mua hàng
-        </button>
+                      >
+                          Mua hàng
+                      </button>
                     </div>
                 </div>
               </div>
