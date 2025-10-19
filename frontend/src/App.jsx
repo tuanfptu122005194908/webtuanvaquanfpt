@@ -3098,36 +3098,37 @@ setDiscountAmount(0);
 
   /> {/* Header */}
       <header className="bg-white shadow-xl sticky top-0 z-50">
-        <nav className="container mx-auto px-6 py-4">
+        <nav className="container mx-auto px-8 py-3"> {/* Giảm py-4 xuống py-3 để nén chiều cao tổng thể */}
           <div className="flex justify-between items-center">
-            {/* Logo */}
-            <div className="flex items-center space-x-4">
-              {/* Box Icon: Tạo hiệu ứng đổ bóng mạnh hơn */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-xl shadow-lg shadow-blue-500/50">
-                <Book className="w-8 h-8" />
+            
+            {/* Logo (ĐÃ SỬA: Giảm kích thước và Căn chỉnh) */}
+            <div className="flex items-center space-x-3"> {/* Đã giảm space-x từ 4 xuống 3 */}
+              {/* Box Icon: p-3 -> p-2, w-8 h-8 -> w-6 h-6 (giảm nhỏ hơn nữa) */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 rounded-lg shadow-lg shadow-blue-500/50 flex items-center justify-center">
+                <Book className="w-6 h-6" />
               </div>
-              <div>
-                {/* Tên thương hiệu: Dùng font chữ lớn, gradient và đổ bóng chữ (shadow) */}
-                <h1 
-                  className="text-3xl md:text-4xl font-black bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent"
-                  style={{ textShadow: '2px 2px 4px rgba(100, 100, 100, 0.2)' }}
+              {/* Khối Text: Thêm flex-col và căn chỉnh chữ */}
+              <div className="flex flex-col justify-center">
+                <h1 
+                  className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent leading-snug" /* Giảm cỡ chữ (xl/2xl) và leading */
+                  style={{ textShadow: '1px 1px 2px rgba(100, 100, 100, 0.1)' }}
                 >
                   Học cùng Tuấn và Quân
                 </h1>
-                <p className="text-xs md:text-sm text-gray-500 font-semibold italic">
+                <p className="text-xs text-gray-500 font-medium italic -mt-0.5"> {/* Đã thêm -mt-0.5 để kéo chữ lên */}
                   Nền tảng học tập chất lượng
                 </p>
               </div>
             </div>
 
-            {/* Desktop Menu - Đã tăng khoảng cách space-x-6 lên space-x-8 */}
-            <div className="hidden md:flex items-center space-x-8 font-medium">
+            {/* Desktop Menu - Giữ nguyên không gian lớn để cân đối */}
+            <div className="hidden md:flex items-center space-x-6 font-medium"> {/* space-x-6 (vừa đủ) */}
               {[
                { name: "Khóa học", id: "courses" },
                 { name: "Tiếng Anh", id: "english" },
                 { name: "Tài liệu", id: "documents" },
                 { name: "Coursera", id: "coursera" },
-                { name: "Tài khoản Premium", id: "accounts" }, 
+                { name: "Tài khoản Premium", id: "accounts" }, 
                 { name: "Liên hệ", id: "contact" },
               ].map((item, idx) => (
                 <a
@@ -3165,7 +3166,7 @@ setDiscountAmount(0);
                 )}
               </button>
 
-             {/* User - Tăng không gian và font chữ cho tên người dùng */}
+             {/* User */}
 {currentUser ? (
   <div className="flex items-center space-x-3 ml-4">
     <button
@@ -3197,7 +3198,7 @@ setDiscountAmount(0);
 )}
             </div>
 
-            {/* Mobile Menu Button */}
+          {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-md hover:bg-gray-100 transition"
@@ -3218,11 +3219,11 @@ setDiscountAmount(0);
                 { name: "Tiếng Anh", id: "english" },
                 { name: "Tài liệu", id: "documents" },
                 { name: "Coursera", id: "coursera" },
-                { name: "Tài khoản Premium", id: "accounts" }, 
+                { name: "Tài khoản Premium", id: "accounts" }, 
                 { name: "Liên hệ", id: "contact" },
               ].map(
                 (item, idx) => {
-                  const id = item.id; 
+                  const id = item.id; 
                   return (
                   <a
                     key={idx}
@@ -3242,7 +3243,7 @@ setDiscountAmount(0);
                 )
               })}
 
-              
+              
               {/* Admin button for mobile */}
               <button
                 onClick={() => {
@@ -3317,6 +3318,8 @@ setDiscountAmount(0);
         </nav>
       </header>
 
+
+    
 
 
      <section
