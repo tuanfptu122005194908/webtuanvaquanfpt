@@ -69,11 +69,7 @@ import {
   Check,
 
   Zap,
-  Bot, // 🔥 THÊM
-  MonitorPlay, // 🔥 THÊM
-  PenTool, // 🔥 THÊM
-  Speech, // 🔥 THÊM
-  Layers,
+  Bot, MonitorPlay, PenTool, Speech, Layers, Brain, BookOpen, Music, Film
 } from "lucide-react";
 
 
@@ -2581,65 +2577,132 @@ const [notification, setNotification] = useState({ message: '', type: '' });
   ];
 
 // 🔥 THÊM DỮ LIỆU TÀI KHOẢN PREMIUM
-  const premiumAccounts = [
+  const accounts = [
     {
-      id: "claude4-sonnet",
-      name: "Claude 4 Sonnet MaxMode",
-      code: "CLAUDE4-7D",
-      desc: "Tài khoản không giới hạn trong 7 ngày. Trải nghiệm AI đẳng cấp.",
-      price: 100000,
-      icon: "🤖",
+      id: 1,
+      name: "Quizlet Plus",
+      duration: "1 tháng",
+      price: 29000,
+      icon: Bot, // Icon mặc định nếu không có icon cụ thể
+      bgColor: 'quizlet-blue', // Màu nền cho Quizlet
     },
     {
-      id: "capcut-pro",
-      name: "Capcut Pro 1 tháng",
-      code: "CAPCUT-1M",
-      desc: "Tài khoản Capcut Pro dùng riêng trong 1 tháng. Mở khóa mọi tính năng chỉnh sửa.",
-      price: 70000,
-      icon: "✂️",
+      id: 2,
+      name: "Netflix Premium",
+      duration: "1 tháng",
+      price: 69000,
+      icon: MonitorPlay, // Icon mặc định
+      bgColor: 'netflix-red', // Màu nền cho Netflix
     },
     {
-      id: "canva-pro",
-      name: "Canva Pro 1 Năm",
-      code: "CANVA-1Y",
-      desc: "Tài khoản Canva Pro dùng chung trong 1 năm. Thiết kế không giới hạn.",
-      price: 100000,
-      icon: "🎨",
+      id: 3,
+      name: "Spotify Premium",
+      duration: "1 tháng",
+      price: 25000,
+      icon: Music, // Ví dụ: icon Music cho Spotify
+      bgColor: 'green-600', // Màu nền Spotify
     },
     {
-      id: "quizlet-plus-30d",
-      name: "Quizlet Plus 30 Ngày",
-      code: "QUIZLET-30D",
-      desc: "Tài khoản Quizlet Plus trong 30 ngày. Học tập hiệu quả hơn.",
-      price: 20000,
-      icon: "🧠",
+      id: 4,
+      name: "Canva Pro",
+      duration: "1 tháng",
+      price: 35000,
+      icon: PenTool, // Ví dụ: icon PenTool cho Canva
+      bgColor: 'blue-500', // Màu nền Canva
     },
     {
-      id: "quizlet-plus-1y",
-      name: "Quizlet Plus 1 Năm",
-      code: "QUIZLET-1Y",
-      desc: "Tài khoản Quizlet Plus trong 1 năm. Tối ưu hóa việc học.",
-      price: 230000,
-      icon: "🏆",
+      id: 5,
+      name: "Grammarly Premium",
+      duration: "1 tháng",
+      price: 39000,
+      icon: Speech, // Ví dụ: icon Speech cho Grammarly
+      bgColor: 'yellow-600', // Màu nền Grammarly
     },
     {
-      id: "duolingo-super",
-      name: "DUOLINGO SUPER 1 Năm",
-      code: "DUOLINGO-1Y",
-      desc: "Tài khoản Duolingo Super trong 1 năm. Học ngoại ngữ không quảng cáo.",
-      price: 230000,
-      icon: "🦉",
+      id: 6,
+      name: "Microsoft Office 365",
+      duration: "1 năm",
+      price: 159000,
+      icon: Layers, // Ví dụ: icon Layers cho Office
+      bgColor: 'red-800', // Màu nền Office
     },
     {
-      id: "netflix-4k",
-      name: "NETFLIX 4K 1 THÁNG CAO CẤP",
-      code: "NETFLIX-1M",
-      desc: "Tài khoản Netflix Cao cấp, chất lượng 4K trong 1 tháng. Xem phim thỏa thích.",
-      price: 80000,
-      icon: "📺",
+        id: 7,
+        name: "Elevate Pro",
+        duration: "1 tháng",
+        price: 20000,
+        icon: Brain, // Ví dụ: icon Brain cho Elevate
+        bgColor: 'purple-600', // Màu nền Elevate
+    },
+    {
+        id: 8,
+        name: "Eloquent Pro",
+        duration: "1 tháng",
+        price: 30000,
+        icon: BookOpen, // Ví dụ: icon BookOpen cho Eloquent
+        bgColor: 'indigo-700', // Màu nền Eloquent
+    },
+    {
+        id: 9,
+        name: "Youtube Premium",
+        duration: "1 tháng",
+        price: 49000,
+        icon: Film, // Ví dụ: icon Film cho Youtube
+        bgColor: 'red-700', // Màu nền Youtube
     },
   ];
 
+ const getLogoColor = (accountName) => {
+  switch (accountName) {
+    case "Quizlet Plus":
+    case "Quizlet Plus 1 Năm":
+      return "text-blue-600"; // Màu xanh Quizlet
+    case "NETFLIX 4K 1 THÁNG CAO CẤP":
+      return "text-red-600"; // Màu đỏ Netflix
+    case "Capcut Pro 1 tháng":
+      return "text-pink-600";
+    case "Canva Pro 1 Năm":
+      return "text-indigo-600";
+    case "DUOLINGO SUPER 1 Năm":
+      return "text-green-600";
+    case "Claude 4 Sonnet MaxMode":
+      return "text-purple-600";
+    default:
+      return "text-gray-900";
+  }
+};
+
+const getAccountIconWrapper = (accountName, IconComponent) => {
+    const iconColorClass = getLogoColor(accountName);
+
+    // Đây là cấu trúc tạo hiệu ứng logo: NỀN MÀU (badgeColor) + HÌNH TRÒN TRẮNG + ICON/CHỮ MÀU CHỦ ĐẠO
+    return (
+        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg">
+            {/* Nếu bạn có file ảnh logo, hãy thay thế IconComponent bằng thẻ <img /> */}
+            <IconComponent className={`h-8 w-8 ${iconColorClass}`} />
+        </div>
+    );
+};
+
+const getAccountBgColor = (accountName) => {
+    switch (accountName) {
+        case "Quizlet Plus 30 Ngày":
+        case "Quizlet Plus 1 Năm":
+            return "bg-blue-600";
+        case "NETFLIX 4K 1 THÁNG CAO CẤP":
+            return "bg-red-600";
+        case "Capcut Pro 1 tháng":
+            return "bg-pink-600";
+        case "Canva Pro 1 Năm":
+            return "bg-indigo-600";
+        case "DUOLINGO SUPER 1 Năm":
+            return "bg-green-600";
+        case "Claude 4 Sonnet MaxMode":
+            return "bg-purple-600";
+        default:
+            return "bg-gray-500";
+    }
+};
   const groupedDocuments = allDocuments.reduce((acc, doc) => {
 
     (acc[doc.semester] = acc[doc.semester] || []).push(doc);
@@ -3906,93 +3969,81 @@ setDiscountAmount(0);
       </section>
 
 {/* ACCOUNTS Section */}
-      <section id="accounts" className="py-20 font-sans bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
-              ⚡ Tài khoản Premium
-            </h2>
-            <p className="text-gray-600 text-lg md:text-xl">
-              Nâng cấp trải nghiệm học tập và làm việc với các tài khoản chất lượng
-            </p>
-          </div>
+  <section id="accounts" className="py-20 font-sans bg-white">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            ⚡ Tài khoản Premium
+          </h2>
+          <p className="text-gray-600 text-lg md:text-xl">
+            Nâng cấp trải nghiệm học tập và làm việc với các tài khoản chất lượng
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {premiumAccounts.map((account) => {
-              let IconComponent = Zap; // Icon mặc định
-              let badgeColor = 'bg-indigo-600';
-              let buttonColor = 'bg-indigo-600 hover:bg-indigo-700';
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {accounts.map((account) => { // Sử dụng 'accounts' thay vì 'premiumAccounts'
+            let IconComponent = Zap; 
+            
+            // Logic chọn icon component
+            if (account.name.includes("Claude")) IconComponent = Bot;
+            else if (account.name.includes("Netflix")) IconComponent = MonitorPlay;
+            else if (account.name.includes("Quizlet")) IconComponent = Layers;
+            else if (account.name.includes("Canva")) IconComponent = PenTool;
+            else if (account.name.includes("Capcut")) IconComponent = PenTool;
+            else if (account.name.includes("DUOLINGO")) IconComponent = Speech;
 
-              // Logic chọn icon và màu sắc theo loại tài khoản
-              if (account.name.includes("Claude")) {
-                IconComponent = Bot;
-                badgeColor = 'bg-gray-800';
-                buttonColor = 'bg-gray-800 hover:bg-gray-900';
-              } else if (account.name.includes("Netflix")) {
-                IconComponent = MonitorPlay;
-                badgeColor = 'bg-red-600';
-                buttonColor = 'bg-red-600 hover:bg-red-700';
-              } else if (account.name.includes("Quizlet")) {
-                IconComponent = Layers;
-                badgeColor = 'bg-blue-600';
-                buttonColor = 'bg-blue-600 hover:bg-blue-700';
-              } else if (account.name.includes("Canva") || account.name.includes("Capcut")) {
-                IconComponent = PenTool;
-                badgeColor = 'bg-pink-600';
-                buttonColor = 'bg-pink-600 hover:bg-pink-700';
-              } else if (account.name.includes("DUOLINGO")) {
-                IconComponent = Speech;
-                badgeColor = 'bg-green-600';
-                buttonColor = 'bg-green-600 hover:bg-green-700';
-              }
+            const badgeColor = getAccountBgColor(account.name);
+            const buttonColor = badgeColor; // Dùng màu nền làm màu nút
 
-              return (
-                <div
-                  key={account.id}
-                  className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2 overflow-hidden flex flex-col border border-gray-100"
-                >
-                  <div className={`p-6 flex flex-col flex-1 justify-between text-center relative ${badgeColor}`}>
-                    {/* Badge nền */}
-                    <div className="absolute inset-0 opacity-10"></div>
-                    
-                    <div className="relative z-10 text-white">
-                      <IconComponent className="w-10 h-10 mx-auto mb-3 text-white" />
-                      <p className="text-sm font-semibold mb-1 text-gray-200">
-                        {account.code}
-                      </p>
-                      <h4 className="font-bold text-2xl mb-2">
-                        {account.name}
-                      </h4>
-                    </div>
+            return (
+              <div
+                key={account.id}
+                className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2 overflow-hidden flex flex-col border border-gray-100"
+              >
+                <div className={`p-6 flex flex-col flex-1 justify-between text-center relative ${badgeColor} bg-opacity-90`}>
+                    
+                  {/* Logo đã được CSS lại */}
+                  <div className="mx-auto mb-4">
+                    {getAccountIconWrapper(account.name, IconComponent)}
+                  </div>
+                  
+                  <div className="relative z-10 text-white">
+                    <p className="text-sm font-semibold mb-1 text-gray-200">
+                      {account.code}
+                    </p>
+                    <h4 className="font-bold text-2xl mb-2">
+                      {account.name}
+                    </h4>
+                  </div>
 
-                    <div className="text-gray-200 text-sm mt-3 pt-3 border-t border-white/20 relative z-10 min-h-[40px] flex items-center justify-center">
-                      {account.desc}
-                    </div>
+                  <div className="text-gray-200 text-sm mt-3 pt-3 border-t border-white/20 relative z-10 min-h-[40px] flex items-center justify-center">
+                    {account.desc}
+                  </div>
 
-                  </div>
-                  <div className="p-6 pt-4 flex flex-col flex-1 justify-end">
-                    <span className="text-3xl font-extrabold text-gray-900 text-center mb-4">
-                      {account.price.toLocaleString()}đ
-                    </span>
-                    <button
-                      onClick={() =>
-                        addToCart({
-                          ...account,
-                          type: "premium_account",
-                          price: account.price,
-                        })
-                      }
-                      className={`w-full text-white px-4 py-3 rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 ${buttonColor} font-semibold`}
-                    >
-                      MUA NGAY
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+                </div>
+                <div className="p-6 pt-4 flex flex-col flex-1 justify-end">
+                  <span className="text-3xl font-extrabold text-gray-900 text-center mb-4">
+                    {account.price.toLocaleString()}đ
+                  </span>
+                  <button
+                    onClick={() =>
+                      addToCart({
+                        ...account,
+                        type: "premium_account",
+                        price: account.price,
+                      })
+                    }
+                    className={`w-full text-white px-4 py-3 rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 ${buttonColor} font-semibold`}
+                  >
+                    MUA NGAY
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
 
       {/* Contact Section */}
 
