@@ -68,6 +68,12 @@ import {
 
   Check,
 
+  Zap,
+  Bot, // 🔥 THÊM
+  MonitorPlay, // 🔥 THÊM
+  PenTool, // 🔥 THÊM
+  Speech, // 🔥 THÊM
+  Layers,
 } from "lucide-react";
 
 
@@ -2574,7 +2580,65 @@ const [notification, setNotification] = useState({ message: '', type: '' });
 
   ];
 
-
+// 🔥 THÊM DỮ LIỆU TÀI KHOẢN PREMIUM
+  const premiumAccounts = [
+    {
+      id: "claude4-sonnet",
+      name: "Claude 4 Sonnet MaxMode",
+      code: "CLAUDE4-7D",
+      desc: "Tài khoản không giới hạn trong 7 ngày. Trải nghiệm AI đẳng cấp.",
+      price: 100000,
+      icon: "🤖",
+    },
+    {
+      id: "capcut-pro",
+      name: "Capcut Pro 1 tháng",
+      code: "CAPCUT-1M",
+      desc: "Tài khoản Capcut Pro dùng riêng trong 1 tháng. Mở khóa mọi tính năng chỉnh sửa.",
+      price: 70000,
+      icon: "✂️",
+    },
+    {
+      id: "canva-pro",
+      name: "Canva Pro 1 Năm",
+      code: "CANVA-1Y",
+      desc: "Tài khoản Canva Pro dùng chung trong 1 năm. Thiết kế không giới hạn.",
+      price: 100000,
+      icon: "🎨",
+    },
+    {
+      id: "quizlet-plus-30d",
+      name: "Quizlet Plus 30 Ngày",
+      code: "QUIZLET-30D",
+      desc: "Tài khoản Quizlet Plus trong 30 ngày. Học tập hiệu quả hơn.",
+      price: 20000,
+      icon: "🧠",
+    },
+    {
+      id: "quizlet-plus-1y",
+      name: "Quizlet Plus 1 Năm",
+      code: "QUIZLET-1Y",
+      desc: "Tài khoản Quizlet Plus trong 1 năm. Tối ưu hóa việc học.",
+      price: 230000,
+      icon: "🏆",
+    },
+    {
+      id: "duolingo-super",
+      name: "DUOLINGO SUPER 1 Năm",
+      code: "DUOLINGO-1Y",
+      desc: "Tài khoản Duolingo Super trong 1 năm. Học ngoại ngữ không quảng cáo.",
+      price: 230000,
+      icon: "🦉",
+    },
+    {
+      id: "netflix-4k",
+      name: "NETFLIX 4K 1 THÁNG CAO CẤP",
+      code: "NETFLIX-1M",
+      desc: "Tài khoản Netflix Cao cấp, chất lượng 4K trong 1 tháng. Xem phim thỏa thích.",
+      price: 80000,
+      icon: "📺",
+    },
+  ];
 
   const groupedDocuments = allDocuments.reduce((acc, doc) => {
 
@@ -2966,15 +3030,12 @@ setDiscountAmount(0);
 
               {[
 
-                { name: "Khóa học", id: "courses" },
-
-                { name: "Tiếng Anh", id: "english" },
-
-                { name: "Tài liệu", id: "documents" },
-
-                { name: "Coursera", id: "coursera" },
-
-                { name: "Liên hệ", id: "contact" },
+               { name: "Khóa học", id: "courses" },
+                { name: "Tiếng Anh", id: "english" },
+                { name: "Tài liệu", id: "documents" },
+                { name: "Coursera", id: "coursera" },
+                { name: "Tài khoản Premium", id: "accounts" }, // <== ĐÃ THÊM
+                { name: "Liên hệ", id: "contact" },
 
               ].map((item, idx) => (
 
@@ -3138,45 +3199,35 @@ setDiscountAmount(0);
 
           {mobileMenuOpen && (
 
-            <div className="md:hidden mt-4 space-y-3 pb-4 border-t border-gray-200">
-
-              {["Khóa học", "Tiếng Anh", "Tài liệu", "Coursera", "Liên hệ"].map(
-
-                (item, idx) => (
-
-                  <a
-
-                    key={idx}
-
-                    href={`#${item.toLowerCase().replace(" ", "")}`}
-
-                    onClick={(e) => {
-
-                      e.preventDefault();
-
-                      document.getElementById(item.toLowerCase().replace(" ", ""))?.scrollIntoView({
-
-                        behavior: "smooth",
-
-                        block: "start",
-
-                      });
-
-                      setMobileMenuOpen(false);
-
-                    }}
-
-                    className="block text-gray-700 hover:text-blue-600 py-2 font-medium"
-
-                  >
-
-                    {item}
-
-                  </a>
-
-                )
-
-              )}
+           <div className="md:hidden mt-4 space-y-3 pb-4 border-t border-gray-200">
+              {[
+                { name: "Khóa học", id: "courses" },
+                { name: "Tiếng Anh", id: "english" },
+                { name: "Tài liệu", id: "documents" },
+                { name: "Coursera", id: "coursera" },
+                { name: "Tài khoản Premium", id: "accounts" }, // <== ĐÃ THÊM
+                { name: "Liên hệ", id: "contact" },
+              ].map(
+                (item, idx) => {
+                  const id = item.id; // 🔥 Dùng ID đã định nghĩa
+                  return (
+                  <a
+                    key={idx}
+                    href={`#${id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(id)?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="block text-gray-700 hover:text-blue-600 py-2 font-medium"
+                  >
+                    {item.name}
+                  </a>
+                )
+              })}
 
               
 
@@ -3854,7 +3905,94 @@ setDiscountAmount(0);
 
       </section>
 
+{/* ACCOUNTS Section */}
+      <section id="accounts" className="py-20 font-sans bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+              ⚡ Tài khoản Premium
+            </h2>
+            <p className="text-gray-600 text-lg md:text-xl">
+              Nâng cấp trải nghiệm học tập và làm việc với các tài khoản chất lượng
+            </p>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {premiumAccounts.map((account) => {
+              let IconComponent = Zap; // Icon mặc định
+              let badgeColor = 'bg-indigo-600';
+              let buttonColor = 'bg-indigo-600 hover:bg-indigo-700';
+
+              // Logic chọn icon và màu sắc theo loại tài khoản
+              if (account.name.includes("Claude")) {
+                IconComponent = Bot;
+                badgeColor = 'bg-gray-800';
+                buttonColor = 'bg-gray-800 hover:bg-gray-900';
+              } else if (account.name.includes("Netflix")) {
+                IconComponent = MonitorPlay;
+                badgeColor = 'bg-red-600';
+                buttonColor = 'bg-red-600 hover:bg-red-700';
+              } else if (account.name.includes("Quizlet")) {
+                IconComponent = Layers;
+                badgeColor = 'bg-blue-600';
+                buttonColor = 'bg-blue-600 hover:bg-blue-700';
+              } else if (account.name.includes("Canva") || account.name.includes("Capcut")) {
+                IconComponent = PenTool;
+                badgeColor = 'bg-pink-600';
+                buttonColor = 'bg-pink-600 hover:bg-pink-700';
+              } else if (account.name.includes("DUOLINGO")) {
+                IconComponent = Speech;
+                badgeColor = 'bg-green-600';
+                buttonColor = 'bg-green-600 hover:bg-green-700';
+              }
+
+              return (
+                <div
+                  key={account.id}
+                  className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2 overflow-hidden flex flex-col border border-gray-100"
+                >
+                  <div className={`p-6 flex flex-col flex-1 justify-between text-center relative ${badgeColor}`}>
+                    {/* Badge nền */}
+                    <div className="absolute inset-0 opacity-10"></div>
+                    
+                    <div className="relative z-10 text-white">
+                      <IconComponent className="w-10 h-10 mx-auto mb-3 text-white" />
+                      <p className="text-sm font-semibold mb-1 text-gray-200">
+                        {account.code}
+                      </p>
+                      <h4 className="font-bold text-2xl mb-2">
+                        {account.name}
+                      </h4>
+                    </div>
+
+                    <div className="text-gray-200 text-sm mt-3 pt-3 border-t border-white/20 relative z-10 min-h-[40px] flex items-center justify-center">
+                      {account.desc}
+                    </div>
+
+                  </div>
+                  <div className="p-6 pt-4 flex flex-col flex-1 justify-end">
+                    <span className="text-3xl font-extrabold text-gray-900 text-center mb-4">
+                      {account.price.toLocaleString()}đ
+                    </span>
+                    <button
+                      onClick={() =>
+                        addToCart({
+                          ...account,
+                          type: "premium_account",
+                          price: account.price,
+                        })
+                      }
+                      className={`w-full text-white px-4 py-3 rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 ${buttonColor} font-semibold`}
+                    >
+                      MUA NGAY
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* Contact Section */}
 
