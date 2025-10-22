@@ -471,44 +471,46 @@ app.get("/api/orders", checkAdminAuth, async (req, res) => {
       // ⭐️ PHẦN CẦN SỬA: Bọc JSON.parse() bằng try-catch
 
       items: (() => {
+        let itemsData = order.items;
+
+        // TRƯỜNG HỢP 1: Dữ liệu đã là Object/Array (do driver mysql2 đã tự parse cột JSON)
+        if (typeof itemsData === "object" && itemsData !== null) {
+          if (Array.isArray(itemsData)) {
+            return itemsData;
+          }
+          // Nếu là Object nhưng không phải Array (khả năng lỗi data), trả về mảng rỗng
+          console.warn(
+            `⚠️ Dữ liệu items của đơn #${order.id} là Object không phải Array. Trả về [].`
+          );
+          return [];
+        }
+
+        // TRƯỜNG HỢP 2: Dữ liệu là String (Cần parse)
         try {
-          let itemsString = order.items;
-
-          // Bước 1: Xử lý NULL hoặc UNDEFINED từ DB
-          if (itemsString === null || itemsString === undefined) {
+          let itemsString = String(itemsData).trim();
+          if (itemsString === "" || itemsString === "null") {
             return [];
           }
 
-          // Bước 2: Chuyển thành chuỗi và loại bỏ khoảng trắng (để xử lý các lỗi chuỗi rỗng)
-          itemsString = String(itemsString).trim();
-
-          if (itemsString === "") {
-            return [];
-          }
-
-          // Bước 3: Phát hiện và xử lý lỗi lưu trữ phổ biến nhất: "[object Object]"
-          // Nếu chuỗi không bắt đầu bằng [ (dạng mảng JSON), có thể là dữ liệu lỗi
+          // Xử lý lỗi phổ biến: "[object Object]"
           if (
             itemsString.startsWith("object") ||
             !itemsString.startsWith("[")
           ) {
             console.warn(
-              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng: ${itemsString}. Trả về []`
+              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng string: ${itemsString}. Trả về [].`
             );
             return [];
           }
 
-          // Bước 4: Thực hiện parse JSON an toàn
           return JSON.parse(itemsString);
         } catch (e) {
-          // Lỗi cú pháp JSON (syntax error)
           console.error(
             `❌ Lỗi cú pháp JSON CẤP BÁCH cho đơn hàng #${order.id}. Message: ${e.message}`
           );
           return [];
         }
       })(),
-
       customerInfo: {
         name: order.customerName,
 
@@ -564,37 +566,40 @@ app.get("/api/users/:userId/orders", async (req, res) => {
       userId: order.userId,
 
       items: (() => {
+        let itemsData = order.items;
+
+        // TRƯỜNG HỢP 1: Dữ liệu đã là Object/Array (do driver mysql2 đã tự parse cột JSON)
+        if (typeof itemsData === "object" && itemsData !== null) {
+          if (Array.isArray(itemsData)) {
+            return itemsData;
+          }
+          // Nếu là Object nhưng không phải Array (khả năng lỗi data), trả về mảng rỗng
+          console.warn(
+            `⚠️ Dữ liệu items của đơn #${order.id} là Object không phải Array. Trả về [].`
+          );
+          return [];
+        }
+
+        // TRƯỜNG HỢP 2: Dữ liệu là String (Cần parse)
         try {
-          let itemsString = order.items;
-
-          // Bước 1: Xử lý NULL hoặc UNDEFINED từ DB
-          if (itemsString === null || itemsString === undefined) {
+          let itemsString = String(itemsData).trim();
+          if (itemsString === "" || itemsString === "null") {
             return [];
           }
 
-          // Bước 2: Chuyển thành chuỗi và loại bỏ khoảng trắng (để xử lý các lỗi chuỗi rỗng)
-          itemsString = String(itemsString).trim();
-
-          if (itemsString === "") {
-            return [];
-          }
-
-          // Bước 3: Phát hiện và xử lý lỗi lưu trữ phổ biến nhất: "[object Object]"
-          // Nếu chuỗi không bắt đầu bằng [ (dạng mảng JSON), có thể là dữ liệu lỗi
+          // Xử lý lỗi phổ biến: "[object Object]"
           if (
             itemsString.startsWith("object") ||
             !itemsString.startsWith("[")
           ) {
             console.warn(
-              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng: ${itemsString}. Trả về []`
+              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng string: ${itemsString}. Trả về [].`
             );
             return [];
           }
 
-          // Bước 4: Thực hiện parse JSON an toàn
           return JSON.parse(itemsString);
         } catch (e) {
-          // Lỗi cú pháp JSON (syntax error)
           console.error(
             `❌ Lỗi cú pháp JSON CẤP BÁCH cho đơn hàng #${order.id}. Message: ${e.message}`
           );
@@ -711,9 +716,8 @@ app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
       items: (() => {
         let itemsData = order.items;
 
-        // Trường hợp 1: Dữ liệu đã là Object/Array (do driver mysql2 đã tự parse cột JSON)
+        // TRƯỜNG HỢP 1: Dữ liệu đã là Object/Array (do driver mysql2 đã tự parse cột JSON)
         if (typeof itemsData === "object" && itemsData !== null) {
-          // Nếu là mảng (đúng format), trả về luôn
           if (Array.isArray(itemsData)) {
             return itemsData;
           }
@@ -724,14 +728,14 @@ app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
           return [];
         }
 
-        // Trường hợp 2: Dữ liệu là String (Cần parse)
+        // TRƯỜNG HỢP 2: Dữ liệu là String (Cần parse)
         try {
           let itemsString = String(itemsData).trim();
-          if (itemsString === "") {
+          if (itemsString === "" || itemsString === "null") {
             return [];
           }
 
-          // Xử lý lỗi phổ biến (Nếu stringify bị lỗi)
+          // Xử lý lỗi phổ biến: "[object Object]"
           if (
             itemsString.startsWith("object") ||
             !itemsString.startsWith("[")
@@ -940,9 +944,8 @@ app.get("/api/users/:userId/orders", async (req, res) => {
       items: (() => {
         let itemsData = order.items;
 
-        // Trường hợp 1: Dữ liệu đã là Object/Array (do driver mysql2 đã tự parse cột JSON)
+        // TRƯỜNG HỢP 1: Dữ liệu đã là Object/Array (do driver mysql2 đã tự parse cột JSON)
         if (typeof itemsData === "object" && itemsData !== null) {
-          // Nếu là mảng (đúng format), trả về luôn
           if (Array.isArray(itemsData)) {
             return itemsData;
           }
@@ -953,14 +956,14 @@ app.get("/api/users/:userId/orders", async (req, res) => {
           return [];
         }
 
-        // Trường hợp 2: Dữ liệu là String (Cần parse)
+        // TRƯỜNG HỢP 2: Dữ liệu là String (Cần parse)
         try {
           let itemsString = String(itemsData).trim();
-          if (itemsString === "") {
+          if (itemsString === "" || itemsString === "null") {
             return [];
           }
 
-          // Xử lý lỗi phổ biến (Nếu stringify bị lỗi)
+          // Xử lý lỗi phổ biến: "[object Object]"
           if (
             itemsString.startsWith("object") ||
             !itemsString.startsWith("[")
@@ -1183,9 +1186,8 @@ app.get("/api/orders", checkAdminAuth, async (req, res) => {
       items: (() => {
         let itemsData = order.items;
 
-        // Trường hợp 1: Dữ liệu đã là Object/Array (do driver mysql2 đã tự parse cột JSON)
+        // TRƯỜNG HỢP 1: Dữ liệu đã là Object/Array (do driver mysql2 đã tự parse cột JSON)
         if (typeof itemsData === "object" && itemsData !== null) {
-          // Nếu là mảng (đúng format), trả về luôn
           if (Array.isArray(itemsData)) {
             return itemsData;
           }
@@ -1196,14 +1198,14 @@ app.get("/api/orders", checkAdminAuth, async (req, res) => {
           return [];
         }
 
-        // Trường hợp 2: Dữ liệu là String (Cần parse)
+        // TRƯỜNG HỢP 2: Dữ liệu là String (Cần parse)
         try {
           let itemsString = String(itemsData).trim();
-          if (itemsString === "") {
+          if (itemsString === "" || itemsString === "null") {
             return [];
           }
 
-          // Xử lý lỗi phổ biến (Nếu stringify bị lỗi)
+          // Xử lý lỗi phổ biến: "[object Object]"
           if (
             itemsString.startsWith("object") ||
             !itemsString.startsWith("[")
