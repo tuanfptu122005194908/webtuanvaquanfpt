@@ -920,28 +920,28 @@ const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
                 },
 
              ].map((stat, idx) => {
-                const Icon = stat.icon;
+                const Icon = stat.icon;
                 // 🔥 SỬA LỖI TAILWIND TẠI ĐÂY
-                const colorClasses = STATS_COLOR_MAP[stat.color] || { bg: "bg-gray-100", text: "text-gray-600" }; 
+                const colorClasses = STATS_COLOR_MAP[stat.color] || { bg: "bg-gray-100", text: "text-gray-600" }; 
                 // <== ĐÃ LẤY RA OBJECT CHỨA CÁC CLASS ĐẦY ĐỦ
-                return (
-                  <div
-                    key={idx}
-                    className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      {/* SỬ DỤNG colorClasses.bg VÀ colorClasses.text */}
-                      <div className={`${colorClasses.bg} p-3 rounded-lg`}>
-                        <Icon className={`w-6 h-6 ${colorClasses.text}`} />
-                      </div>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-1">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      {stat.value}
-                    </p>
-                  </div>
-                );
-              })}
+                return (
+                  <div
+                    key={idx}
+                    className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      {/* SỬ DỤNG colorClasses.bg VÀ colorClasses.text */}
+                      <div className={`${colorClasses.bg} p-3 rounded-lg`}>
+                        <Icon className={`w-6 h-6 ${colorClasses.text}`} />
+                      </div>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-1">{stat.label}</p>
+                    <p className="text-2xl font-bold text-gray-800">
+                      {stat.value}
+                    </p>
+                  </div>
+                );
+              })}
 
             </div>
 
@@ -1128,33 +1128,48 @@ const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
 
 
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-800">Sản phẩm ({order.items.length})</h4>
-                      <div className="space-y-2">
-                        {order.items.length > 0 ? (
-                          order.items.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="flex justify-between text-sm bg-gray-50 p-2 rounded"
-                            >
-                              <span className="text-gray-700">
-                                {item.name} {item.quantity > 1 ? `(SL: ${item.quantity})` : ''} 
-                              </span>
-                              <span className="font-semibold text-gray-800">
-                                {item.price.toLocaleString()}đ
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-sm text-red-500">❌ Đơn hàng không có sản phẩm nào</p>
-                        )}
-                        <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                          <span>Tổng cộng</span>
-                          <span className="text-blue-600">
-                            {order.total.toLocaleString()}đ
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+
+                      <h4 className="font-semibold text-gray-800">Sản phẩm</h4>
+
+                      <div className="space-y-2">
+
+                        {order.items.map((item, idx) => (
+
+                          <div
+
+                            key={idx}
+
+                            className="flex justify-between text-sm bg-gray-50 p-2 rounded"
+
+                          >
+
+                            <span className="text-gray-700">{item.name}</span>
+
+                            <span className="font-semibold text-gray-800">
+
+                              {item.price.toLocaleString()}đ
+
+                            </span>
+
+                          </div>
+
+                        ))}
+
+                        <div className="flex justify-between font-bold text-lg pt-2 border-t">
+
+                          <span>Tổng cộng</span>
+
+                          <span className="text-blue-600">
+
+                            {order.total.toLocaleString()}đ
+
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                    </div>
 
                   </div>
 
@@ -1658,37 +1673,50 @@ const OrderHistory = ({ userId, onClose, showNotification }) => {
 
 
 
-                <div className="space-y-2 mb-4">
-                    <h5 className="font-semibold text-gray-700 text-sm mb-3">
-                      📦 Danh sách sản phẩm ({order.items.length} món):
+                  <div className="space-y-2 mb-4">
+
+                    <h5 className="font-semibold text-gray-700 text-sm">
+
+                      Sản phẩm:
+
                     </h5>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {order.items.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="flex justify-between items-start bg-gray-50 p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-800 mb-1">
-                              {idx + 1}. {item.name}
-                            </p>
-                            {item.code && (
-                              <p className="text-xs text-purple-600 font-semibold bg-purple-50 inline-block px-2 py-0.5 rounded">
-                                Mã: {item.code}
-                              </p>
-                            )}
-                            {item.type && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Loại: {item.type}
-                              </p>
-                            )}
-                          </div>
-                          <span className="font-bold text-blue-600 ml-4 whitespace-nowrap">
-                            {item.price.toLocaleString()}đ
-                          </span>
+
+                    {order.items.map((item, idx) => (
+
+                      <div
+
+                        key={idx}
+
+                        className="flex justify-between items-center bg-gray-50 p-3 rounded-lg"
+
+                      >
+
+                        <div>
+
+                          <p className="font-medium text-gray-800">
+
+                            {item.name}
+
+                          </p>
+
+                          {item.code && (
+
+                            <p className="text-xs text-gray-500">{item.code}</p>
+
+                          )}
+
                         </div>
-                      ))}
-                    </div>
+
+                        <span className="font-semibold text-blue-600">
+
+                          {item.price.toLocaleString()}đ
+
+                        </span>
+
+                      </div>
+
+                    ))}
+
                   </div>
 
 
@@ -2539,118 +2567,118 @@ const [notification, setNotification] = useState({ message: '', type: '' });
 
 // 🔥 THÊM DỮ LIỆU TÀI KHOẢN PREMIUM
   const accounts = [
-    
-    {
-      id: 102,
-      name: "ChatGPT PLUS - 1 tháng - Shared 3 slots",
-      duration: "1 tháng",
-      price: 100000,
-      type: 'chatgpt',
-      stats: { carts: 1282, sold: 18 },
-      logoText: "T&Q",
-      color: 'green-600',
+    
+    {
+      id: 102,
+      name: "ChatGPT PLUS - 1 tháng - Shared 3 slots",
+      duration: "1 tháng",
+      price: 100000,
+      type: 'chatgpt',
+      stats: { carts: 1282, sold: 18 },
+      logoText: "T&Q",
+      color: 'green-600',
       img: tk3
-    },
-    
-    {
-      id: 104,
-      name: "Tài khoản Quizlet Plus 30 Ngày",
-      duration: "1 tháng",
-      price: 20000,
-      type: 'quizlet',
-      stats: { carts: 6528, sold: 5 },
-      logoText: "T&Q",
-      color: 'blue-600',
+    },
+    
+    {
+      id: 104,
+      name: "Tài khoản Quizlet Plus 30 Ngày",
+      duration: "1 tháng",
+      price: 20000,
+      type: 'quizlet',
+      stats: { carts: 6528, sold: 5 },
+      logoText: "T&Q",
+      color: 'blue-600',
       img: tk2
-    },
-    {
-      id: 105,
-      name: "NETFLIX 4K 1 THÁNG CAO CẤP",
-      duration: "1 tháng",
-      price: 80000,
-      type: 'netflix',
-      stats: { carts: 252, sold: 42 },
-      logoText: "T&Q",
-      color: 'red-600',
+    },
+    {
+      id: 105,
+      name: "NETFLIX 4K 1 THÁNG CAO CẤP",
+      duration: "1 tháng",
+      price: 80000,
+      type: 'netflix',
+      stats: { carts: 252, sold: 42 },
+      logoText: "T&Q",
+      color: 'red-600',
       img: tk1
-    },
-    
-    {
-      id: 107,
-      name: "Capcut Pro 1 tháng - Dùng riêng",
-      duration: "1 tháng",
-      price: 70000,
-      type: 'capcut',
-      stats: { carts: 138, sold: 159 },
-      logoText: "T&Q",
-      color: 'pink-600',
+    },
+    
+    {
+      id: 107,
+      name: "Capcut Pro 1 tháng - Dùng riêng",
+      duration: "1 tháng",
+      price: 70000,
+      type: 'capcut',
+      stats: { carts: 138, sold: 159 },
+      logoText: "T&Q",
+      color: 'pink-600',
       img: tk4
-    },
-    {
-      id: 108,
-      name: "Canva Pro 1 Năm CHÍNH CHỦ",
-      duration: "1 năm",
-      price: 100000,
-      type: 'canva',
-      stats: { carts: 182, sold: 9999 },
-      logoText: "T&Q",
-      color: 'indigo-600' ,
+    },
+    {
+      id: 108,
+      name: "Canva Pro 1 Năm CHÍNH CHỦ",
+      duration: "1 năm",
+      price: 100000,
+      type: 'canva',
+      stats: { carts: 182, sold: 9999 },
+      logoText: "T&Q",
+      color: 'indigo-600' ,
       img : tk5
-    },
-    
-    {
-      id: 110,
-      name: "Quizlet Plus 1 Năm",
-      duration: "1 năm CHÍNH CHỦ",
-      price: 230000,
-      type: 'quizlet',
-      stats: { carts: 54, sold: 9999 },
-      logoText: "T&Q",
-      color: 'blue-600',
+    },
+    
+    {
+      id: 110,
+      name: "Quizlet Plus 1 Năm",
+      duration: "1 năm CHÍNH CHỦ",
+      price: 230000,
+      type: 'quizlet',
+      stats: { carts: 54, sold: 9999 },
+      logoText: "T&Q",
+      color: 'blue-600',
       img: tk2
-    },
-    
-  ];
+    },
+    
+  ];
 
 const getLogoColor = (accountName) => {
   switch (accountName.toLowerCase().trim()) {
-    case "quizlet plus":
-    case "tài khoản quizlet plus 30 ngày":
-    case "quizlet plus 1 năm":
-      return "text-blue-600";
-    case "netflix 4k 1 tháng cao cấp":
-      return "text-red-600";
-    case "capcut pro 1 tháng - dùng riêng":
-      return "text-pink-600";
-    case "canva pro 1 năm chính chủ":
-      return "text-indigo-600";
-    case "duolingo super 1 năm chính chủ":
-      return "text-green-600";
-    case "chatgpt plus - 1 tháng - shared 3 slots":
-      return "text-green-500";
-    case "super gnak a.i":
-      return "text-cyan-500";
-    case "studocu premium":
-      return "text-yellow-600";
-    case "claude 4 sonnet maxmode":
-      return "text-purple-600";
-    default:
-      return "text-gray-900";
-  }
+    case "quizlet plus":
+    case "tài khoản quizlet plus 30 ngày":
+    case "quizlet plus 1 năm":
+      return "text-blue-600";
+    case "netflix 4k 1 tháng cao cấp":
+      return "text-red-600";
+    case "capcut pro 1 tháng - dùng riêng":
+      return "text-pink-600";
+    case "canva pro 1 năm chính chủ":
+      return "text-indigo-600";
+    case "duolingo super 1 năm chính chủ":
+      return "text-green-600";
+    case "chatgpt plus - 1 tháng - shared 3 slots":
+      return "text-green-500";
+    case "super gnak a.i":
+      return "text-cyan-500";
+    case "studocu premium":
+      return "text-yellow-600";
+    case "claude 4 sonnet maxmode":
+      return "text-purple-600";
+    default:
+      return "text-gray-900";
+  }
 };
 
 
 
 const getAccountBgColor = (accountName) => {
-    if (accountName.includes("Quizlet")) return "bg-blue-700";
-    if (accountName.includes("NETFLIX")) return "bg-red-700";
-    if (accountName.includes("Capcut")) return "bg-pink-700";
-    if (accountName.includes("Canva")) return "bg-indigo-700";
-    if (accountName.includes("DUOLINGO")) return "bg-green-700";
-    if (accountName.includes("Claude") || accountName.includes("ChatGPT")) return "bg-purple-700";
-    if (accountName.includes("STUDoCU")) return "bg-yellow-600";
-    if (accountName.includes("Super Gnak")) return "bg-cyan-700";
-    return "bg-gray-700";
+    if (accountName.includes("Quizlet")) return "bg-blue-700";
+    if (accountName.includes("NETFLIX")) return "bg-red-700";
+    if (accountName.includes("Capcut")) return "bg-pink-700";
+    if (accountName.includes("Canva")) return "bg-indigo-700";
+    if (accountName.includes("DUOLINGO")) return "bg-green-700";
+    if (accountName.includes("Claude") || accountName.includes("ChatGPT")) return "bg-purple-700";
+    if (accountName.includes("STUDoCU")) return "bg-yellow-600";
+    if (accountName.includes("Super Gnak")) return "bg-cyan-700";
+    return "bg-gray-700";
 };
   const groupedDocuments = allDocuments.reduce((acc, doc) => {
 
@@ -2997,229 +3025,229 @@ setDiscountAmount(0);
     onClose={() => setNotification({ message: '', type: '' })} 
 
   /> {/* Header */}
-      <header className="bg-white shadow-xl sticky top-0 z-50">
-        <nav className="container mx-auto px-8 py-3"> {/* Giảm py-4 xuống py-3 để nén chiều cao tổng thể */}
-          <div className="flex justify-between items-center">
-            
-            {/* Logo (ĐÃ SỬA: Giảm kích thước và Căn chỉnh) */}
-            <div className="flex items-center space-x-3"> {/* Đã giảm space-x từ 4 xuống 3 */}
-              {/* Box Icon: p-3 -> p-2, w-8 h-8 -> w-6 h-6 (giảm nhỏ hơn nữa) */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 rounded-lg shadow-lg shadow-blue-500/50 flex items-center justify-center">
-                <Book className="w-6 h-6" />
-              </div>
-              {/* Khối Text: Thêm flex-col và căn chỉnh chữ */}
-              <div className="flex flex-col justify-center">
-                <h1 
-                  className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent leading-snug" /* Giảm cỡ chữ (xl/2xl) và leading */
-                  style={{ textShadow: '1px 1px 2px rgba(100, 100, 100, 0.1)' }}
-                >
-                  Học cùng Tuấn và Quân
-                </h1>
-                <p className="text-xs text-gray-500 font-medium italic -mt-0.5"> {/* Đã thêm -mt-0.5 để kéo chữ lên */}
-                  Nền tảng học tập chất lượng
-                </p>
-              </div>
-            </div>
+      <header className="bg-white shadow-xl sticky top-0 z-50">
+        <nav className="container mx-auto px-8 py-3"> {/* Giảm py-4 xuống py-3 để nén chiều cao tổng thể */}
+          <div className="flex justify-between items-center">
+            
+            {/* Logo (ĐÃ SỬA: Giảm kích thước và Căn chỉnh) */}
+            <div className="flex items-center space-x-3"> {/* Đã giảm space-x từ 4 xuống 3 */}
+              {/* Box Icon: p-3 -> p-2, w-8 h-8 -> w-6 h-6 (giảm nhỏ hơn nữa) */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 rounded-lg shadow-lg shadow-blue-500/50 flex items-center justify-center">
+                <Book className="w-6 h-6" />
+              </div>
+              {/* Khối Text: Thêm flex-col và căn chỉnh chữ */}
+              <div className="flex flex-col justify-center">
+                <h1 
+                  className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent leading-snug" /* Giảm cỡ chữ (xl/2xl) và leading */
+                  style={{ textShadow: '1px 1px 2px rgba(100, 100, 100, 0.1)' }}
+                >
+                  Học cùng Tuấn và Quân
+                </h1>
+                <p className="text-xs text-gray-500 font-medium italic -mt-0.5"> {/* Đã thêm -mt-0.5 để kéo chữ lên */}
+                  Nền tảng học tập chất lượng
+                </p>
+              </div>
+            </div>
 
-            {/* Desktop Menu - Giữ nguyên không gian lớn để cân đối */}
-            <div className="hidden md:flex items-center space-x-6 font-medium"> {/* space-x-6 (vừa đủ) */}
-              {[
-               { name: "Khóa học", id: "courses" },
-                { name: "Tiếng Anh", id: "english" },
-                { name: "Tài liệu", id: "documents" },
-                { name: "Coursera", id: "coursera" },
-                { name: "Tài khoản Premium", id: "accounts" }, 
-                { name: "Liên hệ", id: "contact" },
-              ].map((item, idx) => (
-                <a
-                  key={idx}
-                  href={`#${item.id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(item.id)?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start",
-                    });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-gray-700 hover:text-blue-600 transition-colors duration-300 whitespace-nowrap"
-                >
-                  {item.name}
-                </a>
-              ))}
-              <button
-                onClick={() => setShowAdminDashboard(true)}
-                className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium whitespace-nowrap"
-              >
-                Admin
-              </button>
-              {/* Cart */}
-              <button
-                onClick={() => setShowCart(true)}
-                className="relative p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <ShoppingCart className="w-6 h-6 text-gray-700 hover:text-purple-600" />
-                {cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-bounce">
-                    {cart.length}
-                  </span>
-                )}
-              </button>
+            {/* Desktop Menu - Giữ nguyên không gian lớn để cân đối */}
+            <div className="hidden md:flex items-center space-x-6 font-medium"> {/* space-x-6 (vừa đủ) */}
+              {[
+               { name: "Khóa học", id: "courses" },
+                { name: "Tiếng Anh", id: "english" },
+                { name: "Tài liệu", id: "documents" },
+                { name: "Coursera", id: "coursera" },
+                { name: "Tài khoản Premium", id: "accounts" }, 
+                { name: "Liên hệ", id: "contact" },
+              ].map((item, idx) => (
+                <a
+                  key={idx}
+                  href={`#${item.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById(item.id)?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-gray-700 hover:text-blue-600 transition-colors duration-300 whitespace-nowrap"
+                >
+                  {item.name}
+                </a>
+              ))}
+              <button
+                onClick={() => setShowAdminDashboard(true)}
+                className="text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium whitespace-nowrap"
+              >
+                Admin
+              </button>
+              {/* Cart */}
+              <button
+                onClick={() => setShowCart(true)}
+                className="relative p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <ShoppingCart className="w-6 h-6 text-gray-700 hover:text-purple-600" />
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-bounce">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
 
-             {/* User */}
+             {/* User */}
 {currentUser ? (
-  <div className="flex items-center space-x-3 ml-4">
-    <button
-      onClick={() => setShowOrderHistory(true)}
-      className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition px-3 py-2 rounded-lg hover:bg-blue-50 whitespace-nowrap"
-    >
-      <ShoppingBag className="w-5 h-5 text-purple-600" />
-      <span className="text-sm font-semibold">Đơn hàng</span>
-    </button>
-    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-full">
-      <span className="text-sm text-gray-800 font-medium whitespace-nowrap">
-        Xin chào, <span className="text-purple-700 font-bold">{currentUser.name}</span>
-      </span>
-      <button
-        onClick={handleLogout}
-        className="p-1 hover:bg-red-100 rounded-full transition"
-      >
-        <LogOut className="w-5 h-5 text-red-500" />
-      </button>
-    </div>
-  </div>
+  <div className="flex items-center space-x-3 ml-4">
+    <button
+      onClick={() => setShowOrderHistory(true)}
+      className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition px-3 py-2 rounded-lg hover:bg-blue-50 whitespace-nowrap"
+    >
+      <ShoppingBag className="w-5 h-5 text-purple-600" />
+      <span className="text-sm font-semibold">Đơn hàng</span>
+    </button>
+    <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-full">
+      <span className="text-sm text-gray-800 font-medium whitespace-nowrap">
+        Xin chào, <span className="text-purple-700 font-bold">{currentUser.name}</span>
+      </span>
+      <button
+        onClick={handleLogout}
+        className="p-1 hover:bg-red-100 rounded-full transition"
+      >
+        <LogOut className="w-5 h-5 text-red-500" />
+      </button>
+    </div>
+  </div>
 ) : (
-  <button
-    onClick={() => setShowLogin(true)}
-    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full font-bold hover:shadow-lg transition transform hover:-translate-y-0.5 whitespace-nowrap"
-  >
-    Đăng nhập
-  </button>
+  <button
+    onClick={() => setShowLogin(true)}
+    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full font-bold hover:shadow-lg transition transform hover:-translate-y-0.5 whitespace-nowrap"
+  >
+    Đăng nhập
+  </button>
 )}
-            </div>
+            </div>
 
-          {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-md hover:bg-gray-100 transition"
-            >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-          </div>
+          {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-md hover:bg-gray-100 transition"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
 
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-           <div className="md:hidden mt-4 space-y-3 pb-4 border-t border-gray-200">
-              {[
-                { name: "Khóa học", id: "courses" },
-                { name: "Tiếng Anh", id: "english" },
-                { name: "Tài liệu", id: "documents" },
-                { name: "Coursera", id: "coursera" },
-                { name: "Tài khoản Premium", id: "accounts" }, 
-                { name: "Liên hệ", id: "contact" },
-              ].map(
-                (item, idx) => {
-                  const id = item.id; 
-                  return (
-                  <a
-                    key={idx}
-                    href={`#${id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById(id)?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="block text-gray-700 hover:text-blue-600 py-2 font-medium"
-                  >
-                    {item.name}
-                  </a>
-                )
-              })}
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+           <div className="md:hidden mt-4 space-y-3 pb-4 border-t border-gray-200">
+              {[
+                { name: "Khóa học", id: "courses" },
+                { name: "Tiếng Anh", id: "english" },
+                { name: "Tài liệu", id: "documents" },
+                { name: "Coursera", id: "coursera" },
+                { name: "Tài khoản Premium", id: "accounts" }, 
+                { name: "Liên hệ", id: "contact" },
+              ].map(
+                (item, idx) => {
+                  const id = item.id; 
+                  return (
+                  <a
+                    key={idx}
+                    href={`#${id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(id)?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="block text-gray-700 hover:text-blue-600 py-2 font-medium"
+                  >
+                    {item.name}
+                  </a>
+                )
+              })}
 
-              
-              {/* Admin button for mobile */}
-              <button
-                onClick={() => {
-                  setShowAdminDashboard(true);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-left text-gray-700 hover:text-blue-600 py-2 font-medium"
-              >
-                Admin
-              </button>
+              
+              {/* Admin button for mobile */}
+              <button
+                onClick={() => {
+                  setShowAdminDashboard(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left text-gray-700 hover:text-blue-600 py-2 font-medium"
+              >
+                Admin
+              </button>
 
-              {/* Cart button for mobile */}
-              <button
-                onClick={() => {
-                  setShowCart(true);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg hover:bg-gray-200 transition"
-              >
-                <span className="font-medium text-gray-700">Giỏ hàng</span>
-                <div className="flex items-center space-x-2">
-                  {cart.length > 0 && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                      {cart.length}
-                    </span>
-                  )}
-                  <ShoppingCart className="w-5 h-5 text-gray-700" />
-                </div>
-              </button>
+              {/* Cart button for mobile */}
+              <button
+                onClick={() => {
+                  setShowCart(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg hover:bg-gray-200 transition"
+              >
+                <span className="font-medium text-gray-700">Giỏ hàng</span>
+                <div className="flex items-center space-x-2">
+                  {cart.length > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      {cart.length}
+                    </span>
+                  )}
+                  <ShoppingCart className="w-5 h-5 text-gray-700" />
+                </div>
+              </button>
 
-             {/* User section for mobile */}
+             {/* User section for mobile */}
 {currentUser ? (
-  <div className="space-y-2">
-    <button
-      onClick={() => {
-        setShowOrderHistory(true);
-        setMobileMenuOpen(false);
-      }}
-      className="w-full flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-3 rounded-lg hover:bg-blue-100 transition"
-    >
-      <ShoppingBag className="w-5 h-5" />
-      <span className="font-medium">Lịch sử đơn hàng</span>
-    </button>
-    <div className="flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg">
-      <span className="text-sm text-gray-700">
-        Xin chào, {currentUser.name}
-      </span>
-      <button
-        onClick={() => {
-          handleLogout();
-          setMobileMenuOpen(false);
-        }}
-        className="p-2 hover:bg-gray-200 rounded-lg transition"
-      >
-        <LogOut className="w-5 h-5 text-gray-700" />
-      </button>
-    </div>
-  </div>
+  <div className="space-y-2">
+    <button
+      onClick={() => {
+        setShowOrderHistory(true);
+        setMobileMenuOpen(false);
+      }}
+      className="w-full flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-3 rounded-lg hover:bg-blue-100 transition"
+    >
+      <ShoppingBag className="w-5 h-5" />
+      <span className="font-medium">Lịch sử đơn hàng</span>
+    </button>
+    <div className="flex items-center justify-between bg-gray-100 px-4 py-3 rounded-lg">
+      <span className="text-sm text-gray-700">
+        Xin chào, {currentUser.name}
+      </span>
+      <button
+        onClick={() => {
+          handleLogout();
+          setMobileMenuOpen(false);
+        }}
+        className="p-2 hover:bg-gray-200 rounded-lg transition"
+      >
+        <LogOut className="w-5 h-5 text-gray-700" />
+      </button>
+    </div>
+  </div>
 ) : (
-  <button
-    onClick={() => {
-      setShowLogin(true);
-      setMobileMenuOpen(false);
-    }}
-    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-md transition transform hover:-translate-y-0.5"
-  >
-    Đăng nhập
-  </button>
+  <button
+    onClick={() => {
+      setShowLogin(true);
+      setMobileMenuOpen(false);
+    }}
+    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-md transition transform hover:-translate-y-0.5"
+  >
+    Đăng nhập
+  </button>
 )}
-            </div>
-          )}
-        </nav>
-      </header>
+            </div>
+          )}
+        </nav>
+      </header>
 
 
-    
+    
 
 
      <section
@@ -3749,105 +3777,105 @@ setDiscountAmount(0);
       </section>
 
 <section id="accounts" className="py-20 font-sans bg-gray-900 text-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            ⚡ Tài khoản Premium
-          </h2>
-          <p className="text-gray-400 text-lg md:text-xl">
-            Nâng cấp trải nghiệm học tập và làm việc với các tài khoản chất lượng
-          </p>
-        </div>
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+            ⚡ Tài khoản Premium
+          </h2>
+          <p className="text-gray-400 text-lg md:text-xl">
+            Nâng cấp trải nghiệm học tập và làm việc với các tài khoản chất lượng
+          </p>
+        </div>
 
-        {/* Đảm bảo dùng grid và gap để các box không đè lên nhau */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {accounts.map((account) => { 
-            const badgeColorClass = getAccountBgColor(account.name);
-            const isStudocu = account.name.includes("STUDoCU");
+        {/* Đảm bảo dùng grid và gap để các box không đè lên nhau */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {accounts.map((account) => { 
+            const badgeColorClass = getAccountBgColor(account.name);
+            const isStudocu = account.name.includes("STUDoCU");
 
-            return (
-              <div
-                key={account.id}
-                className="bg-gray-800 rounded-xl shadow-2xl hover:shadow-3xl transition transform hover:scale-[1.02] overflow-hidden flex flex-col relative border border-gray-700 min-h-[300px]"
-              >
-                  
-                {/* Header Block - GIẢM CHIỀU CAO VÀ CHỈNH LẠI CĂN CHỈNH */}
-                <div className={`p-4 pt-12 text-center relative h-28 ${badgeColorClass} flex justify-center items-end`}>
-                   
-                  {/* Logo - TĂNG KÍCH THƯỚC VÀ ĐẨY LÊN ÍT HƠN */}
-                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2"> 
-                   {/* Thay đổi w-16 h-16 thành w-20 h-20 (Tăng kích thước) */}
-                   {/* Thay đổi -translate-y-8 thành -translate-y-1/2 (Căn giữa theo chiều dọc của Logo so với đường cắt ngang) */}
-                    <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg transform -translate-y-1/2 border-4 border-gray-900/10 overflow-hidden">
-                        <img 
-                            src={account.img} 
-                            alt={account.name} 
-                            className="w-full h-full object-cover p-1"
-                        />
-                    </div>
-                  </div>
-                  
-                  {/* Duration Label */}
-                  <p className="text-white text-sm font-bold opacity-80">
-                    {account.duration}
-                  </p>
+            return (
+              <div
+                key={account.id}
+                className="bg-gray-800 rounded-xl shadow-2xl hover:shadow-3xl transition transform hover:scale-[1.02] overflow-hidden flex flex-col relative border border-gray-700 min-h-[300px]"
+              >
+                  
+                {/* Header Block - GIẢM CHIỀU CAO VÀ CHỈNH LẠI CĂN CHỈNH */}
+                <div className={`p-4 pt-12 text-center relative h-28 ${badgeColorClass} flex justify-center items-end`}>
+                   
+                  {/* Logo - TĂNG KÍCH THƯỚC VÀ ĐẨY LÊN ÍT HƠN */}
+                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2"> 
+                   {/* Thay đổi w-16 h-16 thành w-20 h-20 (Tăng kích thước) */}
+                   {/* Thay đổi -translate-y-8 thành -translate-y-1/2 (Căn giữa theo chiều dọc của Logo so với đường cắt ngang) */}
+                    <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg transform -translate-y-1/2 border-4 border-gray-900/10 overflow-hidden">
+                        <img 
+                            src={account.img} 
+                            alt={account.name} 
+                            className="w-full h-full object-cover p-1"
+                        />
+                    </div>
+                  </div>
+                  
+                  {/* Duration Label */}
+                  <p className="text-white text-sm font-bold opacity-80">
+                    {account.duration}
+                  </p>
 
-                  {/* Label "OFF NOW" - Studocu only */}
-                  {isStudocu && (
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                      OFF NOW!
-                    </div>
-                  )}
-                </div>
+                  {/* Label "OFF NOW" - Studocu only */}
+                  {isStudocu && (
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                      OFF NOW!
+                    </div>
+                  )}
+                </div>
 
-             {/* Body Content */}
-                <div className="p-4 flex flex-col flex-1"> 
-                  
-                  <div className="text-center flex-1 mt-4"> {/* Đã thêm mt-4 để tạo khoảng trống dưới logo */}
-                      <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
-                          {account.name}
-                      </h4>
-                      {/* Logo Text (FUO) */}
-                      <p className="text-xs font-black text-yellow-400 mb-3">
-                          {account.logoText}
-                      </p>
-                  </div>
+             {/* Body Content */}
+                <div className="p-4 flex flex-col flex-1"> 
+                  
+                  <div className="text-center flex-1 mt-4"> {/* Đã thêm mt-4 để tạo khoảng trống dưới logo */}
+                      <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
+                          {account.name}
+                      </h4>
+                      {/* Logo Text (FUO) */}
+                      <p className="text-xs font-black text-yellow-400 mb-3">
+                          {account.logoText}
+                      </p>
+                  </div>
 
-                    {/* Stats Bar */}
-                   <div className="flex justify-around items-center bg-gray-700 rounded-lg p-2 text-xs font-semibold my-4">
-                        <div className="flex items-center text-blue-400">
-                          <ShoppingCart className="w-3 h-3 mr-1" /> {account.stats.carts.toLocaleString()}
-                        </div>
-                        <div className="flex items-center text-red-400">
-                          <DollarSign className="w-3 h-3 mr-1" /> {account.stats.sold.toLocaleString()}
-                        </div>
-                    </div>
+                    {/* Stats Bar */}
+                   <div className="flex justify-around items-center bg-gray-700 rounded-lg p-2 text-xs font-semibold my-4">
+                        <div className="flex items-center text-blue-400">
+                          <ShoppingCart className="w-3 h-3 mr-1" /> {account.stats.carts.toLocaleString()}
+                        </div>
+                        <div className="flex items-center text-red-400">
+                          <DollarSign className="w-3 h-3 mr-1" /> {account.stats.sold.toLocaleString()}
+                        </div>
+                    </div>
 
-                    {/* Price & Button */}
-                   <div className="mt-auto">
-                      <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
-                          {account.price.toLocaleString("vi-VN")} đ
-                      </p>
-                      <button
-                        onClick={() =>
-                          addToCart({
-                            ...account,
-                            type: "premium_account",
-                            price: account.price,
-                          })
-                        }
-                       className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
-                      >
-                          Mua hàng
-                      </button>
-                    </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
+                    {/* Price & Button */}
+                   <div className="mt-auto">
+                      <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
+                          {account.price.toLocaleString("vi-VN")} đ
+                      </p>
+                      <button
+                        onClick={() =>
+                          addToCart({
+                            ...account,
+                            type: "premium_account",
+                            price: account.price,
+                          })
+                        }
+                       className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
+                      >
+                          Mua hàng
+                      </button>
+                    </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
       {/* Contact Section */}
 
       <section id="contact" className="py-20 bg-gray-900 text-white">
