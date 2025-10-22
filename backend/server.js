@@ -544,7 +544,11 @@ app.get("/api/users/:userId/orders", async (req, res) => {
 
       items: (() => {
         try {
-          const itemsString = order.items || "[]"; // ⭐️ SỬA LỖI Ở ĐÂY
+          let itemsString = (order.items || "").trim(); // Đảm bảo là chuỗi và không có khoảng trắng
+          if (!itemsString || !itemsString.startsWith("[")) {
+            return [];
+          }
+
           return JSON.parse(itemsString);
         } catch (e) {
           console.error(
@@ -662,8 +666,20 @@ app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
 
       items: (() => {
         try {
-          // ⭐️ SỬA: Dùng toán tử OR để đảm bảo itemsString không bao giờ là null/undefined/chuỗi rỗng
-          const itemsString = order.items || "[]"; // JSON.parse('[]') là an toàn và trả về []
+          // Lấy dữ liệu, đảm bảo nó là chuỗi và loại bỏ khoảng trắng dư thừa
+          let itemsString = (order.items || "").trim();
+
+          // Nếu chuỗi rỗng, trả về mảng rỗng
+          if (!itemsString) {
+            return [];
+          }
+
+          // Nếu chuỗi không bắt đầu bằng '[' (dạng JSON Array), có thể là lỗi
+          if (itemsString && !itemsString.startsWith("[")) {
+            console.error(`❌ Data không phải JSON Array: ${itemsString}`);
+            return [];
+          }
+
           return JSON.parse(itemsString);
         } catch (e) {
           console.error(
@@ -861,7 +877,11 @@ app.get("/api/users/:userId/orders", async (req, res) => {
 
       items: (() => {
         try {
-          const itemsString = order.items || "[]"; // ⭐️ SỬA LỖI Ở ĐÂY
+          let itemsString = (order.items || "").trim(); // Đảm bảo là chuỗi và không có khoảng trắng
+          if (!itemsString || !itemsString.startsWith("[")) {
+            return [];
+          }
+
           return JSON.parse(itemsString);
         } catch (e) {
           console.error(
