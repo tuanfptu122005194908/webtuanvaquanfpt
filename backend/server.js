@@ -472,19 +472,40 @@ app.get("/api/orders", checkAdminAuth, async (req, res) => {
 
       items: (() => {
         try {
-          // Trả về mảng rỗng nếu dữ liệu là NULL/undefined/rỗng, nếu không thì parse
+          let itemsString = order.items;
 
-          if (!order.items) return [];
+          // Bước 1: Xử lý NULL hoặc UNDEFINED từ DB
+          if (itemsString === null || itemsString === undefined) {
+            return [];
+          }
 
-          return JSON.parse(order.items);
+          // Bước 2: Chuyển thành chuỗi và loại bỏ khoảng trắng (để xử lý các lỗi chuỗi rỗng)
+          itemsString = String(itemsString).trim();
+
+          if (itemsString === "") {
+            return [];
+          }
+
+          // Bước 3: Phát hiện và xử lý lỗi lưu trữ phổ biến nhất: "[object Object]"
+          // Nếu chuỗi không bắt đầu bằng [ (dạng mảng JSON), có thể là dữ liệu lỗi
+          if (
+            itemsString.startsWith("object") ||
+            !itemsString.startsWith("[")
+          ) {
+            console.warn(
+              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng: ${itemsString}. Trả về []`
+            );
+            return [];
+          }
+
+          // Bước 4: Thực hiện parse JSON an toàn
+          return JSON.parse(itemsString);
         } catch (e) {
-          // In lỗi ra console server để debug nhưng không làm sập request
-
+          // Lỗi cú pháp JSON (syntax error)
           console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id}: ${e.message}`
+            `❌ Lỗi cú pháp JSON CẤP BÁCH cho đơn hàng #${order.id}. Message: ${e.message}`
           );
-
-          return []; // Trả về mảng rỗng [] cho frontend
+          return [];
         }
       })(),
 
@@ -544,15 +565,38 @@ app.get("/api/users/:userId/orders", async (req, res) => {
 
       items: (() => {
         try {
-          let itemsString = (order.items || "").trim(); // Đảm bảo là chuỗi và không có khoảng trắng
-          if (!itemsString || !itemsString.startsWith("[")) {
+          let itemsString = order.items;
+
+          // Bước 1: Xử lý NULL hoặc UNDEFINED từ DB
+          if (itemsString === null || itemsString === undefined) {
             return [];
           }
 
+          // Bước 2: Chuyển thành chuỗi và loại bỏ khoảng trắng (để xử lý các lỗi chuỗi rỗng)
+          itemsString = String(itemsString).trim();
+
+          if (itemsString === "") {
+            return [];
+          }
+
+          // Bước 3: Phát hiện và xử lý lỗi lưu trữ phổ biến nhất: "[object Object]"
+          // Nếu chuỗi không bắt đầu bằng [ (dạng mảng JSON), có thể là dữ liệu lỗi
+          if (
+            itemsString.startsWith("object") ||
+            !itemsString.startsWith("[")
+          ) {
+            console.warn(
+              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng: ${itemsString}. Trả về []`
+            );
+            return [];
+          }
+
+          // Bước 4: Thực hiện parse JSON an toàn
           return JSON.parse(itemsString);
         } catch (e) {
+          // Lỗi cú pháp JSON (syntax error)
           console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
+            `❌ Lỗi cú pháp JSON CẤP BÁCH cho đơn hàng #${order.id}. Message: ${e.message}`
           );
           return [];
         }
@@ -666,27 +710,40 @@ app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
 
       items: (() => {
         try {
-          // Lấy dữ liệu, đảm bảo nó là chuỗi và loại bỏ khoảng trắng dư thừa
-          let itemsString = (order.items || "").trim();
+          let itemsString = order.items;
 
-          // Nếu chuỗi rỗng, trả về mảng rỗng
-          if (!itemsString) {
+          // Bước 1: Xử lý NULL hoặc UNDEFINED từ DB
+          if (itemsString === null || itemsString === undefined) {
             return [];
           }
 
-          // Nếu chuỗi không bắt đầu bằng '[' (dạng JSON Array), có thể là lỗi
-          if (itemsString && !itemsString.startsWith("[")) {
-            console.error(`❌ Data không phải JSON Array: ${itemsString}`);
+          // Bước 2: Chuyển thành chuỗi và loại bỏ khoảng trắng (để xử lý các lỗi chuỗi rỗng)
+          itemsString = String(itemsString).trim();
+
+          if (itemsString === "") {
             return [];
           }
 
+          // Bước 3: Phát hiện và xử lý lỗi lưu trữ phổ biến nhất: "[object Object]"
+          // Nếu chuỗi không bắt đầu bằng [ (dạng mảng JSON), có thể là dữ liệu lỗi
+          if (
+            itemsString.startsWith("object") ||
+            !itemsString.startsWith("[")
+          ) {
+            console.warn(
+              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng: ${itemsString}. Trả về []`
+            );
+            return [];
+          }
+
+          // Bước 4: Thực hiện parse JSON an toàn
           return JSON.parse(itemsString);
         } catch (e) {
+          // Lỗi cú pháp JSON (syntax error)
           console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id}. Data: ${order.items}`,
-            e.message
+            `❌ Lỗi cú pháp JSON CẤP BÁCH cho đơn hàng #${order.id}. Message: ${e.message}`
           );
-          return []; // Trả về mảng rỗng nếu lỗi
+          return [];
         }
       })(),
 
@@ -877,15 +934,38 @@ app.get("/api/users/:userId/orders", async (req, res) => {
 
       items: (() => {
         try {
-          let itemsString = (order.items || "").trim(); // Đảm bảo là chuỗi và không có khoảng trắng
-          if (!itemsString || !itemsString.startsWith("[")) {
+          let itemsString = order.items;
+
+          // Bước 1: Xử lý NULL hoặc UNDEFINED từ DB
+          if (itemsString === null || itemsString === undefined) {
             return [];
           }
 
+          // Bước 2: Chuyển thành chuỗi và loại bỏ khoảng trắng (để xử lý các lỗi chuỗi rỗng)
+          itemsString = String(itemsString).trim();
+
+          if (itemsString === "") {
+            return [];
+          }
+
+          // Bước 3: Phát hiện và xử lý lỗi lưu trữ phổ biến nhất: "[object Object]"
+          // Nếu chuỗi không bắt đầu bằng [ (dạng mảng JSON), có thể là dữ liệu lỗi
+          if (
+            itemsString.startsWith("object") ||
+            !itemsString.startsWith("[")
+          ) {
+            console.warn(
+              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng: ${itemsString}. Trả về []`
+            );
+            return [];
+          }
+
+          // Bước 4: Thực hiện parse JSON an toàn
           return JSON.parse(itemsString);
         } catch (e) {
+          // Lỗi cú pháp JSON (syntax error)
           console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
+            `❌ Lỗi cú pháp JSON CẤP BÁCH cho đơn hàng #${order.id}. Message: ${e.message}`
           );
           return [];
         }
@@ -1093,22 +1173,42 @@ app.get("/api/orders", checkAdminAuth, async (req, res) => {
 
       items: (() => {
         try {
-          // Trả về mảng rỗng nếu dữ liệu là NULL/undefined/rỗng, nếu không thì parse
+          let itemsString = order.items;
 
-          if (!order.items) return [];
+          // Bước 1: Xử lý NULL hoặc UNDEFINED từ DB
+          if (itemsString === null || itemsString === undefined) {
+            return [];
+          }
 
-          return JSON.parse(order.items);
+          // Bước 2: Chuyển thành chuỗi và loại bỏ khoảng trắng (để xử lý các lỗi chuỗi rỗng)
+          itemsString = String(itemsString).trim();
+
+          if (itemsString === "") {
+            return [];
+          }
+
+          // Bước 3: Phát hiện và xử lý lỗi lưu trữ phổ biến nhất: "[object Object]"
+          // Nếu chuỗi không bắt đầu bằng [ (dạng mảng JSON), có thể là dữ liệu lỗi
+          if (
+            itemsString.startsWith("object") ||
+            !itemsString.startsWith("[")
+          ) {
+            console.warn(
+              `⚠️ Dữ liệu items của đơn #${order.id} bị lỗi định dạng: ${itemsString}. Trả về []`
+            );
+            return [];
+          }
+
+          // Bước 4: Thực hiện parse JSON an toàn
+          return JSON.parse(itemsString);
         } catch (e) {
-          // In lỗi ra console server để debug nhưng không làm sập request
-
+          // Lỗi cú pháp JSON (syntax error)
           console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id}: ${e.message}`
+            `❌ Lỗi cú pháp JSON CẤP BÁCH cho đơn hàng #${order.id}. Message: ${e.message}`
           );
-
-          return []; // Trả về mảng rỗng [] cho frontend
+          return [];
         }
       })(),
-
       customerInfo: {
         name: order.customerName,
 
