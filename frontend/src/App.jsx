@@ -1673,11 +1673,10 @@ const OrderHistory = ({ userId, onClose, showNotification }) => {
 
 
 
-                  <div className="space-y-2 mb-4">
+                 <div className="space-y-2 mb-4">
                     <h5 className="font-semibold text-gray-700 text-sm mb-3">
                       📦 Danh sách sản phẩm ({order.items.length} món):
                     </h5>
-
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {order.items.map((item, idx) => (
                         <div
