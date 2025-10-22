@@ -1128,48 +1128,33 @@ const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
 
 
                     <div className="space-y-2">
-
-                      <h4 className="font-semibold text-gray-800">Sản phẩm</h4>
-
-                      <div className="space-y-2">
-
-                        {order.items.map((item, idx) => (
-
-                          <div
-
-                            key={idx}
-
-                            className="flex justify-between text-sm bg-gray-50 p-2 rounded"
-
-                          >
-
-                            <span className="text-gray-700">{item.name}</span>
-
-                            <span className="font-semibold text-gray-800">
-
-                              {item.price.toLocaleString()}đ
-
-                            </span>
-
-                          </div>
-
-                        ))}
-
-                        <div className="flex justify-between font-bold text-lg pt-2 border-t">
-
-                          <span>Tổng cộng</span>
-
-                          <span className="text-blue-600">
-
-                            {order.total.toLocaleString()}đ
-
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                    </div>
+                      <h4 className="font-semibold text-gray-800">Sản phẩm ({order.items.length})</h4>
+                      <div className="space-y-2">
+                        {order.items.length > 0 ? (
+                          order.items.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between text-sm bg-gray-50 p-2 rounded"
+                            >
+                              <span className="text-gray-700">
+                                {item.name} {item.quantity > 1 ? `(SL: ${item.quantity})` : ''} 
+                              </span>
+                              <span className="font-semibold text-gray-800">
+                                {item.price.toLocaleString()}đ
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-red-500">❌ Đơn hàng không có sản phẩm nào</p>
+                        )}
+                        <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                          <span>Tổng cộng</span>
+                          <span className="text-blue-600">
+                            {order.total.toLocaleString()}đ
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
                   </div>
 
@@ -1673,7 +1658,7 @@ const OrderHistory = ({ userId, onClose, showNotification }) => {
 
 
 
-                 <div className="space-y-2 mb-4">
+                <div className="space-y-2 mb-4">
                     <h5 className="font-semibold text-gray-700 text-sm mb-3">
                       📦 Danh sách sản phẩm ({order.items.length} món):
                     </h5>

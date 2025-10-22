@@ -544,14 +544,12 @@ app.get("/api/users/:userId/orders", async (req, res) => {
 
       items: (() => {
         try {
-          if (!order.items) return [];
-
-          return JSON.parse(order.items);
+          const itemsString = order.items || "[]"; // ⭐️ SỬA LỖI Ở ĐÂY
+          return JSON.parse(itemsString);
         } catch (e) {
           console.error(
             `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
           );
-
           return [];
         }
       })(),
@@ -664,16 +662,14 @@ app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
 
       items: (() => {
         try {
-          if (!order.items) return []; // Xử lý trường hợp NULL/undefined
-
-          return JSON.parse(order.items);
+          // ⭐️ SỬA: Dùng toán tử OR để đảm bảo itemsString không bao giờ là null/undefined/chuỗi rỗng
+          const itemsString = order.items || "[]"; // JSON.parse('[]') là an toàn và trả về []
+          return JSON.parse(itemsString);
         } catch (e) {
           console.error(
             `❌ Lỗi parse JSON cho đơn hàng #${order.id}. Data: ${order.items}`,
-
             e.message
           );
-
           return []; // Trả về mảng rỗng nếu lỗi
         }
       })(),
@@ -865,14 +861,12 @@ app.get("/api/users/:userId/orders", async (req, res) => {
 
       items: (() => {
         try {
-          if (!order.items) return [];
-
-          return JSON.parse(order.items);
+          const itemsString = order.items || "[]"; // ⭐️ SỬA LỖI Ở ĐÂY
+          return JSON.parse(itemsString);
         } catch (e) {
           console.error(
             `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
           );
-
           return [];
         }
       })(),
