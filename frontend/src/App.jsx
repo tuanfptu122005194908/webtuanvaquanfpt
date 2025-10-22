@@ -1674,49 +1674,37 @@ const OrderHistory = ({ userId, onClose, showNotification }) => {
 
 
                   <div className="space-y-2 mb-4">
-
-                    <h5 className="font-semibold text-gray-700 text-sm">
-
-                      Sản phẩm:
-
+                    <h5 className="font-semibold text-gray-700 text-sm mb-3">
+                      📦 Danh sách sản phẩm ({order.items.length} món):
                     </h5>
 
-                    {order.items.map((item, idx) => (
-
-                      <div
-
-                        key={idx}
-
-                        className="flex justify-between items-center bg-gray-50 p-3 rounded-lg"
-
-                      >
-
-                        <div>
-
-                          <p className="font-medium text-gray-800">
-
-                            {item.name}
-
-                          </p>
-
-                          {item.code && (
-
-                            <p className="text-xs text-gray-500">{item.code}</p>
-
-                          )}
-
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {order.items.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="flex justify-between items-start bg-gray-50 p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-800 mb-1">
+                              {idx + 1}. {item.name}
+                            </p>
+                            {item.code && (
+                              <p className="text-xs text-purple-600 font-semibold bg-purple-50 inline-block px-2 py-0.5 rounded">
+                                Mã: {item.code}
+                              </p>
+                            )}
+                            {item.type && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Loại: {item.type}
+                              </p>
+                            )}
+                          </div>
+                          <span className="font-bold text-blue-600 ml-4 whitespace-nowrap">
+                            {item.price.toLocaleString()}đ
+                          </span>
                         </div>
-
-                        <span className="font-semibold text-blue-600">
-
-                          {item.price.toLocaleString()}đ
-
-                        </span>
-
-                      </div>
-
-                    ))}
-
+                      ))}
+                    </div>
                   </div>
 
 
