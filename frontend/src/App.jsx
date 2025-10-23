@@ -165,25 +165,18 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
   const [activeTab, setActiveTab] = useState("dashboard");
 
-
+  const [dailyStats, setDailyStats] = useState([]); // [ {date: '2025-01-01', totalRevenue: 100000}, ... ]
 
 
 
   useEffect(() => {
-
-    const token = localStorage.getItem("adminToken");
-
-    if (token) {
-
-      setAdminToken(token);
-
-      setIsAuthenticated(true);
-
-      fetchDashboardData(token);
-
-    }
-
-  }, []);
+        const token = localStorage.getItem("adminToken");
+        if (token) {
+            setAdminToken(token);
+            setIsAuthenticated(true);
+            fetchDashboardData(token);
+        }
+    }, []);
 
 
 
@@ -286,55 +279,29 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
 
   const fetchDashboardData = async (token) => {
+        try {
+            // 🔥 THÊM API GỌI DAILY-STATS
+            const [statsRes, ordersRes, usersRes, dailyStatsRes] = await Promise.all([
+                fetch(`${API_URL}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API_URL}/api/admin/orders`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API_URL}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API_URL}/api/admin/daily-stats`, { headers: { Authorization: `Bearer ${token}` } }), // <== DÒNG MỚI
+            ]);
 
-  try {
+            const statsData = await statsRes.json();
+            const ordersData = await ordersRes.json();
+            const usersData = await usersRes.json();
+            const dailyStatsData = await dailyStatsRes.json(); // <== DÒNG MỚI
 
-    const [statsRes, ordersRes, usersRes] = await Promise.all([
+            if (statsData.success) setStats(statsData.stats);
+            if (ordersData.success) setOrders(ordersData.orders);
+            if (usersData.success) setUsers(usersData.users);
+            if (dailyStatsData.success) setDailyStats(dailyStatsData.dailyStats); // <== DÒNG MỚI
 
-      fetch(`${API_URL}/api/admin/stats`, { // <== SỬA TẠI ĐÂY
-
-        headers: { Authorization: `Bearer ${token}` },
-
-      }),
-
-      fetch(`${API_URL}/api/admin/orders`, { // <== SỬA TẠI ĐÂY
-
-        headers: { Authorization: `Bearer ${token}` },
-
-      }),
-
-      fetch(`${API_URL}/api/admin/users`, { // <== SỬA TẠI ĐÂY
-
-        headers: { Authorization: `Bearer ${token}` },
-
-      }),
-
-    ]);
-
-
-
-      const statsData = await statsRes.json();
-
-      const ordersData = await ordersRes.json();
-
-      const usersData = await usersRes.json();
-
-
-
-      if (statsData.success) setStats(statsData.stats);
-
-      if (ordersData.success) setOrders(ordersData.orders);
-
-      if (usersData.success) setUsers(usersData.users);
-
-    } catch (error) {
-
-      console.error("Fetch error:", error);
-
-    }
-
-  };
-
+        } catch (error) {
+            console.error("Fetch error:", error);
+        }
+    };
 
 
   const updateOrderStatus = async (orderId, newStatus) => {
@@ -518,6 +485,33 @@ const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
   };
 
 
+const exportUsersToCSV = () => {
+    // Tạo header CSV
+    let csvContent = "ID,Tên,Email,Số điện thoại,Số đơn hàng,Tổng chi tiêu,Ngày đăng ký\n";
+
+    // Thêm dữ liệu người dùng
+    users.forEach(user => {
+        // Đảm bảo dữ liệu không có dấu phẩy hoặc quote bị lỗi
+        const name = user.name ? `"${user.name.replace(/"/g, '""')}"` : "";
+        const email = user.email || "";
+        const phone = user.phone || ""; // SỬA: Lấy số điện thoại
+        const totalSpent = (user.totalSpent || 0).toLocaleString('vi-VN');
+        const orderCount = user.orderCount || 0;
+        const createdAt = new Date(user.createdAt).toLocaleDateString("vi-VN");
+
+        csvContent += `${user.id},${name},${email},${phone},${orderCount},${totalSpent},${createdAt}\n`;
+    });
+
+    // Tạo Blob và tải file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "danh_sach_nguoi_dung.csv");
+    link.click();
+
+    showNotification("Đã xuất danh sách người dùng thành công!", "success");
+};
 
   const getStatusBadge = (status) => {
 
@@ -945,7 +939,51 @@ const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
 
             </div>
 
-
+{/* 🔥 KHỐI THỐNG KÊ DOANH THU THEO NGÀY */}
+                    <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">
+                            Biến động Doanh thu (Hoàn thành)
+                        </h3>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Ngày
+                                        </th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Doanh thu
+                                        </th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Số đơn
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {dailyStats.map((stat) => (
+                                        <tr key={stat.date}>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {stat.date}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">
+                                                {Number(stat.totalRevenue).toLocaleString('vi-VN')}đ
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">
+                                                {stat.totalOrders}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {dailyStats.length === 0 && (
+                                        <tr>
+                                            <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                                                Chưa có dữ liệu thống kê doanh thu.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
             <div className="bg-white rounded-xl shadow-sm p-6">
 
@@ -1257,163 +1295,103 @@ const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
 
 
 
-        {activeTab === "users" && (
-
-          <div>
-
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-
-              Quản lý người dùng
-
+      {activeTab === "users" && (
+    <div>
+        <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">
+                Quản lý người dùng
             </h2>
+            <button
+                onClick={exportUsersToCSV}
+                className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition font-semibold"
+            >
+                <List className="w-5 h-5" />
+                <span>Xuất CSV</span>
+            </button>
+        </div>
 
-
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-
-              <div className="overflow-x-auto">
-
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
                 <table className="w-full">
-
-                  <thead className="bg-gray-50">
-
-                    <tr>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-
-                        ID
-
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-
-                        Tên
-
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-
-                        Email
-
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-
-                        Số đơn hàng
-
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-
-                        Tổng chi tiêu
-
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-
-                        Ngày đăng ký
-
-                      </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-
-                        Thao tác
-
-                      </th>
-
-                    </tr>
-
-                  </thead>
-
-                  <tbody className="divide-y divide-gray-200">
-
-                    {users.map((user) => (
-
-                      <tr key={user.id} className="hover:bg-gray-50">
-
-                        <td className="px-6 py-4 text-sm text-gray-900">
-
-                          {user.id}
-
-                        </td>
-
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
-
-                          {user.name}
-
-                        </td>
-
-                        <td className="px-6 py-4 text-sm text-gray-600">
-
-                          {user.email}
-
-                        </td>
-
-                        <td className="px-6 py-4 text-sm text-gray-600">
-
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-
-                            {user.orderCount || 0} đơn
-
-                          </span>
-
-                        </td>
-
-                        <td className="px-6 py-4 text-sm font-semibold text-green-600">
-
-                          {(user.totalSpent || 0).toLocaleString()}đ
-
-                        </td>
-
-                        <td className="px-6 py-4 text-sm text-gray-600">
-
-                          {new Date(user.createdAt).toLocaleDateString("vi-VN")}
-
-                        </td>
-
-                        <td className="px-6 py-4 text-sm">
-
-                          <button
-
-                            onClick={() => deleteUser(user.id)}
-
-                            className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-semibold text-sm"
-
-                          >
-
-                            Xóa
-
-                          </button>
-
-                        </td>
-
-                      </tr>
-
-                    ))}
-
-                  </tbody>
-
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                ID
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Tên
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Email
+                            </th>
+                            {/* 🔥 THÊM CỘT SỐ ĐIỆN THOẠI */}
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                SĐT
+                            </th>
+                            {/* 🔥 SỬA DỮ LIỆU CỘT */}
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Số đơn hàng
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Tổng chi tiêu
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Ngày đăng ký
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Thao tác
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {users.map((user) => (
+                            <tr key={user.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 text-sm text-gray-900">
+                                    {user.id}
+                                </td>
+                                <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                                    {user.name}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-600">
+                                    {user.email}
+                                </td>
+                                {/* 🔥 HIỂN THỊ SỐ ĐIỆN THOẠI */}
+                                <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                                    {user.phone || 'N/A'}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-600">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {user.orderCount || 0} đơn
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 text-sm font-semibold text-green-600">
+                                    {(user.totalSpent || 0).toLocaleString()}đ
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-600">
+                                    {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                                </td>
+                                <td className="px-6 py-4 text-sm">
+                                    <button
+                                        onClick={() => deleteUser(user.id)}
+                                        className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-semibold text-sm"
+                                    >
+                                        Xóa
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
                 </table>
-
-              </div>
-
-              {users.length === 0 && (
-
-                <div className="p-12 text-center">
-
-                  <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-
-                  <p className="text-gray-500">Chưa có người dùng nào</p>
-
-                </div>
-
-              )}
-
             </div>
-
-          </div>
-
-        )}
+            {users.length === 0 && (
+                <div className="p-12 text-center">
+                    <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Chưa có người dùng nào</p>
+                </div>
+            )}
+        </div>
+    </div>
+)}
 
       </main>
 

@@ -421,6 +421,44 @@ app.get("/api/admin/stats", checkAdminAuth, async (req, res) => {
   }
 });
 
+app.get("/api/admin/daily-stats", checkAdminAuth, async (req, res) => {
+  try {
+    // Lấy tổng doanh thu VÀ số lượng đơn hàng (chỉ các đơn đã hoàn thành) theo ngày
+    const [dailyStatsResult] = await dbPool.query(`
+            SELECT 
+                DATE(createdAt) AS date,
+                SUM(total) AS totalRevenue,
+                COUNT(id) AS totalOrders
+            FROM 
+                orders 
+            WHERE 
+                status = 'completed'
+            GROUP BY 
+                DATE(createdAt)
+            ORDER BY 
+                date DESC
+            LIMIT 30; -- Giới hạn 30 ngày gần nhất
+        `);
+
+    // Format lại kết quả
+    const dailyStats = dailyStatsResult.map((stat) => ({
+      date: stat.date,
+      totalRevenue: Number(stat.totalRevenue) || 0,
+      totalOrders: stat.totalOrders || 0,
+    }));
+
+    res.json({
+      success: true,
+      dailyStats: dailyStats,
+    });
+  } catch (error) {
+    console.error("Admin daily stats error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê doanh thu theo ngày!",
+    });
+  }
+});
 // Endpoint kiểm tra một đơn hàng cụ thể
 
 app.get("/api/admin/orders/:id/check", checkAdminAuth, async (req, res) => {
@@ -715,42 +753,33 @@ app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
 
 app.get("/api/admin/users", checkAdminAuth, async (req, res) => {
   try {
-    // Lấy thông tin user (đã có totalSpent và orderCount trong bảng)
-
+    // Lấy thông tin user (THÊM CỘT PHONE)
     const [safeUsers] = await dbPool.query(
-      "SELECT id, name, email, createdAt, totalSpent, orderCount FROM users ORDER BY createdAt DESC"
+      "SELECT id, name, email, phone, createdAt, totalSpent, orderCount FROM users ORDER BY createdAt DESC"
     );
 
     const formattedUsers = safeUsers.map((u) => ({
       id: u.id,
-
       name: u.name,
-
       email: u.email,
-
+      phone: u.phone, // <== CỘT PHONE MỚI
       createdAt: u.createdAt,
-
       totalSpent: Number(u.totalSpent) || 0,
-
       orderCount: u.orderCount || 0,
     }));
 
     res.json({
       success: true,
-
       users: formattedUsers,
     });
   } catch (error) {
     console.error("Admin get users error:", error);
-
     res.status(500).json({
       success: false,
-
       message: "Lỗi khi lấy danh sách người dùng!",
     });
   }
 });
-
 // Cập nhật trạng thái đơn hàng
 
 app.patch("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
