@@ -2773,71 +2773,40 @@ const handleLogin = async (e) => {
 
 
   const handleRegister = async (e) => {
+        e.preventDefault();
+        setLoading(true);
 
-    e.preventDefault();
+        const name = e.target.name.value;
+        const email = e.target.email.value;
+        const password = e.target.password.value;
+        // 🔥 BƯỚC 1: LẤY GIÁ TRỊ SỐ ĐIỆN THOẠI TỪ FORM
+        const phone = e.target.phone.value; 
 
-    setLoading(true);
+        try {
+            const response = await fetch(`${API_URL}/api/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                // 🔥 BƯỚC 2: THÊM 'phone' VÀO BODY GỬI ĐI
+                body: JSON.stringify({ name, email, password, phone }), 
+            });
 
+            const data = await response.json();
 
-
-    const name = e.target.name.value;
-
-    const email = e.target.email.value;
-
-    const password = e.target.password.value;
-
-
-
-    try {
-
-      const response = await fetch(`${API_URL}/api/register`, { 
-
-    // Thêm /api/ vào đường dẫn
-
-    method: "POST",
-
-    headers: { "Content-Type": "application/json" },
-
-    body: JSON.stringify({ name, email, password }),
-
-});
-
-
-
-      const data = await response.json();
-
-
-
-      if (data.success) {
-
-        setCurrentUser(data.user);
-
-        localStorage.setItem("currentUser", JSON.stringify(data.user));
-
-        setShowRegister(false);
-
-        showNotification("Đăng ký thành công!", "success");
-
-      } else {
-
-        showNotification(data.message || "Đăng ký thất bại!", "error");
-
-      }
-
-    } catch (error) {
-
-      console.error("Register error:", error);
-
-      showNotification("Lỗi kết nối server!", 'error');
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  };
-
+            if (data.success) {
+                setCurrentUser(data.user);
+                localStorage.setItem("currentUser", JSON.stringify(data.user));
+                setShowRegister(false);
+                showNotification("Đăng ký thành công!", "success");
+            } else {
+                showNotification(data.message || "Đăng ký thất bại!", "error");
+            }
+        } catch (error) {
+            console.error("Register error:", error);
+            showNotification("Lỗi kết nối server!", 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
  const handleCheckout = async (e) => {
@@ -4429,133 +4398,77 @@ setDiscountAmount(0);
       {/* Register Modal */}
 
       {showRegister && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-2xl font-bold text-gray-800">
+                            Đăng ký tài khoản
+                        </h3>
+                        <button
+                            onClick={() => setShowRegister(false)}
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
 
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <form onSubmit={handleRegister} className="space-y-4">
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Họ và tên"
+                            required
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
 
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8">
+                        {/* 🔥 BƯỚC 3: THÊM TRƯỜNG NHẬP SỐ ĐIỆN THOẠI */}
+                        <input 
+                            type="tel" 
+                            name="phone" // CẦN CÓ NAME ĐỂ LẤY VALUE
+                            placeholder="Số điện thoại" 
+                            required 
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                        /> 
 
-            <div className="flex justify-between items-center mb-6">
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Email"
+                            required
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
 
-              <h3 className="text-2xl font-bold text-gray-800">
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Mật khẩu"
+                            required
+                            minLength="6"
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
 
-                Đăng ký tài khoản
+                        <button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition font-semibold"
+                        >
+                            Đăng ký
+                        </button>
+                    </form>
 
-              </h3>
-
-              <button
-
-                onClick={() => setShowRegister(false)}
-
-                className="text-gray-500 hover:text-gray-700"
-
-              >
-
-                <X className="w-6 h-6" />
-
-              </button>
-
+                    <div className="mt-4 text-center">
+                        <button
+                            onClick={() => {
+                                setShowRegister(false);
+                                setShowLogin(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-700"
+                        >
+                            Đã có tài khoản? Đăng nhập
+                        </button>
+                    </div>
+                </div>
             </div>
-
-
-
-            <form onSubmit={handleRegister} className="space-y-4">
-
-              <input
-
-                type="text"
-
-                name="name"
-
-                placeholder="Họ và tên"
-
-                required
-
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-
-              />
-
-
-
-              <input
-
-                type="email"
-
-                name="email"
-
-                placeholder="Email"
-
-                required
-
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-
-              />
-
-
-
-              <input
-
-                type="password"
-
-                name="password"
-
-                placeholder="Mật khẩu"
-
-                required
-
-                minLength="6"
-
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-
-              />
-
-
-
-              <button
-
-                type="submit"
-
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition font-semibold"
-
-              >
-
-                Đăng ký
-
-              </button>
-
-            </form>
-
-
-
-            <div className="mt-4 text-center">
-
-              <button
-
-                onClick={() => {
-
-                  setShowRegister(false);
-
-                  setShowLogin(true);
-
-                }}
-
-                className="text-blue-600 hover:text-blue-700"
-
-              >
-
-                Đã có tài khoản? Đăng nhập
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        
-
-      )}
-
+        )}
 
 
       {/* Order History Modal */}

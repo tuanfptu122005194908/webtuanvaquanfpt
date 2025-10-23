@@ -943,47 +943,41 @@ app.get("/api/users/:userId/orders", async (req, res) => {
 
 app.post("/api/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // 🔥 BƯỚC 1: NHẬN THÊM 'phone' TỪ REQUEST BODY
+    const { name, email, password, phone } = req.body;
 
     // 1. Kiểm tra email đã tồn tại
-
     const [existingUsers] = await dbPool.query(
       "SELECT id FROM users WHERE email = ?",
-
       [email]
     );
 
     if (existingUsers.length > 0) {
       return res.status(400).json({
         success: false,
-
         message: "Email đã được sử dụng!",
       });
     }
 
     // 2. Tạo user mới
-
+    // 🔥 BƯỚC 2: THÊM CỘT 'phone' VÀO CÂU LỆNH INSERT
     const [result] = await dbPool.query(
-      "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-
-      [name, email, password]
+      "INSERT INTO users (name, email, password, phone, totalSpent, orderCount) VALUES (?, ?, ?, ?, 0, 0)", // Thêm cột phone và set mặc định
+      [name, email, password, phone]
     );
 
     const newUserId = result.insertId;
 
+    // 🔥 BƯỚC 3: TRẢ VỀ PHONE TRONG DỮ LIỆU USER ĐÃ ĐĂNG KÝ
     res.status(201).json({
       success: true,
-
       message: "Đăng ký thành công!",
-
-      user: { id: newUserId, name, email },
+      user: { id: newUserId, name, email, phone },
     });
   } catch (error) {
     console.error("Register error:", error);
-
     res.status(500).json({
       success: false,
-
       message: "Lỗi server!",
     });
   }
