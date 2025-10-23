@@ -1031,61 +1031,52 @@ app.post("/api/orders", async (req, res) => {
   try {
     const {
       userId,
-
       items,
-
       customerInfo,
-
       total,
-
       discountAmount = 0,
-
       couponCode = null,
-    } = req.body; // <-- NHẬN DỮ LIỆU MỚI
+    } = req.body;
 
     const newOrderId = Date.now();
+    const itemsJson = JSON.stringify(items);
 
-    const itemsJson = JSON.stringify(items); // 2. Chèn đơn hàng (Thêm 2 cột mới vào truy vấn)
-
-    await dbPool.query(
+    // 1. CHÈN ĐƠN HÀNG VÀO BẢNG ORDERS
+    const [insertResult] = await dbPool.query(
       "INSERT INTO orders (id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, discountAmount, couponCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
-
       [
         newOrderId,
-
         userId,
-
         itemsJson,
-
         customerInfo.name,
-
         customerInfo.phone,
-
         customerInfo.email,
-
         customerInfo.note,
-
         total,
-
-        discountAmount, // <-- Cột mới
-
-        couponCode, // <-- Cột mới
+        discountAmount,
+        couponCode,
       ]
     );
 
+    // 🔥🔥🔥 BƯỚC MỚI: CẬP NHẬT CỘT PHONE CHO USER (NẾU CHƯA CÓ)
+    // Đây là bước quan trọng để cột 'phone' có dữ liệu khi admin gọi /api/admin/users
+    if (customerInfo.phone) {
+      await dbPool.query(
+        "UPDATE users SET phone = ? WHERE id = ? AND (phone IS NULL OR phone = '')",
+        [customerInfo.phone, userId]
+      );
+      console.log(`✅ Cập nhật SĐT cho User #${userId}: ${customerInfo.phone}`);
+    }
+
     res.status(201).json({
       success: true,
-
       message: "Đơn hàng đã được tạo thành công!",
-
       order: { id: newOrderId, ...req.body },
     });
   } catch (error) {
     console.error("Order creation error:", error);
-
     res.status(500).json({
       success: false,
-
       message: "Lỗi khi tạo đơn hàng!",
     });
   }
