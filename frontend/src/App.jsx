@@ -2513,6 +2513,8 @@ const [notification, setNotification] = useState({ message: '', type: '' });
 
     { code: "MAE101", name: "Mathematics for Engineers", price: 70000, semester: "Kỳ 1", img: mae101 },
 
+    { code: "SDI101m", name: "Introduction to Semiconductor Devices_Nhập môn thiết bị bán dẫn", price: 70000, semester: "Kỳ 1", img: mas291 },
+
     
 
     // Kỳ 2
@@ -2543,121 +2545,7 @@ const [notification, setNotification] = useState({ message: '', type: '' });
 
   ];
 
-// 🔥 THÊM DỮ LIỆU TÀI KHOẢN PREMIUM
-  const accounts = [
-    
-    {
-      id: 102,
-      name: "ChatGPT PLUS - 1 tháng - Shared 3 slots",
-      duration: "1 tháng",
-      price: 100000,
-      type: 'chatgpt',
-      stats: { carts: 1282, sold: 18 },
-      logoText: "T&Q",
-      color: 'green-600',
-      img: tk3
-    },
-    
-    {
-      id: 104,
-      name: "Tài khoản Quizlet Plus 30 Ngày",
-      duration: "1 tháng",
-      price: 20000,
-      type: 'quizlet',
-      stats: { carts: 6528, sold: 5 },
-      logoText: "T&Q",
-      color: 'blue-600',
-      img: tk2
-    },
-    {
-      id: 105,
-      name: "NETFLIX 4K 1 THÁNG CAO CẤP",
-      duration: "1 tháng",
-      price: 80000,
-      type: 'netflix',
-      stats: { carts: 252, sold: 42 },
-      logoText: "T&Q",
-      color: 'red-600',
-      img: tk1
-    },
-    
-    {
-      id: 107,
-      name: "Capcut Pro 1 tháng - Dùng riêng",
-      duration: "1 tháng",
-      price: 70000,
-      type: 'capcut',
-      stats: { carts: 138, sold: 159 },
-      logoText: "T&Q",
-      color: 'pink-600',
-      img: tk4
-    },
-    {
-      id: 108,
-      name: "Canva Pro 1 Năm CHÍNH CHỦ",
-      duration: "1 năm",
-      price: 100000,
-      type: 'canva',
-      stats: { carts: 182, sold: 9999 },
-      logoText: "T&Q",
-      color: 'indigo-600' ,
-      img : tk5
-    },
-    
-    {
-      id: 110,
-      name: "Quizlet Plus 1 Năm",
-      duration: "1 năm CHÍNH CHỦ",
-      price: 230000,
-      type: 'quizlet',
-      stats: { carts: 54, sold: 9999 },
-      logoText: "T&Q",
-      color: 'blue-600',
-      img: tk2
-    },
-    
-  ];
 
-const getLogoColor = (accountName) => {
-  switch (accountName.toLowerCase().trim()) {
-    case "quizlet plus":
-    case "tài khoản quizlet plus 30 ngày":
-    case "quizlet plus 1 năm":
-      return "text-blue-600";
-    case "netflix 4k 1 tháng cao cấp":
-      return "text-red-600";
-    case "capcut pro 1 tháng - dùng riêng":
-      return "text-pink-600";
-    case "canva pro 1 năm chính chủ":
-      return "text-indigo-600";
-    case "duolingo super 1 năm chính chủ":
-      return "text-green-600";
-    case "chatgpt plus - 1 tháng - shared 3 slots":
-      return "text-green-500";
-    case "super gnak a.i":
-      return "text-cyan-500";
-    case "studocu premium":
-      return "text-yellow-600";
-    case "claude 4 sonnet maxmode":
-      return "text-purple-600";
-    default:
-      return "text-gray-900";
-  }
-};
-
-
-
-const getAccountBgColor = (accountName) => {
-    if (accountName.includes("Quizlet")) return "bg-blue-700";
-    if (accountName.includes("NETFLIX")) return "bg-red-700";
-    if (accountName.includes("Capcut")) return "bg-pink-700";
-    if (accountName.includes("Canva")) return "bg-indigo-700";
-    if (accountName.includes("DUOLINGO")) return "bg-green-700";
-    if (accountName.includes("Claude") || accountName.includes("ChatGPT")) return "bg-purple-700";
-    if (accountName.includes("STUDoCU")) return "bg-yellow-600";
-    if (accountName.includes("Super Gnak")) return "bg-cyan-700";
-    return "bg-gray-700";
-};
   const groupedDocuments = allDocuments.reduce((acc, doc) => {
 
     (acc[doc.semester] = acc[doc.semester] || []).push(doc);
@@ -3003,7 +2891,7 @@ setDiscountAmount(0);
                 { name: "Tiếng Anh", id: "english" },
                 { name: "Tài liệu", id: "documents" },
                 { name: "Coursera", id: "coursera" },
-                { name: "Tài khoản Premium", id: "accounts" }, 
+         
                 { name: "Liên hệ", id: "contact" },
               ].map((item, idx) => (
                 <a
@@ -3723,106 +3611,7 @@ setDiscountAmount(0);
 
       </section>
 
-<section id="accounts" className="py-20 font-sans bg-gray-900 text-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            ⚡ Tài khoản Premium
-          </h2>
-          <p className="text-gray-400 text-lg md:text-xl">
-            Nâng cấp trải nghiệm học tập và làm việc với các tài khoản chất lượng
-          </p>
-        </div>
 
-        {/* Đảm bảo dùng grid và gap để các box không đè lên nhau */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {accounts.map((account) => { 
-            const badgeColorClass = getAccountBgColor(account.name);
-            const isStudocu = account.name.includes("STUDoCU");
-
-            return (
-              <div
-                key={account.id}
-                className="bg-gray-800 rounded-xl shadow-2xl hover:shadow-3xl transition transform hover:scale-[1.02] overflow-hidden flex flex-col relative border border-gray-700 min-h-[300px]"
-              >
-                  
-                {/* Header Block - GIẢM CHIỀU CAO VÀ CHỈNH LẠI CĂN CHỈNH */}
-                <div className={`p-4 pt-12 text-center relative h-28 ${badgeColorClass} flex justify-center items-end`}>
-                   
-                  {/* Logo - TĂNG KÍCH THƯỚC VÀ ĐẨY LÊN ÍT HƠN */}
-                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2"> 
-                   {/* Thay đổi w-16 h-16 thành w-20 h-20 (Tăng kích thước) */}
-                   {/* Thay đổi -translate-y-8 thành -translate-y-1/2 (Căn giữa theo chiều dọc của Logo so với đường cắt ngang) */}
-                    <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg transform -translate-y-1/2 border-4 border-gray-900/10 overflow-hidden">
-                        <img 
-                            src={account.img} 
-                            alt={account.name} 
-                            className="w-full h-full object-cover p-1"
-                        />
-                    </div>
-                  </div>
-                  
-                  {/* Duration Label */}
-                  <p className="text-white text-sm font-bold opacity-80">
-                    {account.duration}
-                  </p>
-
-                  {/* Label "OFF NOW" - Studocu only */}
-                  {isStudocu && (
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                      OFF NOW!
-                    </div>
-                  )}
-                </div>
-
-             {/* Body Content */}
-                <div className="p-4 flex flex-col flex-1"> 
-                  
-                  <div className="text-center flex-1 mt-4"> {/* Đã thêm mt-4 để tạo khoảng trống dưới logo */}
-                      <h4 className="font-bold text-lg text-gray-100 mb-1 leading-snug">
-                          {account.name}
-                      </h4>
-                      {/* Logo Text (FUO) */}
-                      <p className="text-xs font-black text-yellow-400 mb-3">
-                          {account.logoText}
-                      </p>
-                  </div>
-
-                    {/* Stats Bar */}
-                   <div className="flex justify-around items-center bg-gray-700 rounded-lg p-2 text-xs font-semibold my-4">
-                        <div className="flex items-center text-blue-400">
-                          <ShoppingCart className="w-3 h-3 mr-1" /> {account.stats.carts.toLocaleString()}
-                        </div>
-                        <div className="flex items-center text-red-400">
-                          <DollarSign className="w-3 h-3 mr-1" /> {account.stats.sold.toLocaleString()}
-                        </div>
-                    </div>
-
-                    {/* Price & Button */}
-                   <div className="mt-auto">
-                      <p className="text-2xl font-extrabold text-yellow-400 text-center mb-3">
-                          {account.price.toLocaleString("vi-VN")} đ
-                      </p>
-                      <button
-                        onClick={() =>
-                          addToCart({
-                            ...account,
-                            type: "premium_account",
-                            price: account.price,
-                          })
-                        }
-                       className="w-full bg-teal-600 text-white px-4 py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] font-semibold"
-                      >
-                          Mua hàng
-                      </button>
-                    </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
       {/* Contact Section */}
 
       <section id="contact" className="py-20 bg-gray-900 text-white">
