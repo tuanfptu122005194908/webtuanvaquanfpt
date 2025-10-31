@@ -167,7 +167,7 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
   const [dailyStats, setDailyStats] = useState([]); // [ {date: '2025-01-01', totalRevenue: 100000}, ... ]
 
-
+const [monthlyStats, setMonthlyStats] = useState([]);
 
   useEffect(() => {
         const token = localStorage.getItem("adminToken");
@@ -278,31 +278,33 @@ const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
 
 
-  const fetchDashboardData = async (token) => {
-        try {
-            // 🔥 THÊM API GỌI DAILY-STATS
-            const [statsRes, ordersRes, usersRes, dailyStatsRes] = await Promise.all([
-                fetch(`${API_URL}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } }),
-                fetch(`${API_URL}/api/admin/orders`, { headers: { Authorization: `Bearer ${token}` } }),
-                fetch(`${API_URL}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
-                fetch(`${API_URL}/api/admin/daily-stats`, { headers: { Authorization: `Bearer ${token}` } }), // <== DÒNG MỚI
-            ]);
+ const fetchDashboardData = async (token) => {
+    try {
+        // 🔥 THÊM API GỌI monthly-STATS
+        const [statsRes, ordersRes, usersRes, dailyStatsRes, monthlyStatsRes] = await Promise.all([ // <<< THÊM monthlyStatsRes
+            fetch(`${API_URL}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+            fetch(`${API_URL}/api/admin/orders`, { headers: { Authorization: `Bearer ${token}` } }),
+            fetch(`${API_URL}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
+            fetch(`${API_URL}/api/admin/daily-stats`, { headers: { Authorization: `Bearer ${token}` } }), 
+            fetch(`${API_URL}/api/admin/monthly-stats`, { headers: { Authorization: `Bearer ${token}` } }), // <<< DÒNG MỚI
+        ]);
 
-            const statsData = await statsRes.json();
-            const ordersData = await ordersRes.json();
-            const usersData = await usersRes.json();
-            const dailyStatsData = await dailyStatsRes.json(); // <== DÒNG MỚI
+        const statsData = await statsRes.json();
+        const ordersData = await ordersRes.json();
+        const usersData = await usersRes.json();
+        const dailyStatsData = await dailyStatsRes.json(); 
+        const monthlyStatsData = await monthlyStatsRes.json(); // <<< DÒNG MỚI
 
-            if (statsData.success) setStats(statsData.stats);
-            if (ordersData.success) setOrders(ordersData.orders);
-            if (usersData.success) setUsers(usersData.users);
-            if (dailyStatsData.success) setDailyStats(dailyStatsData.dailyStats); // <== DÒNG MỚI
+        if (statsData.success) setStats(statsData.stats);
+        if (ordersData.success) setOrders(ordersData.orders);
+        if (usersData.success) setUsers(usersData.users);
+        if (dailyStatsData.success) setDailyStats(dailyStatsData.dailyStats);
+        if (monthlyStatsData.success) setMonthlyStats(monthlyStatsData.monthlyStats); // <<< DÒNG MỚI
 
-        } catch (error) {
-            console.error("Fetch error:", error);
-        }
-    };
-
+    } catch (error) {
+        console.error("Fetch error:", error);
+    }
+};
 
   const updateOrderStatus = async (orderId, newStatus) => {
 
@@ -938,7 +940,51 @@ const exportUsersToCSV = () => {
               })}
 
             </div>
-
+{/* === 🔥 KHỐI THỐNG KÊ DOANH THU THEO THÁNG (DÒNG MỚI) === */}
+<div className="bg-white rounded-xl shadow-sm p-6 mt-8">
+    <h3 className="text-xl font-bold text-gray-800 mb-4">
+        Biến động Doanh thu theo Tháng
+    </h3>
+    <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+                <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tháng (Năm-Tháng)
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Doanh thu
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Số đơn
+                    </th>
+                </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+                {monthlyStats.map((stat) => (
+                    <tr key={stat.month}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {stat.month}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">
+                            {Number(stat.totalRevenue).toLocaleString('vi-VN')}đ
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">
+                            {stat.totalOrders}
+                        </td>
+                    </tr>
+                ))}
+                {monthlyStats.length === 0 && (
+                    <tr>
+                        <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                            Chưa có dữ liệu thống kê doanh thu theo tháng.
+                        </td>
+                    </tr>
+                )}
+            </tbody>
+        </table>
+    </div>
+</div>
 {/* 🔥 KHỐI THỐNG KÊ DOANH THU THEO NGÀY */}
                     <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
                         <h3 className="text-xl font-bold text-gray-800 mb-4">
