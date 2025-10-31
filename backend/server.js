@@ -437,7 +437,7 @@ app.get("/api/admin/daily-stats", checkAdminAuth, async (req, res) => {
                 DATE(createdAt)
             ORDER BY 
                 date DESC
-            LIMIT 30; -- Giới hạn 30 ngày gần nhất
+         
         `);
 
     // Format lại kết quả
