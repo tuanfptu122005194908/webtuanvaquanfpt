@@ -422,10 +422,10 @@ app.get("/api/admin/stats", checkAdminAuth, async (req, res) => {
 });
 // ===================== MONTHLY STATS ROUTE =====================
 app.get("/api/admin/monthly-stats", checkAdminAuth, async (req, res) => {
-    try {
-        // Lấy tổng doanh thu VÀ số lượng đơn hàng (chỉ các đơn đã hoàn thành) theo THÁNG
-        // DATE_FORMAT(createdAt, '%Y-%m') sẽ nhóm theo Năm-Tháng (ví dụ: '2025-11')
-        const [monthlyStatsResult] = await dbPool.query(`
+  try {
+    // Lấy tổng doanh thu VÀ số lượng đơn hàng (chỉ các đơn đã hoàn thành) theo THÁNG
+    // DATE_FORMAT(createdAt, '%Y-%m') sẽ nhóm theo Năm-Tháng (ví dụ: '2025-11')
+    const [monthlyStatsResult] = await dbPool.query(`
             SELECT 
                 DATE_FORMAT(createdAt, '%Y-%m') AS month,
                 SUM(total) AS totalRevenue,
@@ -440,24 +440,24 @@ app.get("/api/admin/monthly-stats", checkAdminAuth, async (req, res) => {
                 month DESC; -- Sắp xếp từ tháng gần nhất
         `);
 
-        // Format lại kết quả
-        const monthlyStats = monthlyStatsResult.map((stat) => ({
-            month: stat.month,
-            totalRevenue: Number(stat.totalRevenue) || 0,
-            totalOrders: stat.totalOrders || 0,
-        }));
+    // Format lại kết quả
+    const monthlyStats = monthlyStatsResult.map((stat) => ({
+      month: stat.month,
+      totalRevenue: Number(stat.totalRevenue) || 0,
+      totalOrders: stat.totalOrders || 0,
+    }));
 
-        res.json({
-            success: true,
-            monthlyStats: monthlyStats, // Đổi tên biến để dễ phân biệt
-        });
-    } catch (error) {
-        console.error("Admin monthly stats error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Lỗi khi lấy thống kê doanh thu theo tháng!",
-        });
-    }
+    res.json({
+      success: true,
+      monthlyStats: monthlyStats, // Đổi tên biến để dễ phân biệt
+    });
+  } catch (error) {
+    console.error("Admin monthly stats error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê doanh thu theo tháng!",
+    });
+  }
 });
 app.get("/api/admin/daily-stats", checkAdminAuth, async (req, res) => {
   try {
@@ -475,6 +475,7 @@ app.get("/api/admin/daily-stats", checkAdminAuth, async (req, res) => {
                 DATE(createdAt)
             ORDER BY 
                 date DESC
+                LIMIT 30;
          
         `);
 
