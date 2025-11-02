@@ -1211,49 +1211,62 @@ const exportUsersToCSV = () => {
 
 
 
-                    <div className="space-y-2">
-
-                      <h4 className="font-semibold text-gray-800">Sản phẩm</h4>
-
-                      <div className="space-y-2">
-
+                <div className="space-y-2">
+                      <h4 className="font-semibold text-gray-800 mb-3">
+                        Sản phẩm đã mua ({order.items.length} mục)
+                      </h4>
+                      <div className="space-y-3">
                         {order.items.map((item, idx) => (
-
                           <div
-
                             key={idx}
-
-                            className="flex justify-between text-sm bg-gray-50 p-2 rounded"
-
+                            className="bg-gradient-to-r from-gray-50 to-gray-100 p-3 rounded-lg border-l-4 border-purple-500 hover:shadow-md transition"
                           >
-
-                            <span className="text-gray-700">{item.name}</span>
-
-                            <span className="font-semibold text-gray-800">
-
-                              {item.price.toLocaleString()}đ
-
-                            </span>
-
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <p className="font-bold text-gray-800 text-base">
+                                  {item.name}
+                                </p>
+                                {item.code && (
+                                  <p className="text-xs text-purple-600 font-semibold mt-1">
+                                    Mã: {item.code}
+                                  </p>
+                                )}
+                                {item.type && (
+                                  <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                    {item.type === 'course' && '📚 Khóa học'}
+                                    {item.type === 'english' && '🎓 Tiếng Anh'}
+                                    {item.type === 'document' && '📄 Tài liệu'}
+                                    {item.type === 'coursera' && '🎯 Coursera'}
+                                    {item.type === 'account' && '👤 Tài khoản'}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-right ml-3">
+                                <p className="font-bold text-purple-600 text-lg">
+                                  {item.price.toLocaleString()}đ
+                                </p>
+                                {item.quantity && item.quantity > 1 && (
+                                  <p className="text-xs text-gray-500">
+                                    x{item.quantity}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {item.desc && (
+                              <p className="text-xs text-gray-600 mt-2 pl-2 border-l-2 border-gray-300">
+                                {item.desc}
+                              </p>
+                            )}
                           </div>
-
                         ))}
-
-                        <div className="flex justify-between font-bold text-lg pt-2 border-t">
-
-                          <span>Tổng cộng</span>
-
-                          <span className="text-blue-600">
-
-                            {order.total.toLocaleString()}đ
-
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                    </div>
+    <div className="flex justify-between font-bold text-xl pt-3 mt-3 border-t-2 border-gray-300">
+      <span className="text-gray-700">Tổng cộng</span>
+      <span className="text-blue-600">
+        {order.total.toLocaleString()}đ
+      </span>
+    </div>
+  </div>
+</div>
 
                   </div>
 
