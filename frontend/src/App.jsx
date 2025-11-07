@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import mas291 from "./mas291.png";
 
@@ -121,7 +121,130 @@ const Notification = ({ message, type, onClose }) => {
 
 };
 
+// App.jsx (Thêm sau component Notification)
+const ChatbotWidget = ({ showNotification }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [messages, setMessages] = useState([{ sender: 'bot', text: 'Chào bạn! Tôi là TuanvaQuan Bot, trợ lý ảo của nền tảng học tập. Tôi có thể giúp gì cho bạn?' }]);
+    const [input, setInput] = useState('');
+    const [loading, setLoading] = useState(false);
+    const chatContainerRef = useRef(null);
+    
+    // Cuộn xuống cuối khi có tin nhắn mới
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
 
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        const trimmedInput = input.trim();
+        if (!trimmedInput) return;
+
+        const newUserMessage = { sender: 'user', text: trimmedInput };
+        setMessages((prev) => [...prev, newUserMessage]);
+        setInput('');
+        setLoading(true);
+
+        try {
+            // Lấy lịch sử 10 tin nhắn gần nhất để duy trì ngữ cảnh
+            const history = [...messages.slice(-10), newUserMessage]; 
+            
+            const response = await fetch(`${API_URL}/api/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: trimmedInput, history }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setMessages((prev) => [...prev, { sender: 'bot', text: data.response }]);
+            } else {
+                setMessages((prev) => [...prev, { sender: 'bot', text: data.message || 'Lỗi: Không thể nhận phản hồi từ Bot.' }]);
+                showNotification(data.message || "Lỗi Chatbot!", 'error');
+            }
+
+        } catch (error) {
+            console.error("Chat API error:", error);
+            setMessages((prev) => [...prev, { sender: 'bot', text: 'Lỗi kết nối server. Vui lòng kiểm tra console.' }]);
+            showNotification("Lỗi kết nối server Chatbot!", 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <>
+            {/* Nút kích hoạt (Thường ở góc dưới bên phải) */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="fixed bottom-6 right-6 z-[60] bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-full shadow-2xl hover:shadow-blue-500/50 transition transform hover:scale-110"
+            >
+                {isOpen ? <X className="w-7 h-7" /> : <Bot className="w-7 h-7" />}
+            </button>
+
+            {/* Giao diện Chatbot */}
+            {isOpen && (
+                <div className="fixed bottom-24 right-6 z-[60] w-full max-w-sm h-[80vh] max-h-[600px] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden border border-gray-200">
+                    
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md">
+                        <div className="flex items-center space-x-2">
+                            <Bot className="w-6 h-6" />
+                            <h4 className="text-lg font-bold">TuanvaQuan Bot</h4>
+                        </div>
+                        <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-white/20"><X className="w-5 h-5" /></button>
+                    </div>
+
+                    {/* Chat Messages */}
+                    <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+                        {messages.map((msg, index) => (
+                            <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[80%] p-3 rounded-xl shadow-sm ${
+                                    msg.sender === 'user' 
+                                        ? 'bg-blue-500 text-white rounded-br-none' 
+                                        : 'bg-gray-200 text-gray-800 rounded-tl-none'
+                                }`}>
+                                    {msg.text}
+                                </div>
+                            </div>
+                        ))}
+                        {loading && (
+                            <div className="flex justify-start">
+                                <div className="max-w-[80%] p-3 rounded-xl bg-gray-200 text-gray-800 rounded-tl-none flex items-center">
+                                    <span className="text-sm">Bot đang gõ...</span>
+                                    <RefreshCw className="w-4 h-4 ml-2 animate-spin text-purple-600" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Input Form */}
+                    <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200">
+                        <div className="flex space-x-2">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="Nhập tin nhắn..."
+                                className="flex-1 px-4 py-2 border rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                disabled={loading}
+                            />
+                            <button
+                                type="submit"
+                                disabled={!input.trim() || loading}
+                                className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition disabled:opacity-50"
+                            >
+                                <Zap className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+        </>
+    );
+};
 
 // ============ ADMIN DASHBOARD COMPONENT ============
 const STATS_COLOR_MAP = {

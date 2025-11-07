@@ -150,6 +150,75 @@ console.log(
 );
 
 // server.js (Thêm gần các biến ADMIN_EMAIL/PASSWORD)
+// server.js (Thêm ở đầu file cùng với các lệnh require khác)
+const { GoogleGenAI } = require("@google/genai"); // Cài đặt npm install @google/genai
+
+// Khởi tạo AI Client (Cần .env: GEMINI_API_KEY)
+// Dùng biến môi trường để bảo mật key
+let ai;
+if (process.env.GEMINI_API_KEY) {
+  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  console.log("🤖 AI Client initialized successfully.");
+} else {
+  console.error("❌ GEMINI_API_KEY not found. Chatbot API will be disabled.");
+}
+
+// ===================== CHATBOT ROUTE =====================
+app.post("/api/chat", async (req, res) => {
+  if (!ai) {
+    return res
+      .status(503)
+      .json({ success: false, message: "Dịch vụ AI chưa sẵn sàng." });
+  }
+
+  try {
+    const { message, history } = req.body; // Tin nhắn mới và lịch sử hội thoại
+
+    // 1. Định nghĩa vai trò (System Instruction)
+    const systemInstruction = `Bạn là trợ lý AI tên là "TuanvaQuan Bot" cho một nền tảng thương mại điện tử chuyên bán các khóa học, dịch vụ tiếng Anh (video, slide, kịch bản) và tài liệu ôn thi đại học/FPT Polytechnic/FPT University.
+        
+        Nhiệm vụ của bạn là:
+        - Tư vấn thân thiện, chuyên nghiệp, bằng tiếng Việt.
+        - Trả lời các câu hỏi về các dịch vụ/sản phẩm CÓ SẴN (khóa học, tài liệu, dịch vụ tiếng Anh, Coursera rush).
+        - Đưa ra lời khuyên học tập, lộ trình.
+        - Giới hạn câu trả lời ngắn gọn, tập trung. KHÔNG BÀN LUẬN CÁC CHỦ ĐỀ KHÔNG LIÊN QUAN.
+        - KHÔNG TỰ Ý ĐƯA RA GIÁ TIỀN (trừ khi khách hỏi rõ và bạn biết giá). Thay vào đó, hãy khuyến khích khách hàng "Xem giá và thêm vào giỏ hàng trên trang web."
+        - KHÔNG TRẢ LỜI CÁC CÂU HỎI VỀ ADMIN HOẶC DỮ LIỆU BẢO MẬT.`;
+
+    // 2. Định dạng lịch sử hội thoại cho API (API cụ thể có thể khác)
+    // Đây là ví dụ chung, bạn cần điều chỉnh theo yêu cầu của thư viện AI bạn dùng.
+
+    const apiHistory = history.map((msg) => ({
+      role: msg.sender === "user" ? "user" : "model",
+      parts: [{ text: msg.text }],
+    }));
+
+    // 3. Gọi API của Gemini (Thay thế bằng thư viện AI bạn dùng)
+    const chat = ai.chats.create({
+      model: "gemini-2.5-flash",
+      history: apiHistory,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.7,
+      },
+    });
+
+    const response = await chat.sendMessage({ message });
+
+    res.json({
+      success: true,
+      response: response.text,
+    });
+  } catch (error) {
+    console.error("❌ Chatbot API error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Rất tiếc, Bot đang bận hoặc gặp lỗi. Vui lòng thử lại sau.",
+      error: error.message,
+    });
+  }
+});
+// =======================================================
 
 // ===================== COUPON DATA =====================
 
