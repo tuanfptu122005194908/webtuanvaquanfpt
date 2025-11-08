@@ -1020,87 +1020,108 @@ const getStatusBadge = (status) => {
 
 
 
-      {activeTab === "users" && (
+{activeTab === "users" && (
     <div>
-        <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">
-                Quản lý người dùng
-            </h2>
+        <div className="flex justify-between items-center mb-8">
+            <div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    Quản lý người dùng
+                </h2>
+                <p className="text-gray-500 mt-1">Tổng quan và quản lý tất cả người dùng</p>
+            </div>
             <button
                 onClick={exportUsersToCSV}
-                className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition font-semibold"
+                className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold"
             >
                 <List className="w-5 h-5" />
                 <span>Xuất CSV</span>
             </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gradient-to-r from-indigo-50 to-purple-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
                                 ID
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
                                 Tên
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
                                 Email
                             </th>
-                            {/* 🔥 THÊM CỘT SỐ ĐIỆN THOẠI */}
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
                                 SĐT
                             </th>
-                            {/* 🔥 SỬA DỮ LIỆU CỘT */}
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
                                 Số đơn hàng
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
                                 Tổng chi tiêu
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
                                 Ngày đăng ký
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
                                 Thao tác
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {users.map((user) => (
-                            <tr key={user.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 text-sm text-gray-900">
-                                    {user.id}
-                                </td>
-                                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                    {user.name}
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-600">
-                                    {user.email}
-                                </td>
-                                {/* 🔥 HIỂN THỊ SỐ ĐIỆN THOẠI */}
-                                <td className="px-6 py-4 text-sm text-gray-600 font-medium">
-                                    {user.phone || 'N/A'}
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-600">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {user.orderCount || 0} đơn
+                    <tbody className="divide-y divide-gray-100">
+                        {users.map((user, index) => (
+                            <tr 
+                                key={user.id} 
+                                className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-200 hover:shadow-md"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
+                                <td className="px-6 py-5 text-sm">
+                                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 text-white font-bold text-xs">
+                                        {user.id}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-sm font-semibold text-green-600">
-                                    {(user.totalSpent || 0).toLocaleString()}đ
+                                <td className="px-6 py-5 text-sm font-semibold text-gray-900">
+                                    {user.name}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600">
-                                    {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                                <td className="px-6 py-5 text-sm text-gray-600">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-indigo-500">✉</span>
+                                        <span>{user.email}</span>
+                                    </div>
                                 </td>
-                                <td className="px-6 py-4 text-sm">
+                                <td className="px-6 py-5 text-sm">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-emerald-500">📱</span>
+                                        <span className="font-medium text-gray-700">{user.phone || 'N/A'}</span>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-5 text-sm">
+                                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md">
+                                        📦 {user.orderCount || 0} đơn
+                                    </span>
+                                </td>
+                                <td className="px-6 py-5 text-sm">
+                                    <div className="flex items-center space-x-1">
+                                        <span className="text-lg">💰</span>
+                                        <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
+                                            {(user.totalSpent || 0).toLocaleString()}đ
+                                        </span>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-5 text-sm text-gray-600">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-purple-500">📅</span>
+                                        <span>{new Date(user.createdAt).toLocaleDateString("vi-VN")}</span>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-5 text-sm">
                                     <button
                                         onClick={() => deleteUser(user.id)}
-                                        className="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-semibold text-sm"
+                                        className="group relative bg-gradient-to-r from-red-500 to-pink-500 text-white px-5 py-2.5 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold text-sm overflow-hidden"
                                     >
-                                        Xóa
+                                        <span className="relative z-10">Xóa</span>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                     </button>
                                 </td>
                             </tr>
@@ -1109,9 +1130,12 @@ const getStatusBadge = (status) => {
                 </table>
             </div>
             {users.length === 0 && (
-                <div className="p-12 text-center">
-                    <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Chưa có người dùng nào</p>
+                <div className="p-16 text-center">
+                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 mb-6">
+                        <Users className="w-12 h-12 text-indigo-400" />
+                    </div>
+                    <p className="text-gray-500 text-lg font-medium">Chưa có người dùng nào</p>
+                    <p className="text-gray-400 text-sm mt-2">Người dùng mới sẽ xuất hiện ở đây</p>
                 </div>
             )}
         </div>
