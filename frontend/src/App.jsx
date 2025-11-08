@@ -1103,19 +1103,43 @@ const exportUsersToCSV = () => {
 
 
 
-        {activeTab === "orders" && (
+           {activeTab === "orders" && (
 
           <div>
 
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            <div className="flex justify-between items-center mb-8">
 
-              Quản lý đơn hàng
+              <div>
 
-            </h2>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">
+
+                  Quản lý đơn hàng
+
+                </h2>
+
+                <p className="text-gray-600">Tổng cộng {orders.length} đơn hàng</p>
+
+              </div>
+
+              <button
+
+                onClick={() => fetchDashboardData(adminToken)}
+
+                className="flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition"
+
+              >
+
+                <RefreshCw className="w-5 h-5" />
+
+                <span className="font-medium">Làm mới</span>
+
+              </button>
+
+            </div>
 
 
 
-            <div className="space-y-4">
+            <div className="space-y-6">
 
               {orders.map((order) => (
 
@@ -1123,87 +1147,275 @@ const exportUsersToCSV = () => {
 
                   key={order.id}
 
-                  className="bg-white rounded-xl shadow-sm p-6"
+                  className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-l-4 border-blue-500"
 
                 >
 
-                  <div className="flex justify-between items-start mb-4">
+                  {/* Header đơn hàng */}
 
-                    <div>
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b">
 
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
 
-                        Đơn hàng #{order.id}
+                      <div className="flex items-center space-x-4">
 
-                      </h3>
+                        <div className="bg-blue-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
 
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
+                          #{order.id}
 
-                        <span className="flex items-center">
+                        </div>
 
-                          <Calendar className="w-4 h-4 mr-1" />
+                        <div>
 
-                          {new Date(order.createdAt).toLocaleString("vi-VN")}
+                          <h3 className="text-xl font-bold text-gray-800">
 
-                        </span>
+                            Đơn hàng #{order.id}
+
+                          </h3>
+
+                          <div className="flex items-center text-sm text-gray-600 mt-1">
+
+                            <Calendar className="w-4 h-4 mr-1" />
+
+                            {new Date(order.createdAt).toLocaleString("vi-VN")}
+
+                          </div>
+
+                        </div>
 
                       </div>
 
-                    </div>
+                      <div className="flex items-center space-x-3">
 
-                    {getStatusBadge(order.status)}
+                        {getStatusBadge(order.status)}
 
-                  </div>
+                        <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
 
+                          <p className="text-xs text-gray-500">Tổng tiền</p>
 
+                          <p className="text-xl font-bold text-blue-600">
 
-                  <div className="grid md:grid-cols-2 gap-6 mb-4">
-
-                    <div className="space-y-2">
-
-                      <h4 className="font-semibold text-gray-800">
-
-                        Thông tin khách hàng
-
-                      </h4>
-
-                      <div className="space-y-1 text-sm">
-
-                        <p className="flex items-center text-gray-600">
-
-                          <Users className="w-4 h-4 mr-2" />
-
-                          {order.customerInfo.name}
-
-                        </p>
-
-                        <p className="flex items-center text-gray-600">
-
-                          <Mail className="w-4 h-4 mr-2" />
-
-                          {order.customerInfo.email}
-
-                        </p>
-
-                        <p className="flex items-center text-gray-600">
-
-                          <Phone className="w-4 h-4 mr-2" />
-
-                          {order.customerInfo.phone}
-
-                        </p>
-
-                        {order.customerInfo.note && (
-
-                          <p className="text-gray-600 mt-2">
-
-                            <span className="font-medium">Ghi chú:</span>{" "}
-
-                            {order.customerInfo.note}
+                            {order.total.toLocaleString()}đ
 
                           </p>
 
-                        )}
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+
+                  {/* Nội dung đơn hàng */}
+
+                  <div className="p-6">
+
+                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+
+                      {/* Thông tin khách hàng */}
+
+                      <div className="bg-gradient-to-br from-gray-50 to-blue-50 p-5 rounded-xl border border-gray-200">
+
+                        <div className="flex items-center mb-4">
+
+                          <div className="bg-blue-500 p-2 rounded-lg">
+
+                            <Users className="w-5 h-5 text-white" />
+
+                          </div>
+
+                          <h4 className="ml-3 font-bold text-gray-800 text-lg">
+
+                            Thông tin khách hàng
+
+                          </h4>
+
+                        </div>
+
+                        <div className="space-y-3">
+
+                          <div className="flex items-start">
+
+                            <Users className="w-4 h-4 mr-3 mt-1 text-gray-500 flex-shrink-0" />
+
+                            <div>
+
+                              <p className="text-xs text-gray-500">Họ tên</p>
+
+                              <p className="font-semibold text-gray-800">{order.customerInfo.name}</p>
+
+                            </div>
+
+                          </div>
+
+                          <div className="flex items-start">
+
+                            <Mail className="w-4 h-4 mr-3 mt-1 text-gray-500 flex-shrink-0" />
+
+                            <div>
+
+                              <p className="text-xs text-gray-500">Email</p>
+
+                              <p className="font-semibold text-gray-800 break-all">{order.customerInfo.email}</p>
+
+                            </div>
+
+                          </div>
+
+                          <div className="flex items-start">
+
+                            <Phone className="w-4 h-4 mr-3 mt-1 text-gray-500 flex-shrink-0" />
+
+                            <div>
+
+                              <p className="text-xs text-gray-500">Số điện thoại</p>
+
+                              <p className="font-semibold text-gray-800">{order.customerInfo.phone}</p>
+
+                            </div>
+
+                          </div>
+
+                          {order.customerInfo.note && (
+
+                            <div className="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+
+                              <p className="text-xs text-yellow-700 font-medium mb-1">Ghi chú:</p>
+
+                              <p className="text-sm text-gray-700">{order.customerInfo.note}</p>
+
+                            </div>
+
+                          )}
+
+                        </div>
+
+                      </div>
+
+
+
+                      {/* Sản phẩm */}
+
+                      <div className="bg-gradient-to-br from-gray-50 to-purple-50 p-5 rounded-xl border border-gray-200">
+
+                        <div className="flex items-center justify-between mb-4">
+
+                          <div className="flex items-center">
+
+                            <div className="bg-purple-500 p-2 rounded-lg">
+
+                              <Package className="w-5 h-5 text-white" />
+
+                            </div>
+
+                            <h4 className="ml-3 font-bold text-gray-800 text-lg">
+
+                              Chi tiết sản phẩm
+
+                            </h4>
+
+                          </div>
+
+                          <span className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">
+
+                            {order.items.length} mục
+
+                          </span>
+
+                        </div>
+
+                        <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+
+                          {order.items.map((item, idx) => (
+
+                            <div
+
+                              key={idx}
+
+                              className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
+
+                            >
+
+                              <div className="flex justify-between items-start mb-2">
+
+                                <div className="flex-1 pr-3">
+
+                                  <p className="font-bold text-gray-900 leading-tight mb-1">
+
+                                    {item.name}
+
+                                  </p>
+
+                                  {item.type && (
+
+                                    <span className="inline-block text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+
+                                      {item.type === 'course' && '📚 Khóa học'}
+
+                                      {item.type === 'english' && '🎓 Tiếng Anh'}
+
+                                      {item.type === 'document' && '📄 Tài liệu'}
+
+                                      {item.type === 'coursera' && '🎯 Coursera'}
+
+                                      {item.type === 'account' && '👤 Tài khoản'}
+
+                                    </span>
+
+                                  )}
+
+                                  {item.code && (
+
+                                    <p className="text-xs text-gray-500 mt-1">
+
+                                      Mã: <span className="font-mono font-semibold">{item.code}</span>
+
+                                    </p>
+
+                                  )}
+
+                                  {item.quantity && item.quantity > 1 && (
+
+                                    <p className="text-xs text-gray-500">
+
+                                      Số lượng: <span className="font-semibold">x{item.quantity}</span>
+
+                                    </p>
+
+                                  )}
+
+                                </div>
+
+                                <div className="text-right flex-shrink-0">
+
+                                  <p className="font-bold text-lg text-purple-600">
+
+                                    {item.price.toLocaleString()}đ
+
+                                  </p>
+
+                                </div>
+
+                              </div>
+
+                              {item.desc && (
+
+                                <p className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border-l-2 border-gray-300">
+
+                                  {item.desc}
+
+                                </p>
+
+                              )}
+
+                            </div>
+
+                          ))}
+
+                        </div>
 
                       </div>
 
@@ -1211,130 +1423,73 @@ const exportUsersToCSV = () => {
 
 
 
-               <div className="space-y-4">
-    <h4 className="font-semibold text-gray-800 mb-2 border-b pb-2">
-        Sản phẩm đã mua ({order.items.length} mục)
-    </h4>
-    <div className="space-y-3">
-        {order.items.map((item, idx) => (
-            <div
-                key={idx}
-                className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all"
-            >
-                <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1 pr-4">
-                        <p className="font-extrabold text-lg text-gray-900 leading-tight">
-                            {item.name}
-                        </p>
-                        
-                        {/* Loại sản phẩm */}
-                        {item.type && (
-                            <span className="inline-block mt-1 text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                {item.type === 'course' && '📚 Khóa học'}
-                                {item.type === 'english' && '🎓 Tiếng Anh'}
-                                {item.type === 'document' && '📄 Tài liệu'}
-                                {item.type === 'coursera' && '🎯 Coursera'}
-                                {item.type === 'account' && '👤 Tài khoản'}
-                            </span>
-                        )}
+                    {/* Action buttons */}
 
-                        {/* Mã và Số lượng */}
-                        <div className="mt-1 text-sm text-gray-600">
-                            {item.code && (
-                                <span className="mr-3">Mã: **{item.code}**</span>
-                            )}
-                            {item.quantity && item.quantity > 1 && (
-                                <span>x{item.quantity}</span>
-                            )}
-                        </div>
+                    <div className="flex flex-wrap gap-3 pt-5 border-t border-gray-200">
+
+                      <button
+
+                        onClick={() => updateOrderStatus(order.id, "processing")}
+
+                        disabled={order.status === "processing"}
+
+                        className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-semibold shadow-md"
+
+                      >
+
+                        <Clock className="w-4 h-4" />
+
+                        <span>Đang xử lý</span>
+
+                      </button>
+
+                      <button
+
+                        onClick={() => updateOrderStatus(order.id, "completed")}
+
+                        disabled={order.status === "completed"}
+
+                        className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-semibold shadow-md"
+
+                      >
+
+                        <CheckCircle className="w-4 h-4" />
+
+                        <span>Hoàn thành</span>
+
+                      </button>
+
+                      <button
+
+                        onClick={() => updateOrderStatus(order.id, "cancelled")}
+
+                        disabled={order.status === "cancelled"}
+
+                        className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-semibold shadow-md"
+
+                      >
+
+                        <XCircle className="w-4 h-4" />
+
+                        <span>Hủy đơn</span>
+
+                      </button>
+
+                      <button
+
+                        onClick={() => deleteOrder(order.id)}
+
+                        className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-gray-700 text-white px-4 py-3 rounded-lg hover:bg-gray-800 transition-all transform hover:scale-105 font-semibold shadow-md"
+
+                      >
+
+                        <X className="w-4 h-4" />
+
+                        <span>Xóa đơn</span>
+
+                      </button>
+
                     </div>
-
-                    {/* Giá */}
-                    <div className="text-right ml-3 flex-shrink-0">
-                        <p className="font-bold text-xl text-purple-700">
-                            {item.price.toLocaleString()}đ
-                        </p>
-                    </div>
-                </div>
-                
-                {/* Mô tả/Ghi chú thêm */}
-                {item.desc && (
-                    <p className="text-xs text-gray-600 mt-2 p-2 bg-white rounded border border-dashed border-gray-300">
-                        **Mô tả:** {item.desc}
-                    </p>
-                )}
-            </div>
-        ))}
-        
-        {/* Tổng cộng */}
-        <div className="flex justify-between font-bold text-xl pt-4 mt-4 border-t border-gray-300">
-            <span className="text-gray-700">Tổng cộng đơn hàng:</span>
-            <span className="text-blue-600">
-                {order.total.toLocaleString()}đ
-            </span>
-        </div>
-    </div>
-</div>
-
-                  </div>
-
-
-
-                  <div className="flex flex-wrap gap-2 pt-4 border-t">
-
-                    <button
-
-                      onClick={() => updateOrderStatus(order.id, "processing")}
-
-                      disabled={order.status === "processing"}
-
-                      className="flex-1 min-w-[150px] bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-
-                    >
-
-                      Đang xử lý
-
-                    </button>
-
-                    <button
-
-                      onClick={() => updateOrderStatus(order.id, "completed")}
-
-                      disabled={order.status === "completed"}
-
-                      className="flex-1 min-w-[150px] bg-green-50 text-green-600 px-4 py-2 rounded-lg hover:bg-green-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-
-                    >
-
-                      Hoàn thành
-
-                    </button>
-
-                    <button
-
-                      onClick={() => updateOrderStatus(order.id, "cancelled")}
-
-                      disabled={order.status === "cancelled"}
-
-                      className="flex-1 min-w-[150px] bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-
-                    >
-
-                      Hủy đơn
-
-                    </button>
-
-                    <button
-
-                      onClick={() => deleteOrder(order.id)}
-
-                      className="flex-1 min-w-[150px] bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition font-semibold"
-
-                    >
-
-                      Xóa đơn
-
-                    </button>
 
                   </div>
 
@@ -1342,13 +1497,21 @@ const exportUsersToCSV = () => {
 
               ))}
 
+
+
               {orders.length === 0 && (
 
-                <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+                <div className="bg-white rounded-2xl shadow-md p-16 text-center">
 
-                  <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
 
-                  <p className="text-gray-500">Chưa có đơn hàng nào</p>
+                    <ShoppingBag className="w-12 h-12 text-gray-400" />
+
+                  </div>
+
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Chưa có đơn hàng nào</h3>
+
+                  <p className="text-gray-500">Các đơn hàng mới sẽ xuất hiện tại đây</p>
 
                 </div>
 
@@ -1359,7 +1522,6 @@ const exportUsersToCSV = () => {
           </div>
 
         )}
-
 
 
       {activeTab === "users" && (
