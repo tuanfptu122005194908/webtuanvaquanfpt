@@ -1167,11 +1167,7 @@ const exportUsersToCSV = () => {
 
                         <div>
 
-                          <h3 className="text-xl font-bold text-gray-800">
-
-                            Đơn hàng #{order.id}
-
-                          </h3>
+                          
 
                           <div className="flex items-center text-sm text-gray-600 mt-1">
 
@@ -1298,125 +1294,60 @@ const exportUsersToCSV = () => {
 
 
                       {/* Sản phẩm */}
-
                       <div className="bg-gradient-to-br from-gray-50 to-purple-50 p-5 rounded-xl border border-gray-200">
-
                         <div className="flex items-center justify-between mb-4">
-
                           <div className="flex items-center">
-
                             <div className="bg-purple-500 p-2 rounded-lg">
-
                               <Package className="w-5 h-5 text-white" />
-
                             </div>
-
                             <h4 className="ml-3 font-bold text-gray-800 text-lg">
-
-                              Chi tiết sản phẩm
-
+                              Sản phẩm
                             </h4>
-
                           </div>
-
                           <span className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">
-
                             {order.items.length} mục
-
                           </span>
-
                         </div>
-
-                        <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
-
+                        <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
                           {order.items.map((item, idx) => (
-
                             <div
-
                               key={idx}
-
-                              className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
-
+                              className="bg-white p-3 rounded-lg border border-gray-200 hover:border-purple-300 transition-all"
                             >
-
-                              <div className="flex justify-between items-start mb-2">
-
-                                <div className="flex-1 pr-3">
-
-                                  <p className="font-bold text-gray-900 leading-tight mb-1">
-
-                                    {item.name}
-
-                                  </p>
-
+                              <div className="flex justify-between items-center gap-3">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
                                   {item.type && (
-
-                                    <span className="inline-block text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-
-                                      {item.type === 'course' && '📚 Khóa học'}
-
-                                      {item.type === 'english' && '🎓 Tiếng Anh'}
-
-                                      {item.type === 'document' && '📄 Tài liệu'}
-
-                                      {item.type === 'coursera' && '🎯 Coursera'}
-
-                                      {item.type === 'account' && '👤 Tài khoản'}
-
+                                    <span className="text-lg flex-shrink-0">
+                                      {item.type === 'course' && '📚'}
+                                      {item.type === 'english' && '🎓'}
+                                      {item.type === 'document' && '📄'}
+                                      {item.type === 'coursera' && '🎯'}
+                                      {item.type === 'account' && '👤'}
                                     </span>
-
                                   )}
-
-                                  {item.code && (
-
-                                    <p className="text-xs text-gray-500 mt-1">
-
-                                      Mã: <span className="font-mono font-semibold">{item.code}</span>
-
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-gray-900 truncate text-sm">
+                                      {item.name}
                                     </p>
-
-                                  )}
-
-                                  {item.quantity && item.quantity > 1 && (
-
-                                    <p className="text-xs text-gray-500">
-
-                                      Số lượng: <span className="font-semibold">x{item.quantity}</span>
-
-                                    </p>
-
-                                  )}
-
+                                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                      {item.code && (
+                                        <span className="font-mono">#{item.code}</span>
+                                      )}
+                                      {item.quantity && item.quantity > 1 && (
+                                        <span>• SL: x{item.quantity}</span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-
                                 <div className="text-right flex-shrink-0">
-
-                                  <p className="font-bold text-lg text-purple-600">
-
+                                  <p className="font-bold text-purple-600 text-sm">
                                     {item.price.toLocaleString()}đ
-
                                   </p>
-
                                 </div>
-
                               </div>
-
-                              {item.desc && (
-
-                                <p className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border-l-2 border-gray-300">
-
-                                  {item.desc}
-
-                                </p>
-
-                              )}
-
                             </div>
-
                           ))}
-
                         </div>
-
                       </div>
 
                     </div>
