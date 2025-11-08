@@ -131,9 +131,9 @@ const STATS_COLOR_MAP = {
     yellow: { bg: "bg-yellow-100", text: "text-yellow-600", from: "from-yellow-400", to: "to-yellow-600" },
 };
 
-// ============ COMPONENT BIỂU ĐỒ ĐƯỜNG MÔ PHỎNG (SalesChart) ============
+// ============ COMPONENT BIỂU ĐỒ ĐƯỜNG MÔ PHỎNG (SalesChart) - PHIÊN BẢN MỚI ============
 const SalesChart = ({ data, title, isMonthly = false }) => {
-    // Chỉ lấy tối đa 20 điểm dữ liệu gần nhất để tránh tràn màn hình
+    // Chỉ lấy tối đa 20 điểm dữ liệu gần nhất
     const dataDisplay = data ? data.slice(-20) : [];
 
     if (!data || data.length === 0) {
@@ -145,38 +145,35 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
         );
     }
 
-    // Tính toán giá trị max và min để làm tỷ lệ chiều cao
-    const maxRevenue = Math.max(...dataDisplay.map(item => item.totalRevenue));
-    // Dùng 0 hoặc giá trị min thấp nhất nếu cần, nhưng 0 là hợp lý cho doanh thu
-    const minRevenue = 0; 
+    // Tính toán giá trị max và min cho trục Y (giúp biểu đồ không bị dẹt)
+    const allRevenues = dataDisplay.map(item => item.totalRevenue);
+    const maxRevenue = Math.max(...allRevenues);
+    const minDataRevenue = Math.min(...allRevenues);
+
+    // Đặt giá trị min hiển thị thấp hơn giá trị min của data một chút (hoặc tối thiểu là 0)
+    const minValue = Math.max(0, minDataRevenue * 0.95 - 10000); // Giảm 5% và trừ thêm 10k
+
+    // Tính toán lại max để đảm bảo trục Y có khoảng trống trên cùng
+    const maxValue = maxRevenue * 1.05;
+
+    // Chiều cao tổng thể (Range) của trục Y
+    const range = maxValue - minValue;
 
     // Chuẩn bị dữ liệu cho biểu đồ đường (tọa độ điểm)
     const points = dataDisplay.map((item, index) => {
-        const x = (index / (dataDisplay.length - 1)) * 100; // Tỷ lệ từ 0% đến 100%
-        const y = maxRevenue > 0 ? 100 - (item.totalRevenue / maxRevenue) * 100 : 100; // Tỷ lệ ngược: 100% ở đáy
+        // X: Tỷ lệ vị trí ngang (0% đến 100%)
+        const x = (index / (dataDisplay.length - 1)) * 100;
+        
+        // Y: Tỷ lệ vị trí dọc (0% ở trên cùng, 100% ở dưới cùng)
+        const yValue = item.totalRevenue;
+        const normalizedY = range > 0 ? (yValue - minValue) / range : 0;
+        const y = 100 - normalizedY * 100; // Đảo ngược để 0 là trên cùng, 100 là dưới cùng
+
         return { x, y, item };
     });
 
-    // Tạo chuỗi tọa độ SVG cho đường cong mượt (Spline)
-    const linePath = points.length > 0 ? `M ${points[0].x} ${points[0].y} ` + points.slice(1).map((point, index) => {
-        // Áp dụng thuật toán đơn giản để tạo đường cong mượt (có thể dùng cubic-bezier nếu cần phức tạp hơn)
-        const prevPoint = points[index];
-        const midX = (prevPoint.x + point.x) / 2;
-        // Dùng 'T' (Smooth curve to) hoặc 'C' (Cubic Bézier Curve)
-        // Dùng 'C' cho đường cong mượt hơn
-        // Dùng 'L' nếu muốn đường thẳng góc cạnh
-        return `L ${point.x} ${point.y}`; 
-    }).join(' ') : '';
-    
-    // Tạo chuỗi tọa độ cho đường thẳng nếu muốn mượt hơn (ví dụ: dùng Curve Algorithm)
-    // Hiện tại, ta dùng đường thẳng (L) cho đơn giản và dễ đọc trong context này
-    const linePathSimple = points.map(point => `${point.x},${point.y}`).join(' ');
-    
-    // Đường đi cho vùng tô màu bên dưới đường line (Area Chart)
-    const areaPath = `M ${points[0].x} ${points[0].y} ` +
-                     points.slice(1).map((point) => `L ${point.x} ${point.y}`).join(' ') +
-                     ` L ${points[points.length - 1].x} 100 L ${points[0].x} 100 Z`; // Đóng đường đi về đáy trục X
-
+    // Tạo chuỗi tọa độ SVG cho đường line
+    const linePath = points.map(point => `${point.x},${point.y}`).join(' ');
 
     return (
         <div className="bg-white rounded-xl shadow-2xl p-6 transition-all duration-500 border border-gray-100 hover:border-blue-300">
@@ -185,12 +182,17 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
                 <span className="text-sm font-medium text-blue-500">({data.length} {isMonthly ? 'tháng' : 'ngày'} | Hiển thị {dataDisplay.length} gần nhất)</span>
             </h3>
 
-            {/* Vùng biểu đồ SVG */}
+            {/* Vùng biểu đồ chứa SVG và các điểm tương tác */}
             <div className="relative h-64 border-b border-l border-gray-200" style={{ paddingLeft: '60px' }}>
 
                 {/* Dải phân chia ngang (Grid Lines) và Chú thích trục Y */}
-                {[0.25, 0.5, 0.75, 1].map((ratio, index) => {
-                    const value = maxRevenue * (1 - ratio);
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
+                    // Giá trị Doanh thu tương ứng với mốc
+                    const revenueAtRatio = minValue + range * (1 - ratio);
+                    
+                    // Chỉ hiển thị 4 mốc quan trọng (0%, 25%, 50%, 75%, 100%)
+                    if (index === 0) return null; // Bỏ mốc 100% (trên cùng) vì nó là max
+
                     return (
                         <div
                             key={index}
@@ -198,11 +200,11 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
                             style={{ bottom: `${ratio * 100}%` }}
                         >
                             <span className="absolute left-[-60px] text-xs text-gray-500 pr-1 -mt-2 whitespace-nowrap">
-                                {/* Hiển thị mốc Doanh thu trục Y (Giá trị giảm dần) */}
-                                {value.toLocaleString('vi-VN')}đ
+                                {/* Hiển thị mốc Doanh thu trục Y */}
+                                {Math.round(revenueAtRatio / 1000) * 1000 > 0 ? (Math.round(revenueAtRatio / 1000) * 1000).toLocaleString('vi-VN') + 'đ' : '0đ'}
                             </span>
                         </div>
-                    )
+                    );
                 })}
 
                 {/* Biểu đồ Đường SVG */}
@@ -216,65 +218,67 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
                     </defs>
                     
                     {/* Vùng tô màu (Area) */}
-                    <path 
-                        d={`M ${points[0].x} 100 L ${linePathSimple} L ${points[points.length - 1].x} 100 Z`}
-                        fill="url(#areaGradient)"
-                        stroke="none"
-                        className="transition-all duration-700 ease-out"
-                    />
+                    {points.length > 0 && (
+                        <path 
+                            d={`M ${points[0].x} 100 L ${linePath} L ${points[points.length - 1].x} 100 Z`}
+                            fill="url(#areaGradient)"
+                            stroke="none"
+                            className="transition-all duration-700 ease-out"
+                        />
+                    )}
 
                     {/* Đường Line */}
                     <polyline
                         fill="none"
                         stroke={isMonthly ? '#8b5cf6' : '#10b981'}
                         strokeWidth="3"
-                        points={linePathSimple}
+                        points={linePath}
                         className="transition-all duration-700 ease-out"
                     />
-                    
-                    {/* Các điểm dữ liệu (Dùng div/span cho tooltip) */}
-                    {points.map((point, index) => {
-                        const { x, y, item } = point;
-                        
-                        let displayLabel;
-                        if (isMonthly) {
-                            const [year, month] = item.month.split('-');
-                            displayLabel = `${month}/${year.slice(2)}`;
-                        } else {
-                            const date = new Date(item.date);
-                            displayLabel = `${(date.getDate()).toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                        }
-                        
-                        // Chiều cao tương ứng với vị trí Y (0% ở trên cùng, 100% ở dưới cùng)
-                        const bottomPosition = (100 - y) * 2.56; // Chiều cao 64px = 256px
-                        const leftPosition = x * 3.125; // Chiều rộng 100%
-                        
-                        return (
-                            <div 
-                                key={index} 
-                                className="absolute flex flex-col items-center group transition-all duration-500"
-                                style={{ 
-                                    bottom: `calc(${bottomPosition}% - 4px)`, // - 4px để căn giữa dot (w-2 h-2)
-                                    left: `calc(${x}% - 4px)`, // - 4px để căn giữa dot (w-2 h-2)
-                                }}
-                            >
-                                {/* Điểm dot */}
-                                <div className={`w-2 h-2 rounded-full ${isMonthly ? 'bg-purple-600' : 'bg-teal-500'} ring-4 ring-white shadow-md cursor-pointer`}></div>
-                                
-                                {/* Tooltip khi hover (Tái sử dụng logic cũ) */}
-                                <div className="absolute bottom-full mb-2 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-50 transform -translate-x-1/2 left-1/2">
-                                    <p className="font-bold">{isMonthly ? 'Tháng ' : 'Ngày '} {displayLabel}</p>
-                                    <p>Doanh thu: **{item.totalRevenue.toLocaleString('vi-VN')}đ**</p>
-                                    <p>Đơn hàng: **{item.totalOrders}**</p>
-                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 translate-y-full"></div>
-                                </div>
-                            </div>
-                        );
-                    })}
                 </svg>
 
+                {/* Các điểm tương tác và Tooltip (Dùng HTML/Tailwind) */}
+                {points.map((point, index) => {
+                    const { x, y, item } = point;
+                    
+                    let displayLabel;
+                    if (isMonthly) {
+                        const [year, month] = item.month.split('-');
+                        displayLabel = `${month}/${year.slice(2)}`;
+                    } else {
+                        const date = new Date(item.date);
+                        displayLabel = `${(date.getDate()).toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                    }
+                    
+                    return (
+                        <div 
+                            key={index} 
+                            // Căn chỉnh điểm tương tác (chấm tròn) và vùng hover
+                            className="absolute flex flex-col items-center group transition-all duration-500 cursor-pointer"
+                            style={{ 
+                                // Vị trí (left/bottom) được tính bằng tỷ lệ % của SVG
+                                bottom: `calc(${100 - y}% - 4px)`, // - 4px để căn giữa dot (w-2 h-2)
+                                left: `calc(${x}% - 4px)`,       // - 4px để căn giữa dot (w-2 h-2)
+                                minWidth: '8px', // Kích thước vùng hover tối thiểu
+                                minHeight: '8px', // Kích thước vùng hover tối thiểu
+                            }}
+                        >
+                            {/* Điểm dot */}
+                            <div className={`w-2 h-2 rounded-full ${isMonthly ? 'bg-purple-600' : 'bg-teal-500'} ring-4 ring-white shadow-md transition-all duration-300 group-hover:scale-150`}></div>
+                            
+                            {/* Tooltip khi hover (Hiển thị doanh thu) */}
+                            <div className="absolute bottom-full mb-2 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-50 transform -translate-x-1/2 left-1/2">
+                                <p className="font-bold">{isMonthly ? 'Tháng ' : 'Ngày '} {displayLabel}</p>
+                                <p>Doanh thu: **{item.totalRevenue.toLocaleString('vi-VN')}đ**</p>
+                                <p>Đơn hàng: **{item.totalOrders}**</p>
+                                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 translate-y-full"></div>
+                            </div>
+                        </div>
+                    );
+                })}
 
-                {/* Nhãn dưới (Trục X) - Vẫn cần thiết */}
+
+                {/* Nhãn dưới (Trục X) */}
                 <div className="absolute inset-x-0 bottom-[-20px] flex justify-between px-1">
                     {dataDisplay.map((item, index) => {
                         let displayLabel;
@@ -286,8 +290,11 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
                             displayLabel = `${(date.getDate()).toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
                         }
                         
-                        // Chỉ hiển thị nhãn cho điểm đầu tiên, điểm giữa (nếu nhiều) và điểm cuối
-                        const shouldDisplayLabel = index === 0 || index === dataDisplay.length - 1 || (dataDisplay.length > 5 && index % Math.ceil(dataDisplay.length / 5) === 0);
+                        // Chỉ hiển thị nhãn cho điểm đầu, cuối và một số điểm ở giữa (tối đa 6 nhãn)
+                        const totalLabels = 6;
+                        const interval = Math.max(1, Math.floor((dataDisplay.length - 1) / (totalLabels - 1)));
+                        
+                        const shouldDisplayLabel = index === 0 || index === dataDisplay.length - 1 || (dataDisplay.length > totalLabels && index % interval === 0);
                         
                         if (!shouldDisplayLabel) return null;
 
