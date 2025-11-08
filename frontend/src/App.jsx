@@ -1211,61 +1211,69 @@ const exportUsersToCSV = () => {
 
 
 
-                <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-800 mb-3">
-                        Sản phẩm đã mua ({order.items.length} mục)
-                      </h4>
-                      <div className="space-y-3">
-                        {order.items.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="bg-gradient-to-r from-gray-50 to-gray-100 p-3 rounded-lg border-l-4 border-purple-500 hover:shadow-md transition"
-                          >
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="flex-1">
-                                <p className="font-bold text-gray-800 text-base">
-                                  {item.name}
-                                </p>
-                                {item.code && (
-                                  <p className="text-xs text-purple-600 font-semibold mt-1">
-                                    Mã: {item.code}
-                                  </p>
-                                )}
-                                {item.type && (
-                                  <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                    {item.type === 'course' && '📚 Khóa học'}
-                                    {item.type === 'english' && '🎓 Tiếng Anh'}
-                                    {item.type === 'document' && '📄 Tài liệu'}
-                                    {item.type === 'coursera' && '🎯 Coursera'}
-                                    {item.type === 'account' && '👤 Tài khoản'}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-right ml-3">
-                                <p className="font-bold text-purple-600 text-lg">
-                                  {item.price.toLocaleString()}đ
-                                </p>
-                                {item.quantity && item.quantity > 1 && (
-                                  <p className="text-xs text-gray-500">
-                                    x{item.quantity}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            {item.desc && (
-                              <p className="text-xs text-gray-600 mt-2 pl-2 border-l-2 border-gray-300">
-                                {item.desc}
-                              </p>
+               <div className="space-y-4">
+    <h4 className="font-semibold text-gray-800 mb-2 border-b pb-2">
+        Sản phẩm đã mua ({order.items.length} mục)
+    </h4>
+    <div className="space-y-3">
+        {order.items.map((item, idx) => (
+            <div
+                key={idx}
+                className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all"
+            >
+                <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1 pr-4">
+                        <p className="font-extrabold text-lg text-gray-900 leading-tight">
+                            {item.name}
+                        </p>
+                        
+                        {/* Loại sản phẩm */}
+                        {item.type && (
+                            <span className="inline-block mt-1 text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                {item.type === 'course' && '📚 Khóa học'}
+                                {item.type === 'english' && '🎓 Tiếng Anh'}
+                                {item.type === 'document' && '📄 Tài liệu'}
+                                {item.type === 'coursera' && '🎯 Coursera'}
+                                {item.type === 'account' && '👤 Tài khoản'}
+                            </span>
+                        )}
+
+                        {/* Mã và Số lượng */}
+                        <div className="mt-1 text-sm text-gray-600">
+                            {item.code && (
+                                <span className="mr-3">Mã: **{item.code}**</span>
                             )}
-                          </div>
-                        ))}
-    <div className="flex justify-between font-bold text-xl pt-3 mt-3 border-t-2 border-gray-300">
-      <span className="text-gray-700">Tổng cộng</span>
-      <span className="text-blue-600">
-        {order.total.toLocaleString()}đ
-      </span>
+                            {item.quantity && item.quantity > 1 && (
+                                <span>x{item.quantity}</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Giá */}
+                    <div className="text-right ml-3 flex-shrink-0">
+                        <p className="font-bold text-xl text-purple-700">
+                            {item.price.toLocaleString()}đ
+                        </p>
+                    </div>
+                </div>
+                
+                {/* Mô tả/Ghi chú thêm */}
+                {item.desc && (
+                    <p className="text-xs text-gray-600 mt-2 p-2 bg-white rounded border border-dashed border-gray-300">
+                        **Mô tả:** {item.desc}
+                    </p>
+                )}
+            </div>
+        ))}
+        
+        {/* Tổng cộng */}
+        <div className="flex justify-between font-bold text-xl pt-4 mt-4 border-t border-gray-300">
+            <span className="text-gray-700">Tổng cộng đơn hàng:</span>
+            <span className="text-blue-600">
+                {order.total.toLocaleString()}đ
+            </span>
+        </div>
     </div>
-  </div>
 </div>
 
                   </div>
