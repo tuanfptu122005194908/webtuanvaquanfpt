@@ -125,10 +125,60 @@ const Notification = ({ message, type, onClose }) => {
 
 // ============ ADMIN DASHBOARD COMPONENT ============
 const STATS_COLOR_MAP = {
-    blue: { bg: "bg-blue-100", text: "text-blue-600" },
-    green: { bg: "bg-green-100", text: "text-green-600" },
-    purple: { bg: "bg-purple-100", text: "text-purple-600" },
-    yellow: { bg: "bg-yellow-100", text: "text-yellow-600" },
+    blue: { bg: "bg-blue-100", text: "text-blue-600", from: "from-blue-400", to: "to-blue-600" }, // THÊM from/to
+    green: { bg: "bg-green-100", text: "text-green-600", from: "from-green-400", to: "to-green-600" }, // THÊM from/to
+    purple: { bg: "bg-purple-100", text: "text-purple-600", from: "from-purple-400", to: "to-purple-600" }, // THÊM from/to
+    yellow: { bg: "bg-yellow-100", text: "text-yellow-600", from: "from-yellow-400", to: "to-yellow-600" }, // THÊM from/to
+};
+
+// Component mới cho biểu đồ cột
+const SalesChart = ({ data, title, isMonthly = false }) => {
+    if (!data || data.length === 0) {
+        return (
+            <div className="bg-white rounded-xl shadow-lg p-6 text-center text-gray-500 min-h-[300px] flex items-center justify-center">
+                Chưa có dữ liệu thống kê {title.toLowerCase()}.
+            </div>
+        );
+    }
+
+    // Tính toán giá trị max để làm tỷ lệ chiều cao
+    const maxRevenue = Math.max(...data.map(item => item.totalRevenue));
+
+    return (
+        <div className="bg-white rounded-xl shadow-2xl p-6 transition-all duration-500 border border-gray-100 hover:border-blue-300">
+            <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-3">
+                {title} <span className="text-sm font-medium text-blue-500">({data.length} {isMonthly ? 'tháng' : 'ngày'})</span>
+            </h3>
+            <div className="flex justify-around items-end h-64 space-x-2 overflow-x-auto pb-4">
+                {data.map((item, index) => {
+                    const heightPercent = maxRevenue > 0 ? (item.totalRevenue / maxRevenue) * 100 : 0;
+                    const displayLabel = isMonthly ? item.month.split('-')[1] + '/' + item.month.split('-')[0].slice(2) : item.date.slice(5);
+
+                    return (
+                        <div key={index} className="flex flex-col items-center flex-shrink-0 w-12 group relative">
+                            {/* Thanh Bar Chart */}
+                            <div
+                                style={{ height: `${heightPercent}%` }}
+                                className="w-8 bg-gradient-to-t from-green-400 to-teal-500 rounded-t-lg transition-all duration-700 ease-out hover:from-red-400 hover:to-red-600 shadow-md"
+                                title={`${item.totalRevenue.toLocaleString()}đ`}
+                            ></div>
+                            {/* Tooltip khi hover */}
+                            <div className="absolute bottom-full mb-2 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                                <p className="font-bold">{displayLabel}</p>
+                                <p>Doanh thu: {item.totalRevenue.toLocaleString()}đ</p>
+                                <p>Đơn hàng: {item.totalOrders}</p>
+                                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 translate-y-full"></div>
+                            </div>
+                            {/* Nhãn dưới */}
+                            <span className="mt-2 text-xs text-gray-600 w-full text-center truncate">
+                                {displayLabel}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
 };
 
 const AdminDashboard = ({ onBackToMain, showNotification }) => {
@@ -850,257 +900,119 @@ const exportUsersToCSV = () => {
 
 
       <main className="container mx-auto px-6 py-8">
+                {activeTab === "dashboard" && (
+                    <div>
+                        <h2 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">
+                            📊 Tổng quan Hoạt động
+                        </h2>
 
-        {activeTab === "dashboard" && (
+                        {/* === STATS CARDS - ĐẸP HƠN VỚI HIỆU ỨNG === */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                            {[
+                                {
+                                    label: "Tổng đơn hàng",
+                                    value: stats.totalOrders.toLocaleString(),
+                                    icon: ShoppingBag,
+                                    color: "blue",
+                                },
+                                {
+                                    label: "Tổng Doanh thu",
+                                    value: `${stats.totalRevenue.toLocaleString()}đ`,
+                                    icon: DollarSign,
+                                    color: "green",
+                                },
+                                {
+                                    label: "Tổng Người dùng",
+                                    value: stats.totalUsers.toLocaleString(),
+                                    icon: Users,
+                                    color: "purple",
+                                },
+                                {
+                                    label: "Đơn hàng Chờ",
+                                    value: stats.pendingOrders.toLocaleString(),
+                                    icon: Clock,
+                                    color: "yellow",
+                                },
+                            ].map((stat, idx) => {
+                                const Icon = stat.icon;
+                                const colorClasses = STATS_COLOR_MAP[stat.color] || { bg: "bg-gray-100", text: "text-gray-600", from: "from-gray-300", to: "to-gray-500" };
+                                
+                                return (
+                                    <div
+                                        key={idx}
+                                        className={`bg-white rounded-xl p-6 shadow-xl transition-all duration-300 transform 
+                                                    hover:-translate-y-2 hover:shadow-2xl border-4 border-transparent 
+                                                    hover:border-t-8 ${colorClasses.to}`} // Hiệu ứng 3D đẹp hơn
+                                    >
+                                        <div className="flex items-center justify-between mb-4">
+                                            {/* Gradient Icon Box */}
+                                            <div className={`bg-gradient-to-r ${colorClasses.from} ${colorClasses.to} p-4 rounded-xl shadow-lg shadow-black/20 animate-pulse-once`}>
+                                                <Icon className="w-8 h-8 text-white" />
+                                            </div>
+                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">{stat.label}</p>
+                                        </div>
+                                        <p className="text-4xl font-extrabold text-gray-900 mb-1">
+                                            {stat.value}
+                                        </p>
+                                        <p className={`text-sm font-medium ${colorClasses.text}`}>
+                                            Dữ liệu tổng thể
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        
+                        {/* === KHỐI BIỂU ĐỒ DOANH THU HÀNG THÁNG (MỚI) === */}
+                        <div className="mb-12">
+                            <SalesChart data={monthlyStats} title="📈 Biến động Doanh thu theo Tháng" isMonthly={true} />
+                        </div>
 
-          <div>
+                        {/* === KHỐI BIỂU ĐỒ DOANH THU HÀNG NGÀY (THAY THẾ BẢNG CŨ) === */}
+                        <div className="mb-12">
+                            <SalesChart data={dailyStats} title="🗓️ Biến động Doanh thu theo Ngày" isMonthly={false} />
+                        </div>
 
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-
-              Thống kê tổng quan
-
-            </h2>
-
-
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
-              {[
-
-                {
-
-                  label: "Tổng đơn hàng",
-
-                  value: stats.totalOrders,
-
-                  icon: ShoppingBag,
-
-                  color: "blue",
-
-                },
-
-                {
-
-                  label: "Doanh thu",
-
-                  value: `${stats.totalRevenue.toLocaleString()}đ`,
-
-                  icon: DollarSign,
-
-                  color: "green",
-
-                },
-
-                {
-
-                  label: "Người dùng",
-
-                  value: stats.totalUsers,
-
-                  icon: Users,
-
-                  color: "purple",
-
-                },
-
-                {
-
-                  label: "Đơn chờ",
-
-                  value: stats.pendingOrders,
-
-                  icon: Clock,
-
-                  color: "yellow",
-
-                },
-
-             ].map((stat, idx) => {
-                const Icon = stat.icon;
-                // 🔥 SỬA LỖI TAILWIND TẠI ĐÂY
-                const colorClasses = STATS_COLOR_MAP[stat.color] || { bg: "bg-gray-100", text: "text-gray-600" }; 
-                // <== ĐÃ LẤY RA OBJECT CHỨA CÁC CLASS ĐẦY ĐỦ
-                return (
-                  <div
-                    key={idx}
-                    className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      {/* SỬ DỤNG colorClasses.bg VÀ colorClasses.text */}
-                      <div className={`${colorClasses.bg} p-3 rounded-lg`}>
-                        <Icon className={`w-6 h-6 ${colorClasses.text}`} />
-                      </div>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-1">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      {stat.value}
-                    </p>
-                  </div>
-                );
-              })}
-
-            </div>
-{/* === 🔥 KHỐI THỐNG KÊ DOANH THU THEO THÁNG (DÒNG MỚI) === */}
-<div className="bg-white rounded-xl shadow-sm p-6 mt-8">
-    <h3 className="text-xl font-bold text-gray-800 mb-4">
-        Biến động Doanh thu theo Tháng
-    </h3>
-    <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-                <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tháng (Năm-Tháng)
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Doanh thu
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Số đơn
-                    </th>
-                </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-                {monthlyStats.map((stat) => (
-                    <tr key={stat.month}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {stat.month}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">
-                            {Number(stat.totalRevenue).toLocaleString('vi-VN')}đ
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">
-                            {stat.totalOrders}
-                        </td>
-                    </tr>
-                ))}
-                {monthlyStats.length === 0 && (
-                    <tr>
-                        <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
-                            Chưa có dữ liệu thống kê doanh thu theo tháng.
-                        </td>
-                    </tr>
-                )}
-            </tbody>
-        </table>
-    </div>
-</div>
-{/* 🔥 KHỐI THỐNG KÊ DOANH THU THEO NGÀY */}
-                    <div className="bg-white rounded-xl shadow-sm p-6 mt-8">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">
-                            Biến động Doanh thu (Hoàn thành)
-                        </h3>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Ngày
-                                        </th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Doanh thu
-                                        </th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Số đơn
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {dailyStats.map((stat) => (
-                                        <tr key={stat.date}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {stat.date}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">
-                                                {Number(stat.totalRevenue).toLocaleString('vi-VN')}đ
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600">
-                                                {stat.totalOrders}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {dailyStats.length === 0 && (
-                                        <tr>
-                                            <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
-                                                Chưa có dữ liệu thống kê doanh thu.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                        {/* === ĐƠN HÀNG GẦN ĐÂY - HIỆU ỨNG ĐẸP HƠN === */}
+                        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                            <h3 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
+                                📦 Đơn hàng gần đây
+                            </h3>
+                            <div className="space-y-4">
+                                {orders.slice(0, 5).map((order) => (
+                                    <div
+                                        key={order.id}
+                                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 transition-all duration-300 hover:bg-white hover:border-blue-300 hover:shadow-md"
+                                    >
+                                        <div className="flex items-center space-x-4">
+                                            <ShoppingBag className="w-6 h-6 text-purple-500 flex-shrink-0" />
+                                            <div>
+                                                <p className="font-bold text-gray-800">
+                                                    Đơn #{order.id}
+                                                </p>
+                                                <p className="text-sm text-gray-600">
+                                                    Khách hàng: {order.customerInfo.name}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right flex items-center space-x-4">
+                                            <div className="hidden sm:block">
+                                                {getStatusBadge(order.status)}
+                                            </div>
+                                            <p className="font-extrabold text-xl text-blue-600">
+                                                {order.total.toLocaleString()}đ
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {orders.length === 0 && (
+                                    <p className="text-center text-gray-500 py-4">
+                                        Chưa có đơn hàng nào
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6">
-
-              <h3 className="text-lg font-bold text-gray-800 mb-4">
-
-                Đơn hàng gần đây
-
-              </h3>
-
-              <div className="space-y-3">
-
-                {orders.slice(0, 5).map((order) => (
-
-                  <div
-
-                    key={order.id}
-
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-
-                  >
-
-                    <div>
-
-                      <p className="font-semibold text-gray-800">
-
-                        Đơn #{order.id}
-
-                      </p>
-
-                      <p className="text-sm text-gray-600">
-
-                        {order.customerInfo.name}
-
-                      </p>
-
-                    </div>
-
-                    <div className="text-right">
-
-                      <p className="font-bold text-blue-600 mb-1">
-
-                        {order.total.toLocaleString()}đ
-
-                      </p>
-
-                      {getStatusBadge(order.status)}
-
-                    </div>
-
-                  </div>
-
-                ))}
-
-                {orders.length === 0 && (
-
-                  <p className="text-center text-gray-500 py-4">
-
-                    Chưa có đơn hàng nào
-
-                  </p>
-
                 )}
-
-              </div>
-
-            </div>
-
-          </div>
-
-        )}
-
 
 
         {activeTab === "orders" && (
