@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { Copy } from "lucide-react";
+
 
 import mas291 from "./mas291.png";
 
@@ -1104,49 +1107,53 @@ const exportUsersToCSV = () => {
 
 
          {activeTab === "orders" && (
-  <div className="space-y-8">
+  <div className="space-y-10">
     {/* Header */}
     <div className="flex justify-between items-center mb-8">
       <div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">🛍️ Quản lý đơn hàng</h2>
-        <p className="text-gray-600">Tổng cộng {orders.length} đơn hàng</p>
+        <h2 className="text-4xl font-extrabold text-gray-800 mb-2 flex items-center gap-2">
+          🛍️ Quản lý đơn hàng
+        </h2>
+        <p className="text-gray-600 text-sm">
+          Tổng cộng <span className="font-semibold">{orders.length}</span> đơn hàng
+        </p>
       </div>
+
       <button
         onClick={() => fetchDashboardData(adminToken)}
-        className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all shadow-md"
+        className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg hover:opacity-90 transition"
       >
         <RefreshCw className="w-5 h-5" />
-        <span className="font-medium">Làm mới</span>
+        <span>Làm mới</span>
       </button>
     </div>
 
-    {/* Danh sách đơn */}
+    {/* Danh sách đơn hàng */}
     <div className="space-y-8">
       {orders.map((order) => (
         <div
           key={order.id}
-          className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+          className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all border border-gray-200 overflow-hidden"
         >
           {/* Header đơn */}
-          <div className="bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 p-6 border-b border-gray-200">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b border-gray-200">
             <div className="flex flex-col md:flex-row justify-between gap-4">
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow">
                   #{order.id}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    Đơn hàng #{order.id}
-                  </h3>
-                  <div className="flex items-center text-sm text-gray-600 mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    {new Date(order.createdAt).toLocaleString("vi-VN")}
-                  </div>
+                  <p className="text-gray-700 font-medium">
+                    Ngày đặt:{" "}
+                    <span className="text-gray-900 font-semibold">
+                      {new Date(order.createdAt).toLocaleString("vi-VN")}
+                    </span>
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 {getStatusBadge(order.status)}
-                <div className="bg-white px-4 py-2 rounded-xl shadow-sm border">
+                <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
                   <p className="text-xs text-gray-500">Tổng tiền</p>
                   <p className="text-xl font-bold text-blue-600">
                     {order.total.toLocaleString()}đ
@@ -1157,12 +1164,12 @@ const exportUsersToCSV = () => {
           </div>
 
           {/* Nội dung đơn */}
-          <div className="p-6 space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Thông tin khách */}
+          <div className="p-6">
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              {/* Thông tin khách hàng */}
               <div className="bg-gradient-to-br from-gray-50 to-blue-50 p-5 rounded-xl border border-gray-200 relative">
                 <div className="flex items-center mb-4">
-                  <div className="bg-blue-600 p-2 rounded-lg">
+                  <div className="bg-blue-500 p-2 rounded-lg">
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <h4 className="ml-3 font-bold text-gray-800 text-lg">
@@ -1170,45 +1177,109 @@ const exportUsersToCSV = () => {
                   </h4>
                 </div>
 
-                {/* Dòng copy info */}
-                {[
-                  { label: "Họ tên", icon: <Users className="w-4 h-4" />, value: order.customerInfo.name },
-                  { label: "Email", icon: <Mail className="w-4 h-4" />, value: order.customerInfo.email },
-                  { label: "Số điện thoại", icon: <Phone className="w-4 h-4" />, value: order.customerInfo.phone },
-                ].map((info, i) => (
-                  <div key={i} className="flex justify-between items-center mb-3 bg-white p-3 rounded-lg shadow-sm border">
-                    <div className="flex items-start space-x-3">
-                      <span className="text-gray-500 mt-1">{info.icon}</span>
+                {/* Nút copy toàn bộ */}
+                <button
+                  onClick={() => {
+                    const info = `
+Họ tên: ${order.customerInfo.name}
+Email: ${order.customerInfo.email}
+Số điện thoại: ${order.customerInfo.phone}
+${order.customerInfo.note ? `Ghi chú: ${order.customerInfo.note}` : ""}
+                    `;
+                    navigator.clipboard.writeText(info.trim());
+                    toast.success("Đã sao chép thông tin khách hàng!");
+                  }}
+                  className="absolute top-5 right-5 text-gray-500 hover:text-blue-600 transition"
+                  title="Sao chép toàn bộ thông tin"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+
+                <div className="space-y-3 text-gray-800">
+                  {/* Họ tên */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start">
+                      <Users className="w-4 h-4 mr-2 mt-1 text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">{info.label}</p>
-                        <p className="font-semibold text-gray-800 break-all">{info.value}</p>
+                        <p className="text-xs text-gray-500">Họ tên</p>
+                        <p className="font-semibold">{order.customerInfo.name}</p>
                       </div>
                     </div>
                     <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(info.value);
-                      }}
-                      className="p-2 rounded-full hover:bg-blue-100 transition"
-                      title="Sao chép"
+                      onClick={() => navigator.clipboard.writeText(order.customerInfo.name)}
+                      title="Copy"
+                      className="text-gray-400 hover:text-blue-600 transition"
                     >
-                      <Clipboard className="w-4 h-4 text-blue-600" />
+                      <Copy className="w-4 h-4" />
                     </button>
                   </div>
-                ))}
 
-                {order.customerInfo.note && (
-                  <div className="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                    <p className="text-xs text-yellow-700 font-medium mb-1">Ghi chú:</p>
-                    <p className="text-sm text-gray-700">{order.customerInfo.note}</p>
+                  {/* Email */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start">
+                      <Mail className="w-4 h-4 mr-2 mt-1 text-gray-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Email</p>
+                        <p className="font-semibold break-all">
+                          {order.customerInfo.email}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(order.customerInfo.email)
+                      }
+                      title="Copy"
+                      className="text-gray-400 hover:text-blue-600 transition"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
+
+                  {/* Số điện thoại */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start">
+                      <Phone className="w-4 h-4 mr-2 mt-1 text-gray-500" />
+                      <div>
+                        <p className="text-xs text-gray-500">Số điện thoại</p>
+                        <p className="font-semibold">{order.customerInfo.phone}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(order.customerInfo.phone)
+                      }
+                      title="Copy"
+                      className="text-gray-400 hover:text-blue-600 transition"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Ghi chú */}
+                  {order.customerInfo.note && (
+                    <div className="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded relative">
+                      <p className="text-xs text-yellow-700 font-medium mb-1">Ghi chú</p>
+                      <p className="text-sm text-gray-700">{order.customerInfo.note}</p>
+                      <button
+                        onClick={() =>
+                          navigator.clipboard.writeText(order.customerInfo.note)
+                        }
+                        title="Copy ghi chú"
+                        className="absolute top-2 right-2 text-yellow-600 hover:text-yellow-800 transition"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Chi tiết sản phẩm */}
+              {/* Sản phẩm */}
               <div className="bg-gradient-to-br from-gray-50 to-purple-50 p-5 rounded-xl border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    <div className="bg-purple-600 p-2 rounded-lg">
+                    <div className="bg-purple-500 p-2 rounded-lg">
                       <Package className="w-5 h-5 text-white" />
                     </div>
                     <h4 className="ml-3 font-bold text-gray-800 text-lg">
@@ -1224,11 +1295,13 @@ const exportUsersToCSV = () => {
                   {order.items.map((item, idx) => (
                     <div
                       key={idx}
-                      className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
+                      className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all"
                     >
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start">
                         <div className="flex-1 pr-3">
-                          <p className="font-bold text-gray-900 mb-1">{item.name}</p>
+                          <p className="font-bold text-gray-900 mb-1">
+                            {item.name}
+                          </p>
                           {item.type && (
                             <span className="inline-block text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
                               {item.type === "course" && "📚 Khóa học"}
@@ -1240,21 +1313,23 @@ const exportUsersToCSV = () => {
                           )}
                           {item.code && (
                             <p className="text-xs text-gray-500 mt-1">
-                              Mã: <span className="font-mono font-semibold">{item.code}</span>
+                              Mã:{" "}
+                              <span className="font-mono font-semibold">
+                                {item.code}
+                              </span>
                             </p>
                           )}
-                          {item.quantity && item.quantity > 1 && (
+                          {item.quantity > 1 && (
                             <p className="text-xs text-gray-500">
-                              Số lượng: <span className="font-semibold">x{item.quantity}</span>
+                              Số lượng: <b>x{item.quantity}</b>
                             </p>
                           )}
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg text-purple-600">
-                            {item.price.toLocaleString()}đ
-                          </p>
-                        </div>
+                        <p className="font-bold text-lg text-purple-600">
+                          {item.price.toLocaleString()}đ
+                        </p>
                       </div>
+
                       {item.desc && (
                         <p className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border-l-2 border-gray-300">
                           {item.desc}
@@ -1266,12 +1341,12 @@ const exportUsersToCSV = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action buttons */}
             <div className="flex flex-wrap gap-3 pt-5 border-t border-gray-200">
               <button
                 onClick={() => updateOrderStatus(order.id, "processing")}
                 disabled={order.status === "processing"}
-                className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
+                className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
               >
                 <Clock className="w-4 h-4" />
                 <span>Đang xử lý</span>
@@ -1280,7 +1355,7 @@ const exportUsersToCSV = () => {
               <button
                 onClick={() => updateOrderStatus(order.id, "completed")}
                 disabled={order.status === "completed"}
-                className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
+                className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
               >
                 <CheckCircle className="w-4 h-4" />
                 <span>Hoàn thành</span>
@@ -1289,7 +1364,7 @@ const exportUsersToCSV = () => {
               <button
                 onClick={() => updateOrderStatus(order.id, "cancelled")}
                 disabled={order.status === "cancelled"}
-                className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
+                className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
               >
                 <XCircle className="w-4 h-4" />
                 <span>Hủy đơn</span>
@@ -1297,7 +1372,7 @@ const exportUsersToCSV = () => {
 
               <button
                 onClick={() => deleteOrder(order.id)}
-                className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-gray-700 text-white px-4 py-3 rounded-lg hover:bg-gray-800 transition-all transform hover:scale-105 font-semibold shadow-md"
+                className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-gray-700 text-white px-4 py-3 rounded-lg hover:bg-gray-800 transition-all transform hover:scale-105 font-semibold shadow-md"
               >
                 <X className="w-4 h-4" />
                 <span>Xóa đơn</span>
@@ -1307,7 +1382,6 @@ const exportUsersToCSV = () => {
         </div>
       ))}
 
-      {/* Trường hợp không có đơn */}
       {orders.length === 0 && (
         <div className="bg-white rounded-2xl shadow-md p-16 text-center">
           <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
