@@ -789,7 +789,7 @@ const getStatusBadge = (status) => {
                 )}
 
 
-      {activeTab === "orders" && (
+     {activeTab === "orders" && (
   <div className="space-y-8">
     {/* Header */}
     <div className="flex justify-between items-center mb-8">
@@ -1006,7 +1006,6 @@ const getStatusBadge = (status) => {
     </div>
   </div>
 )}
-
 
 
 
