@@ -123,103 +123,128 @@ const Notification = ({ message, type, onClose }) => {
 
 
 
-// ============ ADMIN DASHBOARD COMPONENT ============
+// ============ CONFIG CHO STATS CARD ============
 const STATS_COLOR_MAP = {
-    blue: { bg: "bg-blue-100", text: "text-blue-600", from: "from-blue-400", to: "to-blue-600" }, // THÊM from/to
-    green: { bg: "bg-green-100", text: "text-green-600", from: "from-green-400", to: "to-green-600" }, // THÊM from/to
-    purple: { bg: "bg-purple-100", text: "text-purple-600", from: "from-purple-400", to: "to-purple-600" }, // THÊM from/to
-    yellow: { bg: "bg-yellow-100", text: "text-yellow-600", from: "from-yellow-400", to: "to-yellow-600" }, // THÊM from/to
+    blue: { bg: "bg-blue-100", text: "text-blue-600", from: "from-blue-400", to: "to-blue-600" },
+    green: { bg: "bg-green-100", text: "text-green-600", from: "from-green-400", to: "to-green-600" },
+    purple: { bg: "bg-purple-100", text: "text-purple-600", from: "from-purple-400", to: "to-purple-600" },
+    yellow: { bg: "bg-yellow-100", text: "text-yellow-600", from: "from-yellow-400", to: "to-yellow-600" },
 };
 
-// Component mới cho biểu đồ cột
+// ============ COMPONENT BIỂU ĐỒ MÔ PHỎNG (SalesChart) ============
 const SalesChart = ({ data, title, isMonthly = false }) => {
+    // Chỉ lấy tối đa 20 điểm dữ liệu gần nhất để tránh tràn màn hình
+    const dataDisplay = data ? data.slice(-20) : []; 
+
     if (!data || data.length === 0) {
         return (
             <div className="bg-white rounded-xl shadow-lg p-6 text-center text-gray-500 min-h-[300px] flex items-center justify-center">
+                <BarChart3 className="w-10 h-10 text-gray-300 mr-2" />
                 Chưa có dữ liệu thống kê {title.toLowerCase()}.
             </div>
         );
     }
 
     // Tính toán giá trị max để làm tỷ lệ chiều cao
-    const maxRevenue = Math.max(...data.map(item => item.totalRevenue));
+    const maxRevenue = Math.max(...dataDisplay.map(item => item.totalRevenue));
 
     return (
         <div className="bg-white rounded-xl shadow-2xl p-6 transition-all duration-500 border border-gray-100 hover:border-blue-300">
-            <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-3">
-                {title} <span className="text-sm font-medium text-blue-500">({data.length} {isMonthly ? 'tháng' : 'ngày'})</span>
+            <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-3 flex justify-between items-center">
+                <span>{title}</span>
+                <span className="text-sm font-medium text-blue-500">({data.length} {isMonthly ? 'tháng' : 'ngày'} | Hiển thị {dataDisplay.length} gần nhất)</span>
             </h3>
-            <div className="flex justify-around items-end h-64 space-x-2 overflow-x-auto pb-4">
-                {data.map((item, index) => {
-                    const heightPercent = maxRevenue > 0 ? (item.totalRevenue / maxRevenue) * 100 : 0;
-                    const displayLabel = isMonthly ? item.month.split('-')[1] + '/' + item.month.split('-')[0].slice(2) : item.date.slice(5);
+            
+            {/* Vùng biểu đồ */}
+            <div className="relative h-64 border-b border-l border-gray-200" style={{ paddingLeft: '60px' }}>
+                
+                {/* Dải phân chia ngang (Grid Lines) và Chú thích trục Y */}
+                {[0.25, 0.5, 0.75, 1].map((ratio, index) => (
+                    <div
+                        key={index}
+                        className="absolute w-full border-t border-gray-200 border-dashed transition-all duration-300"
+                        style={{ bottom: `${ratio * 100}%` }}
+                    >
+                        <span className="absolute left-[-60px] text-xs text-gray-500 pr-1 -mt-2 whitespace-nowrap">
+                            {/* Hiển thị mốc Doanh thu trục Y */}
+                            {(maxRevenue * ratio).toLocaleString('vi-VN')}đ
+                        </span>
+                    </div>
+                ))}
 
-                    return (
-                        <div key={index} className="flex flex-col items-center flex-shrink-0 w-12 group relative">
-                            {/* Thanh Bar Chart */}
-                            <div
-                                style={{ height: `${heightPercent}%` }}
-                                className="w-8 bg-gradient-to-t from-green-400 to-teal-500 rounded-t-lg transition-all duration-700 ease-out hover:from-red-400 hover:to-red-600 shadow-md"
-                                title={`${item.totalRevenue.toLocaleString()}đ`}
-                            ></div>
-                            {/* Tooltip khi hover */}
-                            <div className="absolute bottom-full mb-2 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-                                <p className="font-bold">{displayLabel}</p>
-                                <p>Doanh thu: {item.totalRevenue.toLocaleString()}đ</p>
-                                <p>Đơn hàng: {item.totalOrders}</p>
-                                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 translate-y-full"></div>
+             {/* Container cho các cột */}
+                <div className="absolute inset-0 flex justify-end items-end space-x-2 pb-1 pr-1 overflow-x-auto">
+                    {dataDisplay.map((item, index) => {
+                        const heightPercent = maxRevenue > 0 ? (item.totalRevenue / maxRevenue) * 100 : 0;
+                        
+                        let displayLabel;
+                        if (isMonthly) {
+                            // Format: Thg/Năm (ví dụ: 11/25)
+                            const [year, month] = item.month.split('-');
+                            displayLabel = `${month}/${year.slice(2)}`;
+                        } else {
+                            // Format: Ngày/Tháng (ví dụ: 08/11)
+                            const date = new Date(item.date);
+                            displayLabel = `${(date.getDate()).toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                        }
+
+                        return (
+                            <div 
+                                key={index} 
+                                className="flex flex-col items-center flex-shrink-0 group relative h-full transition-all duration-500"
+                                style={{ minWidth: isMonthly ? '50px' : '40px' }} // Chiều rộng cột
+                            >
+                                {/* Thanh Bar Chart */}
+                                <div
+                                    style={{ height: `${heightPercent}%` }}
+                                    className={`w-4/5 ${isMonthly ? 'bg-gradient-to-t from-purple-400 to-indigo-500' : 'bg-gradient-to-t from-green-400 to-teal-500'} 
+                                                rounded-t-lg transition-all duration-700 ease-out 
+                                                hover:from-red-400 hover:to-red-600 shadow-lg cursor-pointer ${heightPercent === 0 ? 'bg-gray-300' : ''}`}
+                                ></div>
+                                
+                                {/* Tooltip khi hover */}
+                                <div className="absolute bottom-full mb-2 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-50 transform -translate-x-1/2 left-1/2">
+                                    <p className="font-bold">{isMonthly ? 'Tháng ' : 'Ngày '} {displayLabel}</p>
+                                    <p>Doanh thu: **{item.totalRevenue.toLocaleString('vi-VN')}đ**</p>
+                                    <p>Đơn hàng: **{item.totalOrders}**</p>
+                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 translate-y-full"></div>
+                                </div>
+                                
+                                {/* Nhãn dưới (Trục X) */}
+                                <span className="absolute bottom-[-20px] text-xs text-gray-600 w-full text-center truncate font-medium">
+                                    {displayLabel}
+                                </span>
                             </div>
-                            {/* Nhãn dưới */}
-                            <span className="mt-2 text-xs text-gray-600 w-full text-center truncate">
-                                {displayLabel}
-                            </span>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
 };
 
+// ============ ADMIN DASHBOARD COMPONENT ============
 const AdminDashboard = ({ onBackToMain, showNotification }) => {
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [adminToken, setAdminToken] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
 
-  const [adminToken, setAdminToken] = useState(null);
+    const [stats, setStats] = useState({
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalUsers: 0,
+        pendingOrders: 0,
+    });
+    const [orders, setOrders] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [activeTab, setActiveTab] = useState("dashboard");
+    const [dailyStats, setDailyStats] = useState([]); // [ {date: '2025-01-01', totalRevenue: 100000}, ... ]
+    const [monthlyStats, setMonthlyStats] = useState([]);
 
-  const [loading, setLoading] = useState(false);
-
-  const [loginEmail, setLoginEmail] = useState("");
-
-  const [loginPassword, setLoginPassword] = useState("");
-
-
-
-  const [stats, setStats] = useState({
-
-    
-
-    totalOrders: 0,
-
-    totalRevenue: 0,
-
-    totalUsers: 0,
-
-    pendingOrders: 0,
-
-  });
-
-  const [orders, setOrders] = useState([]);
-
-  const [users, setUsers] = useState([]);
-
-  const [activeTab, setActiveTab] = useState("dashboard");
-
-  const [dailyStats, setDailyStats] = useState([]); // [ {date: '2025-01-01', totalRevenue: 100000}, ... ]
-
-const [monthlyStats, setMonthlyStats] = useState([]);
-
-  useEffect(() => {
+    useEffect(() => {
         const token = localStorage.getItem("adminToken");
         if (token) {
             setAdminToken(token);
@@ -228,711 +253,377 @@ const [monthlyStats, setMonthlyStats] = useState([]);
         }
     }, []);
 
-
-
-  const handleLogin = async () => {
-
-    if (!loginEmail || !loginPassword) {
-
-      showNotification("Vui lòng nhập đầy đủ thông tin!", "warning");
-
-      return;
-
-    }
-
-
-
-    setLoading(true);
-
-
-
-    try {
-
-  const response = await fetch(`${API_URL}/api/admin/login`, { // <== SỬA ĐOẠN NÀY
-
-    method: "POST",
-
-    headers: { "Content-Type": "application/json" },
-
-    body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-
-  });
-
-
-
-      const data = await response.json();
-
-
-
-      if (data.success) {
-
-        setAdminToken(data.token);
-
-        setIsAuthenticated(true);
-
-        localStorage.setItem("adminToken", data.token);
-
-        fetchDashboardData(data.token);
-
-        setLoginEmail("");
-
-        setLoginPassword("");
-
-      } else {
-
-        showNotification(data.message || "Đăng nhập thất bại!", "error");
-
-      }
-
-    } catch (error) {
-
-      console.error("Login error:", error);
-
-     showNotification("Lỗi kết nối server!", "error");
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  };
-
-
-
-  const handleLogout = () => {
-
-    setIsAuthenticated(false);
-
-    setAdminToken(null);
-
-    localStorage.removeItem("adminToken");
-
-    setStats({
-
-      totalOrders: 0,
-
-      totalRevenue: 0,
-
-      totalUsers: 0,
-
-      pendingOrders: 0,
-
-    });
-
-    setOrders([]);
-
-    setUsers([]);
-
-  };
-
-
-
- const fetchDashboardData = async (token) => {
-    try {
-        // 🔥 THÊM API GỌI monthly-STATS
-        const [statsRes, ordersRes, usersRes, dailyStatsRes, monthlyStatsRes] = await Promise.all([ // <<< THÊM monthlyStatsRes
-            fetch(`${API_URL}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } }),
-            fetch(`${API_URL}/api/admin/orders`, { headers: { Authorization: `Bearer ${token}` } }),
-            fetch(`${API_URL}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
-            fetch(`${API_URL}/api/admin/daily-stats`, { headers: { Authorization: `Bearer ${token}` } }), 
-            fetch(`${API_URL}/api/admin/monthly-stats`, { headers: { Authorization: `Bearer ${token}` } }), // <<< DÒNG MỚI
-        ]);
-
-        const statsData = await statsRes.json();
-        const ordersData = await ordersRes.json();
-        const usersData = await usersRes.json();
-        const dailyStatsData = await dailyStatsRes.json(); 
-        const monthlyStatsData = await monthlyStatsRes.json(); // <<< DÒNG MỚI
-
-        if (statsData.success) setStats(statsData.stats);
-        if (ordersData.success) setOrders(ordersData.orders);
-        if (usersData.success) setUsers(usersData.users);
-        if (dailyStatsData.success) setDailyStats(dailyStatsData.dailyStats);
-        if (monthlyStatsData.success) setMonthlyStats(monthlyStatsData.monthlyStats); // <<< DÒNG MỚI
-
-    } catch (error) {
-        console.error("Fetch error:", error);
-    }
-};
-
-  const updateOrderStatus = async (orderId, newStatus) => {
-
-    try {
-
-     const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
-
-        method: "PATCH",
-
-        headers: {
-
-          "Content-Type": "application/json",
-
-          Authorization: `Bearer ${adminToken}`,
-
-        },
-
-        body: JSON.stringify({ status: newStatus }),
-
-      });
-
-
-
-      const data = await response.json();
-
-
-
-      if (data.success) {
-
-        setOrders(
-
-          orders.map((order) =>
-
-            order.id === orderId ? { ...order, status: newStatus } : order
-
-          )
-
-        );
-
-        fetchDashboardData(adminToken);
-
-        showNotification("Cập nhật trạng thái thành công!", "success");
-
-      } else {
-
-        showNotification(data.message || "Cập nhật thất bại!", "error");
-
-      }
-
-    } catch (error) {
-
-      console.error("Update error:", error);
-
-      showNotification("Lỗi kết nối server!", "error");
-
-    }
-
-  };
-
-
-
-  const deleteOrder = async (orderId) => {
-
-    if (!window.confirm(`Bạn có chắc muốn xóa đơn hàng #${orderId}?\nHành động này không thể hoàn tác!`)) {
-
-      return;
-
-    }
-
-
-
-    try {
-
-     const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
-
-        method: 'DELETE',
-
-        headers: {
-
-          'Authorization': `Bearer ${adminToken}`,
-
-          'Content-Type': 'application/json',
-
-        },
-
-      });
-
-
-
-      const data = await response.json();
-
-
-
-      if (response.ok && data.success) {
-
-        setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
-
-        fetchDashboardData(adminToken);
-
-        showNotification(data.message || 'Xóa đơn hàng thành công!', 'success');
-
-      } else {
-
-        showNotification(data.message || 'Không thể xóa đơn hàng!', 'error');
-
-      }
-
-    } catch (error) {
-
-      console.error('Delete error:', error);
-
-      showNotification('Lỗi khi xóa đơn hàng: ' + error.message, 'error');
-
-    }
-
-  };
-
-
-
-  const deleteUser = async (userId) => {
-
-    if (!window.confirm(`Bạn có chắc muốn xóa người dùng #${userId}?\n\nHành động này sẽ:\n- Xóa vĩnh viễn người dùng\n- Xóa TẤT CẢ đơn hàng của người dùng này\n\nKhông thể hoàn tác!`)) {
-
-      return;
-
-    }
-
-
-
-    try {
-
-const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
-
-        method: 'DELETE',
-
-        headers: {
-
-          'Authorization': `Bearer ${adminToken}`,
-
-          'Content-Type': 'application/json',
-
-        },
-
-      });
-
-
-
-      const data = await response.json();
-
-
-
-      if (response.ok && data.success) {
-
-        setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-
-        fetchDashboardData(adminToken);
-
-        const message = data.deletedOrdersCount > 0 
-
-          ? `Đã xóa người dùng và ${data.deletedOrdersCount} đơn hàng liên quan!`
-
-          : `Đã xóa người dùng thành công!`;
-
-        showNotification(message, 'success');
-
-      } else {
-
-        showNotification(data.message || 'Không thể xóa người dùng!', 'error');
-
-      }
-
-    } catch (error) {
-
-      console.error('Delete error:', error);
-
-      showNotification('Lỗi khi xóa người dùng: ' + error.message, 'error');
-
-    }
-
-  };
-
-
-const exportUsersToCSV = () => {
-    // Tạo header CSV
-    let csvContent = "ID,Tên,Email,Số điện thoại,Số đơn hàng,Tổng chi tiêu,Ngày đăng ký\n";
-
-    // Thêm dữ liệu người dùng
-    users.forEach(user => {
-        // Đảm bảo dữ liệu không có dấu phẩy hoặc quote bị lỗi
-        const name = user.name ? `"${user.name.replace(/"/g, '""')}"` : "";
-        const email = user.email || "";
-        const phone = user.phone || ""; // SỬA: Lấy số điện thoại
-        const totalSpent = (user.totalSpent || 0).toLocaleString('vi-VN');
-        const orderCount = user.orderCount || 0;
-        const createdAt = new Date(user.createdAt).toLocaleDateString("vi-VN");
-
-        csvContent += `${user.id},${name},${email},${phone},${orderCount},${totalSpent},${createdAt}\n`;
-    });
-
-    // Tạo Blob và tải file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "danh_sach_nguoi_dung.csv");
-    link.click();
-
-    showNotification("Đã xuất danh sách người dùng thành công!", "success");
-};
-
-  const getStatusBadge = (status) => {
-
-    const statusConfig = {
-
-      pending: {
-
-        bg: "bg-yellow-100",
-
-        text: "text-yellow-800",
-
-        label: "Chờ xử lý",
-
-      },
-
-      processing: {
-
-        bg: "bg-blue-100",
-
-        text: "text-blue-800",
-
-        label: "Đang xử lý",
-
-      },
-
-      completed: {
-
-        bg: "bg-green-100",
-
-        text: "text-green-800",
-
-        label: "Hoàn thành",
-
-      },
-
-      cancelled: {
-
-        bg: "bg-red-100",
-
-        text: "text-red-800",
-
-        label: "Đã hủy",
-
-      },
-
+    // ... (handleLogin, handleLogout, updateOrderStatus, deleteOrder, deleteUser, exportUsersToCSV giữ nguyên)
+    const handleLogin = async () => {
+        if (!loginEmail || !loginPassword) {
+            showNotification("Vui lòng nhập đầy đủ thông tin!", "warning");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch(`${API_URL}/api/admin/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setAdminToken(data.token);
+                setIsAuthenticated(true);
+                localStorage.setItem("adminToken", data.token);
+                fetchDashboardData(data.token);
+                setLoginEmail("");
+                setLoginPassword("");
+                showNotification("Đăng nhập Admin thành công!", "success");
+            } else {
+                showNotification(data.message || "Đăng nhập thất bại!", "error");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            showNotification("Lỗi kết nối server!", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        setAdminToken(null);
+        localStorage.removeItem("adminToken");
+        setStats({
+            totalOrders: 0,
+            totalRevenue: 0,
+            totalUsers: 0,
+            pendingOrders: 0,
+        });
+        setOrders([]);
+        setUsers([]);
+        showNotification("Đã đăng xuất Admin!", "info");
+    };
+
+
+const fetchDashboardData = async (token) => {
+        try {
+            const [statsRes, ordersRes, usersRes, dailyStatsRes, monthlyStatsRes] = await Promise.all([ 
+                fetch(`${API_URL}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API_URL}/api/admin/orders`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API_URL}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API_URL}/api/admin/daily-stats`, { headers: { Authorization: `Bearer ${token}` } }), 
+                fetch(`${API_URL}/api/admin/monthly-stats`, { headers: { Authorization: `Bearer ${token}` } }),
+            ]);
+
+            const statsData = await statsRes.json();
+            const ordersData = await ordersRes.json();
+            const usersData = await usersRes.json();
+            const dailyStatsData = await dailyStatsRes.json(); 
+            const monthlyStatsData = await monthlyStatsRes.json();
+
+            if (statsData.success) setStats(statsData.stats);
+            // Sắp xếp đơn hàng mới nhất lên trên
+            if (ordersData.success) setOrders(ordersData.orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+            if (usersData.success) setUsers(usersData.users);
+            if (dailyStatsData.success) setDailyStats(dailyStatsData.dailyStats.sort((a, b) => new Date(a.date) - new Date(b.date))); // Sắp xếp tăng dần theo ngày
+            if (monthlyStatsData.success) setMonthlyStats(monthlyStatsData.monthlyStats.sort((a, b) => a.month.localeCompare(b.month))); // Sắp xếp tăng dần theo tháng
+
+        } catch (error) {
+            console.error("Fetch error:", error);
+            showNotification("Lỗi khi tải dữ liệu Dashboard!", "error");
+        }
+    };
+    
+    // ... (updateOrderStatus, deleteOrder, deleteUser giữ nguyên)
+    const updateOrderStatus = async (orderId, newStatus) => {
+        try {
+            const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${adminToken}`,
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setOrders(
+                    orders.map((order) =>
+                        order.id === orderId ? { ...order, status: newStatus } : order
+                    )
+                );
+                fetchDashboardData(adminToken);
+                showNotification("Cập nhật trạng thái thành công!", "success");
+            } else {
+                showNotification(data.message || "Cập nhật thất bại!", "error");
+            }
+        } catch (error) {
+            console.error("Update error:", error);
+            showNotification("Lỗi kết nối server!", "error");
+        }
+    };
+    
+    const deleteOrder = async (orderId) => {
+        if (!window.confirm(`Bạn có chắc muốn xóa đơn hàng #${orderId}?\nHành động này không thể hoàn tác!`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/api/admin/orders/${orderId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+                fetchDashboardData(adminToken);
+                showNotification(data.message || 'Xóa đơn hàng thành công!', 'success');
+            } else {
+                showNotification(data.message || 'Không thể xóa đơn hàng!', 'error');
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            showNotification('Lỗi khi xóa đơn hàng: ' + error.message, 'error');
+        }
+    };
+    
+    const deleteUser = async (userId) => {
+        if (!window.confirm(`Bạn có chắc muốn xóa người dùng #${userId}?\n\nHành động này sẽ:\n- Xóa vĩnh viễn người dùng\n- Xóa TẤT CẢ đơn hàng của người dùng này\n\nKhông thể hoàn tác!`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+                fetchDashboardData(adminToken);
+                const message = data.deletedOrdersCount > 0 
+                    ? `Đã xóa người dùng và ${data.deletedOrdersCount} đơn hàng liên quan!`
+                    : `Đã xóa người dùng thành công!`;
+                showNotification(message, 'success');
+            } else {
+                showNotification(data.message || 'Không thể xóa người dùng!', 'error');
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            showNotification('Lỗi khi xóa người dùng: ' + error.message, 'error');
+        }
+    };
+
+    const exportUsersToCSV = () => {
+        let csvContent = "ID,Tên,Email,Số điện thoại,Số đơn hàng,Tổng chi tiêu,Ngày đăng ký\n";
+        users.forEach(user => {
+            const name = user.name ? `"${user.name.replace(/"/g, '""')}"` : "";
+            const email = user.email || "";
+            const phone = user.phone || ""; 
+            const totalSpent = (user.totalSpent || 0).toLocaleString('vi-VN');
+            const orderCount = user.orderCount || 0;
+            const createdAt = new Date(user.createdAt).toLocaleDateString("vi-VN");
+            csvContent += `${user.id},${name},${email},${phone},${orderCount},${totalSpent},${createdAt}\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "danh_sach_nguoi_dung.csv");
+        link.click();
+
+        showNotification("Đã xuất danh sách người dùng thành công!", "success");
     };
 
 
 
-    const config = statusConfig[status] || statusConfig.pending;
+const getStatusBadge = (status) => {
+        const statusConfig = {
+            pending: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Chờ xử lý" },
+            processing: { bg: "bg-blue-100", text: "text-blue-800", label: "Đang xử lý" },
+            completed: { bg: "bg-green-100", text: "text-green-800", label: "Hoàn thành" },
+            cancelled: { bg: "bg-red-100", text: "text-red-800", label: "Đã hủy" },
+        };
 
+        const config = statusConfig[status] || statusConfig.pending;
 
-
-    return (
-
-      <span
-
-        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}
-
-      >
-
-        {config.label}
-
-      </span>
-
-    );
-
-  };
+        return (
+            <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}
+            >
+                {config.label}
+            </span>
+        );
+    };
 
 
 
   if (!isAuthenticated) {
 
     return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+                    <button
+                        onClick={onBackToMain}
+                        className="mb-4 text-blue-600 hover:text-blue-800 flex items-center"
+                    >
+                        ← Quay lại trang chính
+                    </button>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+                    <div className="text-center mb-8">
+                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <BarChart3 className="w-10 h-10 text-white" />
+                        </div>
+                        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                            Admin Dashboard
+                        </h2>
+                        <p className="text-gray-600">Đăng nhập để quản lý hệ thống</p>
+                    </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                value={loginEmail}
+                                onChange={(e) => setLoginEmail(e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="admin@gmail.com"
+                            />
+                        </div>
 
-          <button
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Mật khẩu
+                            </label>
+                            <input
+                                type="password"
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="••••••••"
+                            />
+                        </div>
 
-            onClick={onBackToMain}
-
-            className="mb-4 text-blue-600 hover:text-blue-800 flex items-center"
-
-          >
-
-            ← Quay lại trang chính
-
-          </button>
-
-
-
-          <div className="text-center mb-8">
-
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-
-              <BarChart3 className="w-10 h-10 text-white" />
-
+                        <button
+                            onClick={handleLogin}
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition transform hover:scale-105 disabled:opacity-50"
+                        >
+                            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                        </button>
+                    </div>
+                </div>
             </div>
-
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-
-              Admin Dashboard
-
-            </h2>
-
-            <p className="text-gray-600">Đăng nhập để quản lý hệ thống</p>
-
-          </div>
-
-
-
-          <div className="space-y-4">
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-
-                Email
-
-              </label>
-
-              <input
-
-                type="email"
-
-                value={loginEmail}
-
-                onChange={(e) => setLoginEmail(e.target.value)}
-
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-
-                placeholder="admin@gmail.com"
-
-              />
-
-            </div>
-
-
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-
-                Mật khẩu
-
-              </label>
-
-              <input
-
-                type="password"
-
-                value={loginPassword}
-
-                onChange={(e) => setLoginPassword(e.target.value)}
-
-                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
-
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-
-                placeholder="••••••••"
-
-              />
-
-            </div>
-
-
-
-            <button
-
-              onClick={handleLogin}
-
-              disabled={loading}
-
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition transform hover:scale-105 disabled:opacity-50"
-
-            >
-
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    );
-
-  }
-
-
-
-  return (
-
-    <div className="min-h-screen bg-gray-50">
-
-      <header className="bg-white shadow-sm border-b">
-
-        <div className="container mx-auto px-6 py-4">
-
-          <div className="flex justify-between items-center">
-
-            <div className="flex items-center space-x-4">
-
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-lg">
-
-                <BarChart3 className="w-6 h-6 text-white" />
-
-              </div>
-
-              <div>
-
-                <h1 className="text-2xl font-bold text-gray-800">
-
-                  Admin Dashboard
-
-                </h1>
-
-                <p className="text-sm text-gray-600">Quản lý hệ thống</p>
-
-              </div>
-
-            </div>
-
-
-
-            <div className="flex items-center space-x-4">
-
-              <button
-
-                onClick={onBackToMain}
-
-                className="text-sm text-blue-600 hover:text-blue-800"
-
-              >
-
-                ← Trang chính
-
-              </button>
-
-              <button
-
-                onClick={() => fetchDashboardData(adminToken)}
-
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-
-              >
-
-                <RefreshCw className="w-5 h-5 text-gray-600" />
-
-              </button>
-
-              <button
-
-                onClick={handleLogout}
-
-                className="flex items-center space-x-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition"
-
-              >
-
-                <LogOut className="w-5 h-5" />
-
-                <span>Đăng xuất</span>
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </header>
-
-
-
-      <nav className="bg-white border-b">
-
-        <div className="container mx-auto px-6">
-
-          <div className="flex space-x-8">
-
-            {[
-
-              { id: "dashboard", label: "Tổng quan", icon: BarChart3 },
-
-              { id: "orders", label: "Đơn hàng", icon: ShoppingBag },
-
-              { id: "users", label: "Người dùng", icon: Users },
-
-            ].map((tab) => {
-
-              const Icon = tab.icon;
-
-              return (
-
-                <button
-
-                  key={tab.id}
-
-                  onClick={() => setActiveTab(tab.id)}
-
-                  className={`flex items-center space-x-2 py-4 border-b-2 transition ${
-
-                    activeTab === tab.id
-
-                      ? "border-blue-600 text-blue-600"
-
-                      : "border-transparent text-gray-600 hover:text-gray-900"
-
-                  }`}
-
-                >
-
-                  <Icon className="w-5 h-5" />
-
-                  <span className="font-medium">{tab.label}</span>
-
-                </button>
-
-              );
-
-            })}
-
-          </div>
-
-        </div>
-
-      </nav>
-
-
-
-      <main className="container mx-auto px-6 py-8">
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
+            <header className="bg-white shadow-sm border-b">
+                <div className="container mx-auto px-6 py-4">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-4">
+                            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-lg">
+                                <BarChart3 className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-800">
+                                    Admin Dashboard
+                                </h1>
+                                <p className="text-sm text-gray-600">Quản lý hệ thống</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center space-x-4">
+                            <button
+                                onClick={onBackToMain}
+                                className="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                                ← Trang chính
+                            </button>
+                            <button
+                                onClick={() => fetchDashboardData(adminToken)}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                                title="Làm mới dữ liệu"
+                            >
+                                <RefreshCw className="w-5 h-5 text-gray-600" />
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center space-x-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition"
+                            >
+                                <LogOut className="w-5 h-5" />
+                                <span>Đăng xuất</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+
+
+      {/* Navigation */}
+            <nav className="bg-white border-b">
+                <div className="container mx-auto px-6">
+                    <div className="flex space-x-8">
+                        {[
+                            { id: "dashboard", label: "Tổng quan", icon: BarChart3 },
+                            { id: "orders", label: "Đơn hàng", icon: ShoppingBag },
+                            { id: "users", label: "Người dùng", icon: Users },
+                        ].map((tab) => {
+                            const Icon = tab.icon;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center space-x-2 py-4 border-b-2 transition ${
+                                        activeTab === tab.id
+                                            ? "border-blue-600 text-blue-600"
+                                            : "border-transparent text-gray-600 hover:text-gray-900"
+                                    }`}
+                                >
+                                    <Icon className="w-5 h-5" />
+                                    <span className="font-medium">{tab.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </nav>
+
+            <main className="container mx-auto px-6 py-8">
                 {activeTab === "dashboard" && (
                     <div>
                         <h2 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">
                             📊 Tổng quan Hoạt động
                         </h2>
 
-                        {/* === STATS CARDS - ĐẸP HƠN VỚI HIỆU ỨNG === */}
+                        {/* === STATS CARDS - HIỆU ỨNG ĐẸP === */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
                             {[
-                                {
-                                    label: "Tổng đơn hàng",
-                                    value: stats.totalOrders.toLocaleString(),
-                                    icon: ShoppingBag,
-                                    color: "blue",
-                                },
-                                {
-                                    label: "Tổng Doanh thu",
-                                    value: `${stats.totalRevenue.toLocaleString()}đ`,
-                                    icon: DollarSign,
-                                    color: "green",
-                                },
-                                {
-                                    label: "Tổng Người dùng",
-                                    value: stats.totalUsers.toLocaleString(),
-                                    icon: Users,
-                                    color: "purple",
-                                },
-                                {
-                                    label: "Đơn hàng Chờ",
-                                    value: stats.pendingOrders.toLocaleString(),
-                                    icon: Clock,
-                                    color: "yellow",
-                                },
+                                { label: "Tổng đơn hàng", value: stats.totalOrders.toLocaleString(), icon: ShoppingBag, color: "blue", },
+                                { label: "Tổng Doanh thu", value: `${stats.totalRevenue.toLocaleString()}đ`, icon: DollarSign, color: "green", },
+                                { label: "Tổng Người dùng", value: stats.totalUsers.toLocaleString(), icon: Users, color: "purple", },
+                                { label: "Đơn hàng Chờ", value: stats.pendingOrders.toLocaleString(), icon: Clock, color: "yellow", },
                             ].map((stat, idx) => {
                                 const Icon = stat.icon;
                                 const colorClasses = STATS_COLOR_MAP[stat.color] || { bg: "bg-gray-100", text: "text-gray-600", from: "from-gray-300", to: "to-gray-500" };
@@ -942,11 +633,10 @@ const exportUsersToCSV = () => {
                                         key={idx}
                                         className={`bg-white rounded-xl p-6 shadow-xl transition-all duration-300 transform 
                                                     hover:-translate-y-2 hover:shadow-2xl border-4 border-transparent 
-                                                    hover:border-t-8 ${colorClasses.to}`} // Hiệu ứng 3D đẹp hơn
+                                                    hover:border-t-8 ${colorClasses.to}`}
                                     >
                                         <div className="flex items-center justify-between mb-4">
-                                            {/* Gradient Icon Box */}
-                                            <div className={`bg-gradient-to-r ${colorClasses.from} ${colorClasses.to} p-4 rounded-xl shadow-lg shadow-black/20 animate-pulse-once`}>
+                                            <div className={`bg-gradient-to-r ${colorClasses.from} ${colorClasses.to} p-4 rounded-xl shadow-lg shadow-black/20`}>
                                                 <Icon className="w-8 h-8 text-white" />
                                             </div>
                                             <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">{stat.label}</p>
@@ -962,12 +652,12 @@ const exportUsersToCSV = () => {
                             })}
                         </div>
                         
-                        {/* === KHỐI BIỂU ĐỒ DOANH THU HÀNG THÁNG (MỚI) === */}
+                        {/* === KHỐI BIỂU ĐỒ DOANH THU HÀNG THÁNG === */}
                         <div className="mb-12">
                             <SalesChart data={monthlyStats} title="📈 Biến động Doanh thu theo Tháng" isMonthly={true} />
                         </div>
 
-                        {/* === KHỐI BIỂU ĐỒ DOANH THU HÀNG NGÀY (THAY THẾ BẢNG CŨ) === */}
+                        {/* === KHỐI BIỂU ĐỒ DOANH THU HÀNG NGÀY === */}
                         <div className="mb-12">
                             <SalesChart data={dailyStats} title="🗓️ Biến động Doanh thu theo Ngày" isMonthly={false} />
                         </div>
@@ -1015,262 +705,224 @@ const exportUsersToCSV = () => {
                 )}
 
 
-        {activeTab === "orders" && (
-
-          <div>
-
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-
-              Quản lý đơn hàng
-
-            </h2>
-
-
-
-            <div className="space-y-4">
-
-              {orders.map((order) => (
-
-                <div
-
-                  key={order.id}
-
-                  className="bg-white rounded-xl shadow-sm p-6"
-
-                >
-
-                  <div className="flex justify-between items-start mb-4">
-
-                    <div>
-
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">
-
-                        Đơn hàng #{order.id}
-
-                      </h3>
-
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-
-                        <span className="flex items-center">
-
-                          <Calendar className="w-4 h-4 mr-1" />
-
-                          {new Date(order.createdAt).toLocaleString("vi-VN")}
-
-                        </span>
-
-                      </div>
-
-                    </div>
-
-                    {getStatusBadge(order.status)}
-
-                  </div>
-
-
-
-                  <div className="grid md:grid-cols-2 gap-6 mb-4">
-
-                    <div className="space-y-2">
-
-                      <h4 className="font-semibold text-gray-800">
-
-                        Thông tin khách hàng
-
-                      </h4>
-
-                      <div className="space-y-1 text-sm">
-
-                        <p className="flex items-center text-gray-600">
-
-                          <Users className="w-4 h-4 mr-2" />
-
-                          {order.customerInfo.name}
-
-                        </p>
-
-                        <p className="flex items-center text-gray-600">
-
-                          <Mail className="w-4 h-4 mr-2" />
-
-                          {order.customerInfo.email}
-
-                        </p>
-
-                        <p className="flex items-center text-gray-600">
-
-                          <Phone className="w-4 h-4 mr-2" />
-
-                          {order.customerInfo.phone}
-
-                        </p>
-
-                        {order.customerInfo.note && (
-
-                          <p className="text-gray-600 mt-2">
-
-                            <span className="font-medium">Ghi chú:</span>{" "}
-
-                            {order.customerInfo.note}
-
-                          </p>
-
-                        )}
-
-                      </div>
-
-                    </div>
-
-
-
-               <div className="space-y-4">
-    <h4 className="font-semibold text-gray-800 mb-2 border-b pb-2">
-        Sản phẩm đã mua ({order.items.length} mục)
-    </h4>
-    <div className="space-y-3">
-        {order.items.map((item, idx) => (
-            <div
-                key={idx}
-                className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all"
-            >
-                <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1 pr-4">
-                        <p className="font-extrabold text-lg text-gray-900 leading-tight">
-                            {item.name}
-                        </p>
-                        
-                        {/* Loại sản phẩm */}
-                        {item.type && (
-                            <span className="inline-block mt-1 text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                {item.type === 'course' && '📚 Khóa học'}
-                                {item.type === 'english' && '🎓 Tiếng Anh'}
-                                {item.type === 'document' && '📄 Tài liệu'}
-                                {item.type === 'coursera' && '🎯 Coursera'}
-                                {item.type === 'account' && '👤 Tài khoản'}
-                            </span>
-                        )}
-
-                        {/* Mã và Số lượng */}
-                        <div className="mt-1 text-sm text-gray-600">
-                            {item.code && (
-                                <span className="mr-3">Mã: **{item.code}**</span>
-                            )}
-                            {item.quantity && item.quantity > 1 && (
-                                <span>x{item.quantity}</span>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Giá */}
-                    <div className="text-right ml-3 flex-shrink-0">
-                        <p className="font-bold text-xl text-purple-700">
-                            {item.price.toLocaleString()}đ
-                        </p>
-                    </div>
-                </div>
-                
-                {/* Mô tả/Ghi chú thêm */}
-                {item.desc && (
-                    <p className="text-xs text-gray-600 mt-2 p-2 bg-white rounded border border-dashed border-gray-300">
-                        **Mô tả:** {item.desc}
-                    </p>
-                )}
-            </div>
-        ))}
-        
-        {/* Tổng cộng */}
-        <div className="flex justify-between font-bold text-xl pt-4 mt-4 border-t border-gray-300">
-            <span className="text-gray-700">Tổng cộng đơn hàng:</span>
-            <span className="text-blue-600">
-                {order.total.toLocaleString()}đ
-            </span>
-        </div>
+      {activeTab === "orders" && (
+  <div className="space-y-8">
+    {/* Header */}
+    <div className="flex justify-between items-center mb-8">
+      <div>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">🛍️ Quản lý đơn hàng</h2>
+        <p className="text-gray-600">Tổng cộng {orders.length} đơn hàng</p>
+      </div>
+      <button
+        onClick={() => fetchDashboardData(adminToken)}
+        className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all shadow-md"
+      >
+        <RefreshCw className="w-5 h-5" />
+        <span className="font-medium">Làm mới</span>
+      </button>
     </div>
-</div>
 
-                  </div>
-
-
-
-                  <div className="flex flex-wrap gap-2 pt-4 border-t">
-
-                    <button
-
-                      onClick={() => updateOrderStatus(order.id, "processing")}
-
-                      disabled={order.status === "processing"}
-
-                      className="flex-1 min-w-[150px] bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-
-                    >
-
-                      Đang xử lý
-
-                    </button>
-
-                    <button
-
-                      onClick={() => updateOrderStatus(order.id, "completed")}
-
-                      disabled={order.status === "completed"}
-
-                      className="flex-1 min-w-[150px] bg-green-50 text-green-600 px-4 py-2 rounded-lg hover:bg-green-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-
-                    >
-
-                      Hoàn thành
-
-                    </button>
-
-                    <button
-
-                      onClick={() => updateOrderStatus(order.id, "cancelled")}
-
-                      disabled={order.status === "cancelled"}
-
-                      className="flex-1 min-w-[150px] bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-
-                    >
-
-                      Hủy đơn
-
-                    </button>
-
-                    <button
-
-                      onClick={() => deleteOrder(order.id)}
-
-                      className="flex-1 min-w-[150px] bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition font-semibold"
-
-                    >
-
-                      Xóa đơn
-
-                    </button>
-
-                  </div>
-
+    {/* Danh sách đơn */}
+    <div className="space-y-8">
+      {orders.map((order) => (
+        <div
+          key={order.id}
+          className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+        >
+          {/* Header đơn */}
+          <div className="bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 p-6 border-b border-gray-200">
+            <div className="flex flex-col md:flex-row justify-between gap-4">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
+                  #{order.id}
                 </div>
-
-              ))}
-
-              {orders.length === 0 && (
-
-                <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-
-                  <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-
-                  <p className="text-gray-500">Chưa có đơn hàng nào</p>
-
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Đơn hàng #{order.id}
+                  </h3>
+                  <div className="flex items-center text-sm text-gray-600 mt-1">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {new Date(order.createdAt).toLocaleString("vi-VN")}
+                  </div>
                 </div>
-
-              )}
-
+              </div>
+              <div className="flex items-center space-x-3">
+                {getStatusBadge(order.status)}
+                <div className="bg-white px-4 py-2 rounded-xl shadow-sm border">
+                  <p className="text-xs text-gray-500">Tổng tiền</p>
+                  <p className="text-xl font-bold text-blue-600">
+                    {order.total.toLocaleString()}đ
+                  </p>
+                </div>
+              </div>
             </div>
-
           </div>
 
-        )}
+          {/* Nội dung đơn */}
+          <div className="p-6 space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Thông tin khách */}
+              <div className="bg-gradient-to-br from-gray-50 to-blue-50 p-5 rounded-xl border border-gray-200 relative">
+                <div className="flex items-center mb-4">
+                  <div className="bg-blue-600 p-2 rounded-lg">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <h4 className="ml-3 font-bold text-gray-800 text-lg">
+                    Thông tin khách hàng
+                  </h4>
+                </div>
+
+                {/* Dòng copy info */}
+                {[
+                  { label: "Họ tên", icon: <Users className="w-4 h-4" />, value: order.customerInfo.name },
+                  { label: "Email", icon: <Mail className="w-4 h-4" />, value: order.customerInfo.email },
+                  { label: "Số điện thoại", icon: <Phone className="w-4 h-4" />, value: order.customerInfo.phone },
+                ].map((info, i) => (
+                  <div key={i} className="flex justify-between items-center mb-3 bg-white p-3 rounded-lg shadow-sm border">
+                    <div className="flex items-start space-x-3">
+                      <span className="text-gray-500 mt-1">{info.icon}</span>
+                      <div>
+                        <p className="text-xs text-gray-500">{info.label}</p>
+                        <p className="font-semibold text-gray-800 break-all">{info.value}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(info.value);
+                      }}
+                      className="p-2 rounded-full hover:bg-blue-100 transition"
+                      title="Sao chép"
+                    >
+                      <Clipboard className="w-4 h-4 text-blue-600" />
+                    </button>
+                  </div>
+                ))}
+
+                {order.customerInfo.note && (
+                  <div className="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                    <p className="text-xs text-yellow-700 font-medium mb-1">Ghi chú:</p>
+                    <p className="text-sm text-gray-700">{order.customerInfo.note}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Chi tiết sản phẩm */}
+              <div className="bg-gradient-to-br from-gray-50 to-purple-50 p-5 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className="bg-purple-600 p-2 rounded-lg">
+                      <Package className="w-5 h-5 text-white" />
+                    </div>
+                    <h4 className="ml-3 font-bold text-gray-800 text-lg">
+                      Chi tiết sản phẩm
+                    </h4>
+                  </div>
+                  <span className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">
+                    {order.items.length} mục
+                  </span>
+                </div>
+
+                <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+                  {order.items.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 pr-3">
+                          <p className="font-bold text-gray-900 mb-1">{item.name}</p>
+                          {item.type && (
+                            <span className="inline-block text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                              {item.type === "course" && "📚 Khóa học"}
+                              {item.type === "english" && "🎓 Tiếng Anh"}
+                              {item.type === "document" && "📄 Tài liệu"}
+                              {item.type === "coursera" && "🎯 Coursera"}
+                              {item.type === "account" && "👤 Tài khoản"}
+                            </span>
+                          )}
+                          {item.code && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Mã: <span className="font-mono font-semibold">{item.code}</span>
+                            </p>
+                          )}
+                          {item.quantity && item.quantity > 1 && (
+                            <p className="text-xs text-gray-500">
+                              Số lượng: <span className="font-semibold">x{item.quantity}</span>
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg text-purple-600">
+                            {item.price.toLocaleString()}đ
+                          </p>
+                        </div>
+                      </div>
+                      {item.desc && (
+                        <p className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border-l-2 border-gray-300">
+                          {item.desc}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 pt-5 border-t border-gray-200">
+              <button
+                onClick={() => updateOrderStatus(order.id, "processing")}
+                disabled={order.status === "processing"}
+                className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
+              >
+                <Clock className="w-4 h-4" />
+                <span>Đang xử lý</span>
+              </button>
+
+              <button
+                onClick={() => updateOrderStatus(order.id, "completed")}
+                disabled={order.status === "completed"}
+                className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>Hoàn thành</span>
+              </button>
+
+              <button
+                onClick={() => updateOrderStatus(order.id, "cancelled")}
+                disabled={order.status === "cancelled"}
+                className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-all transform hover:scale-105 disabled:opacity-50 font-semibold shadow-md"
+              >
+                <XCircle className="w-4 h-4" />
+                <span>Hủy đơn</span>
+              </button>
+
+              <button
+                onClick={() => deleteOrder(order.id)}
+                className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 bg-gray-700 text-white px-4 py-3 rounded-lg hover:bg-gray-800 transition-all transform hover:scale-105 font-semibold shadow-md"
+              >
+                <X className="w-4 h-4" />
+                <span>Xóa đơn</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* Trường hợp không có đơn */}
+      {orders.length === 0 && (
+        <div className="bg-white rounded-2xl shadow-md p-16 text-center">
+          <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ShoppingBag className="w-12 h-12 text-gray-400" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Chưa có đơn hàng nào</h3>
+          <p className="text-gray-500">Các đơn hàng mới sẽ xuất hiện tại đây</p>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
 
 
 
