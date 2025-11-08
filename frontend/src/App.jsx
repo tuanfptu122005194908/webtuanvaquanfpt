@@ -131,7 +131,7 @@ const STATS_COLOR_MAP = {
     yellow: { bg: "bg-yellow-100", text: "text-yellow-600", from: "from-yellow-400", to: "to-yellow-600" },
 };
 
-// ============ COMPONENT BIỂU ĐỒ ĐƯỜNG MÔ PHỎNG (SalesChart) - NEON GREEN ============
+// ============ COMPONENT BIỂU ĐỒ ĐƯỜNG MÔ PHỎNG (SalesChart) - MÀU #990033 ============
 const SalesChart = ({ data, title, isMonthly = false }) => {
     // Chỉ lấy tối đa 20 điểm dữ liệu gần nhất
     const dataDisplay = data ? data.slice(-20) : [];
@@ -145,7 +145,7 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
         );
     }
 
-    // Tính toán giá trị max và min cho trục Y (giúp biểu đồ không bị dẹt)
+    // Tính toán giá trị max và min cho trục Y
     const allRevenues = dataDisplay.map(item => item.totalRevenue);
     const maxRevenue = Math.max(...allRevenues);
     const minDataRevenue = Math.min(...allRevenues);
@@ -163,14 +163,17 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
 
     const linePath = points.map(point => `${point.x},${point.y}`).join(' ');
 
-    // 🔥 Màu Neon Green (Mã màu HEX: #39FF14)
-    const NEON_COLOR_HEX = '#39FF14'; 
+    // 🔥 MÃ MÀU CHÍNH: Đỏ Tía đậm (Maroon)
+    const PRIMARY_COLOR_HEX = '#990033'; 
+    // 🔥 ĐỘ DÀY LINE ĐỒNG NHẤT
+    const LINE_STROKE_WIDTH = "2"; 
 
     return (
-        <div className="bg-white rounded-xl shadow-2xl p-6 transition-all duration-500 border border-gray-100 hover:border-lime-300">
+        <div className="bg-white rounded-xl shadow-2xl p-6 transition-all duration-500 border border-gray-100 hover:border-[#990033]/50">
             <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-3 flex justify-between items-center">
                 <span>{title}</span>
-                <span className="text-sm font-medium text-lime-500">({data.length} {isMonthly ? 'tháng' : 'ngày'} | Hiển thị {dataDisplay.length} gần nhất)</span>
+                {/* Dùng màu đậm cho chữ */}
+                <span className="text-sm font-medium text-[#990033]">({data.length} {isMonthly ? 'tháng' : 'ngày'} | Hiển thị {dataDisplay.length} gần nhất)</span>
             </h3>
 
             {/* Vùng biểu đồ chứa SVG và các điểm tương tác */}
@@ -197,10 +200,10 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
                 {/* Biểu đồ Đường SVG */}
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <defs>
-                        {/* Gradient cho vùng tô màu - Dùng màu Neon */}
+                        {/* Gradient cho vùng tô màu - Dùng màu #990033 */}
                         <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
-                            <stop offset="0%" stopColor={NEON_COLOR_HEX} stopOpacity={0.5}/>
-                            <stop offset="100%" stopColor={NEON_COLOR_HEX} stopOpacity={0}/>
+                            <stop offset="0%" stopColor={PRIMARY_COLOR_HEX} stopOpacity={0.5}/>
+                            <stop offset="100%" stopColor={PRIMARY_COLOR_HEX} stopOpacity={0}/>
                         </linearGradient>
                     </defs>
                     
@@ -214,11 +217,11 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
                         />
                     )}
 
-                    {/* Đường Line - Dùng màu Neon */}
+                    {/* Đường Line - Dùng màu #990033 và độ dày đồng nhất */}
                     <polyline
                         fill="none"
-                        stroke={NEON_COLOR_HEX} // 🔥 ĐÃ ĐỔI MÀU NEON GREEN
-                        strokeWidth="2"
+                        stroke={PRIMARY_COLOR_HEX} // 🔥 DÙNG MÀU CHÍNH
+                        strokeWidth={LINE_STROKE_WIDTH} // 🔥 ĐỘ DÀY ĐỒNG NHẤT
                         points={linePath}
                         className="transition-all duration-700 ease-out"
                     />
@@ -248,8 +251,9 @@ const SalesChart = ({ data, title, isMonthly = false }) => {
                                 minHeight: '8px', 
                             }}
                         >
-                            {/* Điểm dot - Dùng màu Neon/Lime */}
-                            <div className={`w-2 h-2 rounded-full bg-lime-500 ring-4 ring-white shadow-md transition-all duration-300 group-hover:scale-150`}></div> 
+                            {/* Điểm dot - Dùng màu #990033 */}
+                            {/* Dùng màu đậm hơn một chút (hoặc trực tiếp) vì Tailwind không hỗ trợ #990033 trực tiếp */}
+                            <div className={`w-2 h-2 rounded-full bg-red-800 ring-4 ring-white shadow-md transition-all duration-300 group-hover:scale-150`}></div> 
                             
                             {/* Tooltip khi hover */}
                             <div className="absolute bottom-full mb-2 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-50 transform -translate-x-1/2 left-1/2">
