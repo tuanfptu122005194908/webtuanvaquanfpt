@@ -814,33 +814,31 @@ const getStatusBadge = (status) => {
           key={order.id}
           className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-l-4 border-blue-500"
         >
-          {/* Header đơn hàng */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
-                  #{order.id}
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Đơn hàng #{order.id}</h3>
-                  <div className="flex items-center text-sm text-gray-600 mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    {new Date(order.createdAt).toLocaleString("vi-VN")}
-                  </div>
-                </div>
-              </div>
+         <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b">
+  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    <div className="flex items-center space-x-4">
+      {/* ĐÃ XÓA: 
+        <div className="bg-blue-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
+          #{order.id}
+        </div>
+      */}
+      
+      {/* Giờ không còn space-x-4 nữa, nên có thể bỏ hoặc để lại nếu có ý định thêm icon khác */}
+      <div> 
+        <h3 className="text-xl font-bold text-gray-800">Đơn hàng #{order.id}</h3>
+        <div className="flex items-center text-sm text-gray-600 mt-1">
+          <Calendar className="w-4 h-4 mr-1" />
+          {new Date(order.createdAt).toLocaleString("vi-VN")}
+        </div>
+      </div>
+    </div>
 
-              <div className="flex items-center space-x-3">
-                {getStatusBadge(order.status)}
-                <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
-                  <p className="text-xs text-gray-500">Tổng tiền</p>
-                  <p className="text-xl font-bold text-blue-600">
-                    {order.total.toLocaleString()}đ
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div className="flex items-center space-x-3">
+      {getStatusBadge(order.status)}
+      {/* ... */}
+    </div>
+  </div>
+</div>
 
           {/* Nội dung đơn hàng */}
           <div className="p-6">
