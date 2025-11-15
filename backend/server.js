@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
-const mysql = require("mysql2/promise");
+// ⚠️ THAY THẾ MYSQL BẰNG PG (POSTGRESQL)
+const { Pool } = require("pg");
 require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,39 +30,78 @@ app.use(
 
 app.use(express.json());
 
-// ⚙️ CẤU HÌNH KẾT NỐI MYSQL
+// ⚙️ CẤU HÌNH KẾT NỐI POSTGRESQL (Dùng DATABASE_URL của Render)
 let dbPool;
 try {
-  dbPool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
+  // Ưu tiên dùng DATABASE_URL để đơn giản hóa deploy trên Render
+  dbPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    // BẮT BUỘC cho Render: Cấu hình SSL
     ssl: {
       rejectUnauthorized: false,
     },
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   });
 
-  console.log("✅ MySQL Pool created successfully");
+  console.log("✅ PostgreSQL Pool created successfully");
 
   dbPool
-    .getConnection()
-    .then((connection) => {
-      console.log("🚀 Connected to MySQL database!");
-      connection.release();
+    .connect()
+    .then((client) => {
+      console.log("🚀 Connected to PostgreSQL database!");
+      client.release();
     })
     .catch((err) => {
-      console.error("❌ Failed to connect to MySQL database:", err.message);
+      console.error(
+        "❌ Failed to connect to PostgreSQL database:",
+        err.message
+      );
       process.exit(1);
     });
 } catch (error) {
-  console.error("❌ MySQL setup error:", error.message);
+  console.error("❌ PostgreSQL setup error:", error.message);
   process.exit(1);
 }
+
+// ===================== HÀM HỖ TRỢ QUERY CHO POSTGRESQL =====================
+
+/**
+ * Hàm thực thi SELECT query và trả về mảng rows.
+ * @param {string} sql - Câu lệnh SQL (dùng $1, $2, ...)
+ * @param {Array<any>} params - Mảng tham số
+ * @returns {Promise<Array<any>>}
+ */
+async function query(sql, params = []) {
+  const client = await dbPool.connect();
+  try {
+    const result = await client.query(sql, params);
+    return result.rows;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Hàm thực thi INSERT/UPDATE/DELETE.
+ * @param {string} sql - Câu lệnh SQL (dùng $1, $2, ...)
+ * @param {Array<any>} params - Mảng tham số
+ * @returns {Promise<{affectedRows: number, insertId: number|null}>}
+ */
+async function execute(sql, params = []) {
+  const client = await dbPool.connect();
+  try {
+    const result = await client.query(sql, params);
+    // Lấy ID vừa insert nếu có (cần thêm RETURNING id trong SQL)
+    const insertId = result.rows[0] ? result.rows[0].id : null;
+    return { affectedRows: result.rowCount, insertId };
+  } finally {
+    client.release();
+  }
+}
+
+// ===================== BIẾN VÀ DỮ LIỆU CỐ ĐỊNH =====================
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "tuan0112";
@@ -72,7 +112,7 @@ console.log(
   ADMIN_PASSWORD ? "***" + ADMIN_PASSWORD.slice(-4) : "NOT SET"
 );
 
-// ===================== COUPON DATA =====================
+// COUPON DATA
 const COUPONS = [
   { code: "TQ10-CHILL", discount: 10000 },
   { code: "TQ20-VUIVE", discount: 20000 },
@@ -85,7 +125,6 @@ const COUPONS = [
   { code: "TQ90-DANGCAP", discount: 90000 },
   { code: "TQ100-QUADINH", discount: 100000 },
 ];
-// =======================================================
 
 // ===================== ADMIN ROUTES =====================
 
@@ -170,19 +209,18 @@ app.delete("/api/admin/users/:id", checkAdminAuth, async (req, res) => {
       });
     }
 
-    // 1. Kiểm tra tồn tại và đếm số đơn hàng cần xóa
-    const [userOrders] = await dbPool.query(
-      "SELECT COUNT(id) as count FROM orders WHERE userId = ?",
+    // 1. Kiểm tra tồn tại và đếm số đơn hàng cần xóa (dùng $1)
+    const userOrders = await query(
+      'SELECT COUNT(id) as count FROM orders WHERE "userId" = $1',
       [userId]
     );
 
     const deletedOrdersCount = userOrders[0].count;
 
-    // 2. Xóa người dùng
-    const [deleteResult] = await dbPool.query(
-      "DELETE FROM users WHERE id = ?",
-      [userId]
-    );
+    // 2. Xóa người dùng (dùng $1)
+    const deleteResult = await execute("DELETE FROM users WHERE id = $1", [
+      userId,
+    ]);
 
     if (deleteResult.affectedRows === 0) {
       return res.status(404).json({
@@ -215,25 +253,25 @@ app.delete("/api/admin/users/:id", checkAdminAuth, async (req, res) => {
 app.get("/api/admin/stats", checkAdminAuth, async (req, res) => {
   try {
     // 1. Lấy tổng đơn hàng
-    const [totalOrdersResult] = await dbPool.query(
+    const totalOrdersResult = await query(
       "SELECT COUNT(id) AS count FROM orders"
     );
     const totalOrders = totalOrdersResult[0].count;
 
     // 2. Lấy tổng doanh thu (chỉ các đơn đã hoàn thành)
-    const [totalRevenueResult] = await dbPool.query(
+    const totalRevenueResult = await query(
       "SELECT SUM(total) AS sum FROM orders WHERE status = 'completed'"
     );
     const totalRevenue = Number(totalRevenueResult[0].sum) || 0;
 
     // 3. Lấy tổng người dùng
-    const [totalUsersResult] = await dbPool.query(
+    const totalUsersResult = await query(
       "SELECT COUNT(id) AS count FROM users"
     );
     const totalUsers = totalUsersResult[0].count;
 
     // 4. Lấy đơn chờ xử lý
-    const [pendingOrdersResult] = await dbPool.query(
+    const pendingOrdersResult = await query(
       "SELECT COUNT(id) AS count FROM orders WHERE status = 'pending'"
     );
     const pendingOrders = pendingOrdersResult[0].count;
@@ -259,11 +297,12 @@ app.get("/api/admin/stats", checkAdminAuth, async (req, res) => {
 // Lấy thống kê theo tháng
 app.get("/api/admin/monthly-stats", checkAdminAuth, async (req, res) => {
   try {
-    const [monthlyStatsResult] = await dbPool.query(`
+    // ⚠️ Thay thế DATE_FORMAT bằng TO_CHAR và dùng dấu nháy kép cho "createdAt"
+    const monthlyStatsResult = await query(`
             SELECT 
-                DATE_FORMAT(createdAt, '%Y-%m') AS month,
-                SUM(total) AS totalRevenue,
-                COUNT(id) AS totalOrders
+                TO_CHAR("createdAt", 'YYYY-MM') AS month,
+                SUM(total) AS "totalRevenue",
+                COUNT(id) AS "totalOrders"
             FROM 
                 orders 
             WHERE 
@@ -277,7 +316,7 @@ app.get("/api/admin/monthly-stats", checkAdminAuth, async (req, res) => {
     const monthlyStats = monthlyStatsResult.map((stat) => ({
       month: stat.month,
       totalRevenue: Number(stat.totalRevenue) || 0,
-      totalOrders: stat.totalOrders || 0,
+      totalOrders: Number(stat.totalOrders) || 0,
     }));
 
     res.json({
@@ -296,26 +335,27 @@ app.get("/api/admin/monthly-stats", checkAdminAuth, async (req, res) => {
 // Lấy thống kê theo ngày
 app.get("/api/admin/daily-stats", checkAdminAuth, async (req, res) => {
   try {
-    const [dailyStatsResult] = await dbPool.query(`
+    // ⚠️ Thay thế DATE(createdAt) bằng DATE("createdAt")
+    const dailyStatsResult = await query(`
             SELECT 
-                DATE(createdAt) AS date,
-                SUM(total) AS totalRevenue,
-                COUNT(id) AS totalOrders
+                DATE("createdAt") AS date,
+                SUM(total) AS "totalRevenue",
+                COUNT(id) AS "totalOrders"
             FROM 
                 orders 
             WHERE 
                 status = 'completed'
             GROUP BY 
-                DATE(createdAt)
+                DATE("createdAt")
             ORDER BY 
                 date DESC
-                LIMIT 30;
+            LIMIT 30;
         `);
 
     const dailyStats = dailyStatsResult.map((stat) => ({
       date: stat.date,
       totalRevenue: Number(stat.totalRevenue) || 0,
-      totalOrders: stat.totalOrders || 0,
+      totalOrders: Number(stat.totalOrders) || 0,
     }));
 
     res.json({
@@ -343,10 +383,10 @@ app.delete("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
       });
     }
 
-    const [deleteResult] = await dbPool.query(
-      "DELETE FROM orders WHERE id = ?",
-      [orderId]
-    );
+    // ⚠️ Dùng $1
+    const deleteResult = await execute("DELETE FROM orders WHERE id = $1", [
+      orderId,
+    ]);
 
     if (deleteResult.affectedRows === 0) {
       return res.status(404).json({
@@ -373,35 +413,19 @@ app.delete("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
   }
 });
 
-// Lấy tất cả đơn hàng (admin only) - ĐÃ CẬP NHẬT XỬ LÝ JSON CỦA ITEMS
+// Lấy tất cả đơn hàng (admin only)
 app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
   try {
-    const [allOrders] = await dbPool.query(
-      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders ORDER BY createdAt DESC"
+    // ⚠️ Dùng dấu nháy kép cho các cột tên hỗn hợp
+    const allOrders = await query(
+      'SELECT id, "userId", items, "customerName", "customerPhone", "customerEmail", "customerNote", total, status, "createdAt" FROM orders ORDER BY "createdAt" DESC'
     );
 
     const formattedOrders = allOrders.map((order) => ({
       id: order.id,
       userId: order.userId,
-      // 🌟 KHẮC PHỤC VẤN ĐỀ PARSE JSON
-      items: (() => {
-        try {
-          // 1. Nếu đã là Object (do mysql2/promise tự parse), trả về luôn
-          if (typeof order.items === "object" && order.items !== null)
-            return order.items;
-          // 2. Nếu là chuỗi, parse nó
-          if (typeof order.items === "string" && order.items)
-            return JSON.parse(order.items);
-
-          return []; // Trả về mảng rỗng nếu null/undefined/không phải chuỗi/object
-        } catch (e) {
-          console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id}. Data: ${order.items}`,
-            e.message
-          );
-          return [];
-        }
-      })(),
+      // items đã được pg parse tự động
+      items: order.items || [],
       customerInfo: {
         name: order.customerName,
         phone: order.customerPhone,
@@ -430,8 +454,9 @@ app.get("/api/admin/orders", checkAdminAuth, async (req, res) => {
 // Lấy tất cả users (admin only)
 app.get("/api/admin/users", checkAdminAuth, async (req, res) => {
   try {
-    const [safeUsers] = await dbPool.query(
-      "SELECT id, name, email, phone, createdAt, totalSpent, orderCount FROM users ORDER BY createdAt DESC"
+    // ⚠️ Dùng dấu nháy kép
+    const safeUsers = await query(
+      'SELECT id, name, email, phone, "createdAt", "totalSpent", "orderCount" FROM users ORDER BY "createdAt" DESC'
     );
 
     const formattedUsers = safeUsers.map((u) => ({
@@ -441,7 +466,7 @@ app.get("/api/admin/users", checkAdminAuth, async (req, res) => {
       phone: u.phone,
       createdAt: u.createdAt,
       totalSpent: Number(u.totalSpent) || 0,
-      orderCount: u.orderCount || 0,
+      orderCount: Number(u.orderCount) || 0,
     }));
 
     res.json({
@@ -463,9 +488,9 @@ app.patch("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
     const orderId = Number(req.params.id);
     const { status } = req.body;
 
-    // 1. Cập nhật trạng thái
-    const [updateResult] = await dbPool.query(
-      "UPDATE orders SET status = ? WHERE id = ?",
+    // 1. Cập nhật trạng thái (dùng $1, $2)
+    const updateResult = await execute(
+      "UPDATE orders SET status = $1 WHERE id = $2",
       [status, orderId]
     );
 
@@ -478,9 +503,9 @@ app.patch("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
 
     // 2. Nếu trạng thái là 'completed', CẬP NHẬT THÔNG TIN USER
     if (status === "completed") {
-      // a. Lấy thông tin đơn hàng vừa cập nhật
-      const [orders] = await dbPool.query(
-        "SELECT userId, total FROM orders WHERE id = ?",
+      // a. Lấy thông tin đơn hàng vừa cập nhật (dùng dấu nháy kép)
+      const orders = await query(
+        'SELECT "userId", total FROM orders WHERE id = $1',
         [orderId]
       );
       const order = orders[0];
@@ -488,17 +513,17 @@ app.patch("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
       if (order) {
         const userId = order.userId;
 
-        // b. Tính toán lại tổng chi tiêu và số đơn hoàn thành của user
-        const [stats] = await dbPool.query(
-          "SELECT COUNT(id) AS orderCount, SUM(total) AS totalSpent FROM orders WHERE userId = ? AND status = 'completed'",
+        // b. Tính toán lại tổng chi tiêu và số đơn hoàn thành của user (dùng dấu nháy kép)
+        const stats = await query(
+          'SELECT COUNT(id) AS "orderCount", SUM(total) AS "totalSpent" FROM orders WHERE "userId" = $1 AND status = \'completed\'',
           [userId]
         );
         const { orderCount, totalSpent } = stats[0];
 
-        // c. Cập nhật lại user
-        await dbPool.query(
-          "UPDATE users SET totalSpent = ?, orderCount = ? WHERE id = ?",
-          [Number(totalSpent) || 0, orderCount, userId]
+        // c. Cập nhật lại user (dùng dấu nháy kép)
+        await execute(
+          'UPDATE users SET "totalSpent" = $1, "orderCount" = $2 WHERE id = $3',
+          [Number(totalSpent) || 0, Number(orderCount) || 0, userId]
         );
 
         console.log(
@@ -527,7 +552,7 @@ app.patch("/api/admin/orders/:id", checkAdminAuth, async (req, res) => {
 
 // ===================== USER ROUTES =====================
 
-// Lấy đơn hàng của user hiện tại - ĐÃ CẬP NHẬT XỬ LÝ JSON CỦA ITEMS
+// Lấy đơn hàng của user hiện tại
 app.get("/api/users/:userId/orders", async (req, res) => {
   try {
     const userId = Number(req.params.userId);
@@ -539,32 +564,16 @@ app.get("/api/users/:userId/orders", async (req, res) => {
       });
     }
 
-    const [userOrders] = await dbPool.query(
-      "SELECT id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, createdAt FROM orders WHERE userId = ? ORDER BY createdAt DESC",
+    // ⚠️ Dùng $1 và dấu nháy kép
+    const userOrders = await query(
+      'SELECT id, "userId", items, "customerName", "customerPhone", "customerEmail", "customerNote", total, status, "createdAt" FROM orders WHERE "userId" = $1 ORDER BY "createdAt" DESC',
       [userId]
     );
 
     const formattedOrders = userOrders.map((order) => ({
       id: order.id,
       userId: order.userId,
-      // 🌟 KHẮC PHỤC VẤN ĐỀ PARSE JSON
-      items: (() => {
-        try {
-          // 1. Nếu đã là Object (do mysql2/promise tự parse), trả về luôn
-          if (typeof order.items === "object" && order.items !== null)
-            return order.items;
-          // 2. Nếu là chuỗi, parse nó
-          if (typeof order.items === "string" && order.items)
-            return JSON.parse(order.items);
-
-          return []; // Trả về mảng rỗng nếu null/undefined/không phải chuỗi/object
-        } catch (e) {
-          console.error(
-            `❌ Lỗi parse JSON cho đơn hàng #${order.id} của User #${order.userId}: ${e.message}`
-          );
-          return [];
-        }
-      })(),
+      items: order.items || [],
       customerInfo: {
         name: order.customerName,
         phone: order.customerPhone,
@@ -596,11 +605,10 @@ app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
 
-    // 1. Kiểm tra email đã tồn tại
-    const [existingUsers] = await dbPool.query(
-      "SELECT id FROM users WHERE email = ?",
-      [email]
-    );
+    // 1. Kiểm tra email đã tồn tại (dùng $1)
+    const existingUsers = await query("SELECT id FROM users WHERE email = $1", [
+      email,
+    ]);
 
     if (existingUsers.length > 0) {
       return res.status(400).json({
@@ -610,8 +618,9 @@ app.post("/api/register", async (req, res) => {
     }
 
     // 2. Tạo user mới
-    const [result] = await dbPool.query(
-      "INSERT INTO users (name, email, password, phone, totalSpent, orderCount) VALUES (?, ?, ?, ?, 0, 0)",
+    // ⚠️ BẮT BUỘC dùng RETURNING id để lấy ID vừa tạo
+    const result = await execute(
+      'INSERT INTO users (name, email, password, phone, "totalSpent", "orderCount") VALUES ($1, $2, $3, $4, 0, 0) RETURNING id',
       [name, email, password, phone]
     );
 
@@ -636,8 +645,9 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const [users] = await dbPool.query(
-      "SELECT id, name, email, phone FROM users WHERE email = ? AND password = ?", // Lấy thêm phone
+    // ⚠️ Dùng $1, $2
+    const users = await query(
+      "SELECT id, name, email, phone FROM users WHERE email = $1 AND password = $2",
       [email, password]
     );
 
@@ -658,7 +668,7 @@ app.post("/api/login", async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-      }, // Trả về phone
+      },
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -681,12 +691,14 @@ app.post("/api/orders", async (req, res) => {
     } = req.body;
 
     const newOrderId = Date.now();
-    // ⚠️ CHUYỂN OBJECT SANG CHUỖI JSON ĐỂ LƯU VÀO CSDL
+    // PostgreSQL (pg) có thể tự xử lý object/array thành JSONB,
+    // nhưng JSON.stringify vẫn là cách an toàn nhất khi truyền vào params.
     const itemsJson = JSON.stringify(items);
 
-    // 1. CHÈN ĐƠN HÀNG VÀO BẢNG ORDERS
-    const [insertResult] = await dbPool.query(
-      "INSERT INTO orders (id, userId, items, customerName, customerPhone, customerEmail, customerNote, total, status, discountAmount, couponCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
+    // 1. CHÈN ĐƠN HÀNG VÀO BẢNG ORDERS (Dùng $1 đến $10 và dấu nháy kép)
+    // Thêm cột "createdAt" với giá trị NOW() nếu bạn không truyền vào
+    await execute(
+      'INSERT INTO orders (id, "userId", items, "customerName", "customerPhone", "customerEmail", "customerNote", total, status, "discountAmount", "couponCode", "createdAt") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, \'pending\', $9, $10, NOW())',
       [
         newOrderId,
         userId,
@@ -701,10 +713,10 @@ app.post("/api/orders", async (req, res) => {
       ]
     );
 
-    // 2. CẬP NHẬT CỘT PHONE CHO USER (NẾU CHƯA CÓ)
+    // 2. CẬP NHẬT CỘT PHONE CHO USER
     if (customerInfo.phone) {
-      await dbPool.query(
-        "UPDATE users SET phone = ? WHERE id = ? AND (phone IS NULL OR phone = '')",
+      await execute(
+        "UPDATE users SET phone = $1 WHERE id = $2 AND (phone IS NULL OR phone = '')",
         [customerInfo.phone, userId]
       );
       console.log(`✅ Cập nhật SĐT cho User #${userId}: ${customerInfo.phone}`);
@@ -760,8 +772,9 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.listen(process.env.PORT, () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
+  // PORT được lấy từ biến môi trường
   console.log(`📧 Email: ${process.env.EMAIL_USER}`);
   console.log(`📌 Admin Email: ${ADMIN_EMAIL}`);
 });
